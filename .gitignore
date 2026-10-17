@@ -1,0 +1,12 @@
+/.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+/.env
+/data/
+/snapshots/
+/config/portfolios/private/
+/reports/daily/*.md
+.DS_Store
+docs/down_market_hedging_and_covered_calls.md

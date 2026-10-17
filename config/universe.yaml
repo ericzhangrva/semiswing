@@ -1,0 +1,89 @@
+# Regular stocks and unleveraged ETFs only. No leveraged ETFs (SOXL, NVDL, etc.) and no options.
+tradeable_stocks:
+  # Core AI Compute, Foundry & Lithography
+  - NVDA
+  - AVGO
+  - AMD
+  - ARM
+  - TSM
+  - ASML
+  # Memory & Data Storage
+  - MU
+  - WDC
+  - SNDK
+  - STX
+  - PSTG
+  # AI Networking, Optics, Interconnects & Data Center Cooling
+  - ANET
+  - VRT
+  - COHR
+  - LITE
+  - CRDO
+  - ALAB
+  - FN
+  - CLS
+  - NBIS
+  # Semiconductor Equipment, Custom Silicon & Analog/Power Semis (Group 1 & 2)
+  - KLAC
+  - LRCX
+  - AMAT
+  - MRVL
+  - QCOM
+  - TXN
+  - "ON"
+  - MCHP
+  - SMCI
+  - INTC
+  - SNPS
+  - CDNS
+  - MPWR
+  - ADI
+  - NXPI
+  - TER
+  # AI Hyperscalers, Consumer AI Ecosystem, Servers & Enterprise AI Software (Group 3)
+  - AAPL
+  - MSFT
+  - META
+  - GOOGL
+  - AMZN
+  - ORCL
+  - PLTR
+  - APP
+  - NOW
+  - DELL
+  # AI Data Center Power & Grid Infrastructure (Group 4)
+  - CEG
+  - VST
+  - GEV
+  - ETN
+  - PWR
+
+tradeable_etfs:
+  - SMH
+  - SOXX
+  - VGT
+  - QQQ
+  - SPY
+  - AIQ
+  - IGV
+
+training_only_stocks: []
+
+context_tickers:
+  - QQQ
+  - SPY
+  - VGT
+  - IGV
+  - "^VIX"
+  - "^VIX3M"
+  - "^VXN"
+  - "^VVIX"
+  - "^SKEW"
+
+fred_series:
+  DTB3: "3-Month Treasury Bill Secondary Market Rate"
+  DGS10: "10-Year Treasury Constant Maturity Rate"
+  DTWEXBGS: "Nominal Broad U.S. Dollar Index"
+  VIXCLS: "CBOE Volatility Index: VIX"
+  VXVCLS: "CBOE S&P 500 3-Month Volatility Index"
+  BAMLH0A0HYM2: "ICE BofA US High Yield Index Option-Adjusted Spread"

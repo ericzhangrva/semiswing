@@ -1,0 +1,90 @@
+backtest:
+  start_date: "2018-01-01"
+  oos_start_date: "2022-01-01"
+  ai_era_start: "2023-01-01"
+  commission_bps: 2.0
+  slippage_bps: 5.0
+
+window:
+  fixed: [10, 20, 40]
+  base: 20
+  min: 10
+  max: 60
+  use_cpd: false
+
+regime:
+  smh_ema: 100
+  vix_max: 30.0
+  vix_ts_max: 1.0
+  vvix_max: 110.0
+
+baseline:
+  slope_t_norm_min: 1.5
+  slope_r2_min: 0.35
+  rs_rank_min: 0.80
+  ext_atr_min: -0.50
+  ext_atr_max: 3.50
+  earnings_buffer_days: 3
+  min_price: 10.0
+  min_dollar_vol_20d: 150000000.0
+
+labels:
+  tp_atr: 3.75
+  sl_atr: 2.5
+  horizon: 25
+
+model:
+  calibration: "sigmoid"
+  max_depth: 3
+  num_leaves: 7
+  min_child_samples: 50
+  n_estimators: 120
+  learning_rate: 0.04
+  subsample: 0.8
+  colsample_bytree: 0.8
+  embargo_days: 20
+  n_splits: 5
+  retrain_freq_days: 63
+
+gate:
+  p_min: 0.44
+  p_high: 0.46
+  p_exit: 0.30
+  exit_confirm_runs: 3
+  ev_min_r: 0.05
+
+data:
+  eod_tolerance: 0.005
+  intraday_tolerance: 0.005
+  iex_max_age_min: 3
+  max_staleness_min: 5
+  min_health: 80
+
+risk:
+  paper_equity: 10000.0
+  risk_per_trade: 0.040
+  risk_per_trade_medium: 0.030
+  stop_atr: 3.0
+  tp1_atr: 5.5
+  tp1_fraction: 0.25
+  breakeven_trigger_r: 1.5
+  trail_atr: 4.5
+  time_stop: 25
+  early_time_stop_day: 12
+  early_time_stop_min_r: -0.50
+  backstop: 0.15
+  max_pos_pct: 0.33
+  max_positions: 4
+  max_open_risk: 0.14
+  max_corr_60d: 0.85
+  max_correlated_names: 2
+  dd_kill: 0.18
+  cooldown_days: 3
+  streak_stop_limit: 4
+
+alerts:
+  channels: ["sms_messages", "ntfy"]
+  quiet_start: "17:00"
+  quiet_end: "08:00"
+  max_entry_per_ticker_day: 1
+  retry_seconds: 60

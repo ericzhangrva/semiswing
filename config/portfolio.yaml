@@ -1,0 +1,24 @@
+# Public Demo Template Portfolio ($10,000 Reference Account)
+# Real portfolio configs live in gitignored config/portfolios/private/*.yaml and GitHub Secret PORTFOLIOS_SECRET_JSON
+account_name: "Demo Reference Portfolio ($10K)"
+snapshot_date: "2026-10-15"
+cash: 2500.00
+
+positions:
+  - ticker: "SMH"
+    description: "VanEck Semiconductor ETF"
+    role: "bull_core"
+    shares: 10.0
+    avg_cost: 450.00
+    last_price: 539.79
+    current_value: 5397.90
+    notes: "Sample core semiconductor ETF position"
+
+  - ticker: "NVDA"
+    description: "NVIDIA Corp"
+    role: "swing"
+    shares: 10.0
+    avg_cost: 180.00
+    last_price: 214.13
+    current_value: 2141.30
+    notes: "Sample AI swing position"

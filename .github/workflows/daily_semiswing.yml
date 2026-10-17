@@ -1,0 +1,71 @@
+name: SemiSwing 9AM Market-Day Pipeline (Backtest + Trade Ticket + Cloudflare Pages)
+
+on:
+  schedule:
+    # Runs at 9:00 AM US/Eastern on weekdays (13:00 UTC during EDT; NYSE holiday guard inside daily-run)
+    - cron: "0 13 * * 1-5"
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Force run even on a weekend or NYSE holiday"
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+
+permissions:
+  contents: write
+
+jobs:
+  daily-semiswing:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install SemiSwing package & dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+
+      - name: Run 9AM Market-Day Pipeline (Ingest + Public Backtest Report + Encrypted Multi-Portfolio Trade Tickets)
+        env:
+          TZ: America/New_York
+          PORTFOLIOS_SECRET_JSON: ${{ secrets.PORTFOLIOS_SECRET_JSON }}
+          PORTFOLIO_PASSCODE: ${{ secrets.PORTFOLIO_PASSCODE }}
+          ALERT_EMAIL: ${{ secrets.ALERT_EMAIL }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST || 'smtp.gmail.com' }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT || '587' }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+        run: |
+          if [ "${{ github.event.inputs.force }}" = "true" ]; then
+            semiswing daily-run --force --no-email
+          else
+            semiswing daily-run --no-email
+          fi
+
+      - name: Commit & Push Updated Backtest & Daily Trade Ticket Reports (Triggers Cloudflare Pages)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add reports/
+          if git diff --staged --quiet; then
+            echo "No report changes to commit."
+          else
+            git commit -m "chore(reports): update daily trade ticket & walk-forward backtest ($(date +'%Y-%m-%d'))"
+            git push
+          fi
