@@ -491,11 +491,13 @@ def build_daily_recommendation_plan(
         ref_shares = ref_notional / c_px
 
         # Standalone ticket size for this candidate under both cash pools (2 slots in Cash Only, 2 slots in Cash+ETF Rotate)
+        cand_meta_s = float(row.get("ml_size_scalar", 1.0))
+        effective_cand_scalar = macro_scalar * cand_meta_s
         stand_dollars_cash, stand_sh_cash, stand_risk_cash = _compute_single_ticket_size(
-            c_px, stop_px, tier, current_cash, total_equity, strategy, target_slots=2, macro_scalar=macro_scalar
+            c_px, stop_px, tier, current_cash, total_equity, strategy, target_slots=2, macro_scalar=effective_cand_scalar
         )
         stand_dollars_rot, stand_sh_rot, stand_risk_rot = _compute_single_ticket_size(
-            c_px, stop_px, tier, deployable_with_rotate, total_equity, strategy, target_slots=2, macro_scalar=macro_scalar
+            c_px, stop_px, tier, deployable_with_rotate, total_equity, strategy, target_slots=2, macro_scalar=effective_cand_scalar
         )
 
         # Build gate diagnostic notes

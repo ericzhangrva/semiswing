@@ -96,6 +96,7 @@ class PlattCalibratedGBM:
         self.platt: LogisticRegression | None = None
         self.oof_brier_raw: float = np.nan
         self.oof_brier_cal: float = np.nan
+        self.oof_preds_pool: np.ndarray | None = None
         self.feature_means: np.ndarray | None = None
         self.feature_stds: np.ndarray | None = None
 
@@ -164,20 +165,29 @@ class PlattCalibratedGBM:
         self.models.append(full_clf)
 
         valid_oof = ~np.isnan(oof_raw)
-        if valid_oof.sum() >= 30 and len(np.unique(y[valid_oof])) == 2:
+        if valid_oof.sum() >= 30:
             raw_p = np.clip(oof_raw[valid_oof], 1e-4, 1.0 - 1e-4)
-            self.oof_brier_raw = float(brier_score_loss(y[valid_oof], raw_p))
-            logits = np.log(raw_p / (1.0 - raw_p)).reshape(-1, 1)
-            platt = LogisticRegression(C=1.0, solver="lbfgs")
-            platt.fit(logits, y[valid_oof], sample_weight=w[valid_oof])
-            if platt.coef_[0][0] > 0:
-                self.platt = platt
-                cal_p = 0.70 * platt.predict_proba(logits)[:, 1] + 0.30 * raw_p
-                self.oof_brier_cal = float(brier_score_loss(y[valid_oof], cal_p))
-            else:
-                self.oof_brier_cal = self.oof_brier_raw
+            self.oof_preds_pool = np.sort(raw_p)
+            if len(np.unique(y[valid_oof])) == 2:
+                self.oof_brier_raw = float(brier_score_loss(y[valid_oof], raw_p))
+                logits = np.log(raw_p / (1.0 - raw_p)).reshape(-1, 1)
+                platt = LogisticRegression(C=1.0, solver="lbfgs")
+                platt.fit(logits, y[valid_oof], sample_weight=w[valid_oof])
+                if platt.coef_[0][0] > 0:
+                    self.platt = platt
+                    cal_p = 0.70 * platt.predict_proba(logits)[:, 1] + 0.30 * raw_p
+                    self.oof_brier_cal = float(brier_score_loss(y[valid_oof], cal_p))
+                else:
+                    self.oof_brier_cal = self.oof_brier_raw
 
         return self
+
+    def compute_percentile_rank(self, probs: np.ndarray) -> np.ndarray:
+        """Map raw probabilities into empirical percentile ranks [0.0, 1.0] using OOF distribution."""
+        if self.oof_preds_pool is None or len(self.oof_preds_pool) == 0:
+            return np.clip((probs - 0.40) / 0.20, 0.0, 1.0)
+        idx = np.searchsorted(self.oof_preds_pool, probs, side="right")
+        return np.clip(idx / float(len(self.oof_preds_pool)), 0.0, 1.0)
 
     def predict_proba(self, df: pd.DataFrame) -> np.ndarray:
         if not self.models:
@@ -235,7 +245,10 @@ def run_walkforward_ml_predictions(
     end date (`tb_end_date`) is strictly before the test block start.
     """
     df = panel.sort_values(["date", "ticker"]).copy().reset_index(drop=True)
+    if "baseline_signal" not in df.columns:
+        df = evaluate_baseline_signals(df, strategy)
     df["ml_prob"] = 0.50
+    df["ml_size_scalar"] = 1.00
     df["ml_ev_r"] = -0.05
     df["ml_signal"] = 0
     df["ml_tier"] = "NONE"
@@ -281,41 +294,26 @@ def run_walkforward_ml_predictions(
             continue
         probs = model.predict_proba(df.loc[test_mask])
         df.loc[test_mask, "ml_prob"] = probs
+        pct_ranks = model.compute_percentile_rank(probs)
+        s_min = float(strategy.model.min_sizing_scalar)
+        s_max = float(strategy.model.max_sizing_scalar)
+        df.loc[test_mask, "ml_size_scalar"] = np.clip(s_min + (s_max - s_min) * pct_ranks, s_min, s_max)
         block_models.append((test_mask, model))
 
-    reward_r = strategy.labels.tp_atr / strategy.labels.sl_atr  # 3.75 / 2.50 = 1.5R
+    reward_r = strategy.labels.tp_atr / strategy.labels.sl_atr  # 3.0 / 2.0 = 1.5R
     costs_r = 0.05
     df["ml_ev_r"] = df["ml_prob"] * reward_r - (1.0 - df["ml_prob"]) * 1.0 - costs_r
 
-    bcfg = strategy.baseline
-    gcfg = strategy.gate
-    liq_ok = (df["close"] >= bcfg.min_price) & (df["dollar_vol_20d"] >= bcfg.min_dollar_vol_20d)
-    health_ok = health_score >= strategy.data.min_health
-
-    qualifies = (
-        (df["date"] >= oos_start)
-        & (df["is_tradeable_universe"] == 1)
-        & liq_ok
-        & health_ok
-        & (df["regime_on"] == 1)
-        & (df["ml_prob"] >= gcfg.p_min)
-        & (df["ml_ev_r"] >= gcfg.ev_min_r)
-        & (df["slope_t_norm"] >= 1.2)
-        & (df["ema20_slope"] > 0.0)
-        & (df["rs_rank"] >= 0.80)
-        & (df["ext_atr"] >= bcfg.ext_atr_min)
-        & (df["ext_atr"] <= bcfg.ext_atr_max)
-        & (df["days_to_earnings"] > bcfg.earnings_buffer_days)
-        & (df["fomc_next_day"] == 0)
-    )
+    # Continuous Meta-Labeling: Retain all baseline-qualified trades and scale position size continuously
+    qualifies = (df["date"] >= oos_start) & (df["baseline_signal"] == 1)
 
     df["ml_signal"] = qualifies.astype(int)
     df["ml_tier"] = np.where(
-        qualifies & (df["ml_prob"] >= gcfg.p_high),
+        qualifies & (df["ml_size_scalar"] >= 1.15),
         "HIGH",
-        np.where(qualifies, "MEDIUM", "NONE"),
+        np.where(qualifies & (df["ml_size_scalar"] >= 0.85), "MEDIUM", np.where(qualifies, "LOW", "NONE")),
     )
-    df["ml_score"] = np.where(qualifies, df["ml_prob"] * (df["rs_rank"] ** 2) * np.maximum(df["resid_mom_60"], 0.05), 0.0)
+    df["ml_score"] = np.where(qualifies, df["baseline_score"] * df["ml_size_scalar"], 0.0)
 
     # Compute strictly point-in-time marginal SHAP attributions using each block's trained model
     smh_dts = df.loc[df["ticker"] == "SMH", "date"]

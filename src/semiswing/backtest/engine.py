@@ -33,6 +33,7 @@ class Position:
     realized_pnl: float = 0.0
     entry_notional: float = 0.0
     entry_risk_dollars: float = 0.0
+    size_scalar: float = 1.0
     shap_summary: str = ""
 
 
@@ -300,6 +301,7 @@ def run_portfolio_backtest(
                     "r_multiple": round(r_mult, 2),
                     "exit_reason": reason,
                     "entry_prob": round(pos.entry_prob, 3),
+                    "size_scalar": round(pos.size_scalar, 2),
                     "shap_summary": pos.shap_summary,
                 }
             )
@@ -356,12 +358,15 @@ def run_portfolio_backtest(
                 if macro_s <= 0.0:
                     continue
 
+                meta_s = float(cand.get("size_scalar", 1.0))
+                effective_scalar = macro_s * meta_s
+
                 tier = cand["tier"]
-                risk_frac = rcfg.risk_per_trade if tier == "HIGH" else rcfg.risk_per_trade_medium
+                risk_frac = rcfg.risk_per_trade if tier in ("HIGH", "SUPER_HIGH") else rcfg.risk_per_trade_medium
                 max_open_r = rcfg.max_open_risk
                 pos_cap_pct = rcfg.max_pos_pct
 
-                risk_budget = open_equity * risk_frac * macro_s
+                risk_budget = open_equity * risk_frac * effective_scalar
                 if (open_risk_dollars + risk_budget) > (open_equity * max_open_r):
                     continue
 
@@ -373,7 +378,7 @@ def run_portfolio_backtest(
                 tp1_px = entry_px + rcfg.tp1_atr * atr_sig
 
                 desired_shares = risk_budget / max(effective_stop_dist, 1e-4)
-                max_notional = min(open_equity * pos_cap_pct * macro_s, cash * 0.99)
+                max_notional = min(open_equity * pos_cap_pct * effective_scalar, cash * 0.99)
                 shares = min(desired_shares, max_notional / entry_px)
                 notional = shares * entry_px
 
@@ -402,6 +407,7 @@ def run_portfolio_backtest(
                     entry_prob=cand["prob"],
                     entry_notional=notional,
                     entry_risk_dollars=actual_risk_dollars,
+                    size_scalar=meta_s,
                     shap_summary=cand["shap_summary"],
                 )
 
@@ -493,6 +499,7 @@ def run_portfolio_backtest(
                     "r_multiple": round(r_mult, 2),
                     "exit_reason": reason,
                     "entry_prob": round(pos.entry_prob, 3),
+                    "size_scalar": round(pos.size_scalar, 2),
                     "shap_summary": pos.shap_summary,
                 }
             )
@@ -520,6 +527,7 @@ def run_portfolio_backtest(
                     if np.isnan(c_px) or np.isnan(atr_val) or atr_val <= 0:
                         continue
                     macro_val = float(row["macro_scalar"]) if "macro_scalar" in row else 1.0
+                    size_scalar_val = float(row["ml_size_scalar"]) if (mode == "ml" and "ml_size_scalar" in row) else 1.0
                     pending_candidates.append(
                         {
                             "ticker": ticker,
@@ -529,6 +537,7 @@ def run_portfolio_backtest(
                             "prob": float(row[prob_col]),
                             "score": float(row[score_col]),
                             "macro_scalar": macro_val,
+                            "size_scalar": size_scalar_val,
                             "shap_summary": str(row.get("ml_shap", "")),
                         }
                     )

@@ -59,17 +59,20 @@ class LabelsConfig(BaseModel):
 
 
 class ModelConfig(BaseModel):
-    calibration: str = "sigmoid"
-    max_depth: int = 3
-    num_leaves: int = 7
-    min_child_samples: int = 50
-    n_estimators: int = 120
-    learning_rate: float = 0.04
+    calibration: str = "percentile_rank"
+    max_depth: int = 2
+    num_leaves: int = 4
+    min_child_samples: int = 60
+    n_estimators: int = 100
+    learning_rate: float = 0.03
     subsample: float = 0.8
     colsample_bytree: float = 0.8
     embargo_days: int = 20
     n_splits: int = 5
     retrain_freq_days: int = 63
+    min_sizing_scalar: float = 0.50
+    max_sizing_scalar: float = 1.50
+
 
 
 class GateConfig(BaseModel):
