@@ -116,24 +116,25 @@ def _compute_single_ticket_size(
     total_equity: float,
     strategy: StrategySettings,
     target_slots: int = 2,
+    macro_scalar: float = 1.0,
 ) -> tuple[float, float, float]:
     """
     Compute exact (buy_dollars, buy_shares, risk_dollars) for a candidate given `pool_cash` and `total_equity`.
-    Caps each ticket at min(33% of total_equity, pool_cash / target_slots) so deployable cash is diversified
+    Caps each ticket at min(33% of total_equity * macro_scalar, pool_cash / target_slots) so deployable cash is diversified
     across `target_slots` (2 in Cash-Only mode, 2-3 in Cash+TQQQ Rotation mode).
     """
     rcfg = strategy.risk
-    if pool_cash < 100.0 or close_price <= 0:
+    if pool_cash < 100.0 or close_price <= 0 or macro_scalar <= 0:
         return 0.0, 0.0, 0.0
 
     risk_frac = rcfg.risk_per_trade if tier in ("CONSENSUS", "HIGH") else rcfg.risk_per_trade_medium
-    risk_budget = total_equity * risk_frac
+    risk_budget = total_equity * risk_frac * macro_scalar
     risk_per_share = max(close_price - stop_price, 1e-4)
     desired_shares = risk_budget / risk_per_share
     desired_notional = desired_shares * close_price
 
     slot_cap = pool_cash / max(target_slots, 1)
-    max_pos_notional = min(total_equity * rcfg.max_pos_pct, slot_cap)
+    max_pos_notional = min(total_equity * rcfg.max_pos_pct * macro_scalar, slot_cap)
     alloc_notional = min(desired_notional, max_pos_notional, pool_cash)
     if alloc_notional < 100.0:
         return 0.0, 0.0, 0.0
@@ -152,6 +153,7 @@ def _allocate_Pool(
     open_swing_risk_dollars: float,
     mode: str,
     target_slots: int = 2,
+    macro_scalar: float = 1.0,
 ) -> float:
     """
     Allocate a cash budget (`pool_cash`) across ranked buy candidates using SemiSwing risk and slot caps.
@@ -163,14 +165,14 @@ def _allocate_Pool(
     used_risk = float(open_swing_risk_dollars)
     max_open_risk_dollars = total_equity * rcfg.max_open_risk
     slot_cap = pool_cash / max(target_slots, 1)
-    max_pos_notional = min(total_equity * rcfg.max_pos_pct, slot_cap)
+    max_pos_notional = min(total_equity * rcfg.max_pos_pct * macro_scalar, slot_cap)
 
     for cand in candidates:
-        if used_slots >= rcfg.max_positions or rem_cash < 100.0:
+        if used_slots >= rcfg.max_positions or rem_cash < 100.0 or macro_scalar <= 0:
             break
 
         risk_frac = rcfg.risk_per_trade if cand.tier in ("CONSENSUS", "HIGH") else rcfg.risk_per_trade_medium
-        target_risk_dollars = total_equity * risk_frac
+        target_risk_dollars = total_equity * risk_frac * macro_scalar
         avail_risk_dollars = max(0.0, max_open_risk_dollars - used_risk)
         risk_budget = min(target_risk_dollars, avail_risk_dollars)
         if risk_budget < 25.0:
@@ -226,6 +228,7 @@ def build_daily_recommendation_plan(
     # Extract market regime & context metrics
     sample_row = day_df.iloc[0]
     regime_on = bool(int(sample_row.get("regime_on", 0)) == 1)
+    macro_scalar = float(sample_row.get("macro_scalar", 1.0 if regime_on else 0.0))
     vix_lvl = float(sample_row.get("vix_lvl", 20.0))
     vix_ts = float(sample_row.get("vix_ts", 0.95))
     cash_rate_apy_pct = round(float(sample_row.get("cash_rate_apy", 0.04)) * 100.0, 2)
@@ -246,8 +249,8 @@ def build_daily_recommendation_plan(
         smh_ema100 = smh_close * 0.98
         smh_ema200 = smh_close * 0.90
 
-    # Secular bull core remains intact as long as SMH holds above its 200-day EMA (prevents whip-sawing core ETF on 1-day pullbacks)
-    smh_secular_bull = bool(smh_close > smh_ema200)
+    # Secular bull core remains intact based on the stateful hysteresis Schmitt trigger
+    smh_secular_bull = bool(int(sample_row.get("smh_secular_bull", 1 if smh_close > smh_ema200 else 0)) == 1)
 
     # 1. Evaluate current holdings and compute total portfolio equity
     current_cash = float(capital_override) if capital_override is not None else float(portfolio.cash)
@@ -489,10 +492,10 @@ def build_daily_recommendation_plan(
 
         # Standalone ticket size for this candidate under both cash pools (2 slots in Cash Only, 2 slots in Cash+ETF Rotate)
         stand_dollars_cash, stand_sh_cash, stand_risk_cash = _compute_single_ticket_size(
-            c_px, stop_px, tier, current_cash, total_equity, strategy, target_slots=2
+            c_px, stop_px, tier, current_cash, total_equity, strategy, target_slots=2, macro_scalar=macro_scalar
         )
         stand_dollars_rot, stand_sh_rot, stand_risk_rot = _compute_single_ticket_size(
-            c_px, stop_px, tier, deployable_with_rotate, total_equity, strategy, target_slots=2
+            c_px, stop_px, tier, deployable_with_rotate, total_equity, strategy, target_slots=2, macro_scalar=macro_scalar
         )
 
         # Build gate diagnostic notes
@@ -573,6 +576,7 @@ def build_daily_recommendation_plan(
             open_swing_risk_dollars=open_swing_risk_dollars,
             mode="cash_only",
             target_slots=2,
+            macro_scalar=macro_scalar,
         )
         rem_with_rotate = _allocate_Pool(
             active_buys,
@@ -583,6 +587,7 @@ def build_daily_recommendation_plan(
             open_swing_risk_dollars=open_swing_risk_dollars,
             mode="with_rotate",
             target_slots=2,
+            macro_scalar=macro_scalar,
         )
     else:
         rem_cash_only = round(current_cash, 2)

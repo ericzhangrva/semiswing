@@ -28,10 +28,17 @@ class WindowConfig(BaseModel):
 
 
 class RegimeConfig(BaseModel):
-    smh_ema: int = 100
-    vix_max: float = 30.0
-    vix_ts_max: float = 1.0
+    smh_ema: int = 200
+    smh_ema_slow: int = 200
+    smh_ema_fast: int = 50
+    hysteresis_band_pct: float = 0.015  # 1.5% buffer above/below EMA200 (Schmitt trigger)
+    vix_max: float = 28.0
+    vix_max_entry: float = 28.0
+    vix_kill_switch: float = 32.0
+    vix_ts_max: float = 1.00
     vvix_max: float = 110.0
+    premarket_gap_down_max: float = 0.015  # Cancel long execution if pre-market SMH gaps down > 1.5%
+
 
 
 class BaselineConfig(BaseModel):

@@ -228,6 +228,7 @@ def run_portfolio_backtest(
 
     eq_rows = []
     closed_trades = []
+    smh_prev_close: float = np.nan
 
     # Group panel by date for fast event-driven loop
     by_date = {d: grp.set_index("ticker") for d, grp in df.groupby("date", sort=False)}
@@ -310,6 +311,13 @@ def run_portfolio_backtest(
                     streak_stops = 0
 
         # (b) Execute pending candidate orders at Market Open (Next-Day Open Fill)
+        # Check morning pre-market sector gap-down circuit breaker (09:15-09:30 ET)
+        smh_open = float(day_slice.loc["SMH", "open"]) if "SMH" in day_slice.index else np.nan
+        if not np.isnan(smh_prev_close) and smh_prev_close > 0 and not np.isnan(smh_open):
+            smh_gap_down = (smh_open / smh_prev_close) - 1.0
+            if smh_gap_down < -strategy.regime.premarket_gap_down_max:
+                pending_candidates.clear()
+
         if d_idx > pause_until_idx and pending_candidates and len(open_positions) < rcfg.max_positions:
             open_pos_val = sum(
                 pos.shares * (float(day_slice.loc[t, "open"]) if t in day_slice.index else pos.entry_price)
@@ -344,12 +352,16 @@ def run_portfolio_backtest(
                 if o_px > (c_prev + 1.0 * atr_sig) or (c_prev > 0 and (o_px / c_prev) > 1.04):
                     continue
 
+                macro_s = float(cand.get("macro_scalar", 1.0))
+                if macro_s <= 0.0:
+                    continue
+
                 tier = cand["tier"]
                 risk_frac = rcfg.risk_per_trade if tier == "HIGH" else rcfg.risk_per_trade_medium
                 max_open_r = rcfg.max_open_risk
                 pos_cap_pct = rcfg.max_pos_pct
 
-                risk_budget = open_equity * risk_frac
+                risk_budget = open_equity * risk_frac * macro_s
                 if (open_risk_dollars + risk_budget) > (open_equity * max_open_r):
                     continue
 
@@ -361,7 +373,7 @@ def run_portfolio_backtest(
                 tp1_px = entry_px + rcfg.tp1_atr * atr_sig
 
                 desired_shares = risk_budget / max(effective_stop_dist, 1e-4)
-                max_notional = min(open_equity * pos_cap_pct, cash * 0.99)
+                max_notional = min(open_equity * pos_cap_pct * macro_s, cash * 0.99)
                 shares = min(desired_shares, max_notional / entry_px)
                 notional = shares * entry_px
 
@@ -507,6 +519,7 @@ def run_portfolio_backtest(
                     atr_val = float(row["atr"])
                     if np.isnan(c_px) or np.isnan(atr_val) or atr_val <= 0:
                         continue
+                    macro_val = float(row["macro_scalar"]) if "macro_scalar" in row else 1.0
                     pending_candidates.append(
                         {
                             "ticker": ticker,
@@ -515,6 +528,7 @@ def run_portfolio_backtest(
                             "tier": str(row[tier_col]),
                             "prob": float(row[prob_col]),
                             "score": float(row[score_col]),
+                            "macro_scalar": macro_val,
                             "shap_summary": str(row.get("ml_shap", "")),
                         }
                     )
@@ -537,6 +551,10 @@ def run_portfolio_backtest(
         )
         prev_regime_on = regime_today
         prev_secular_bull = secular_bull_today
+        if "SMH" in day_slice.index:
+            smh_c = float(day_slice.loc["SMH", "close"])
+            if not np.isnan(smh_c) and smh_c > 0:
+                smh_prev_close = smh_c
 
     eq_df = pd.DataFrame(eq_rows)
     trades_df = pd.DataFrame(closed_trades)

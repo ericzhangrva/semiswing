@@ -122,10 +122,10 @@ def build_context_and_regime(
         else:
             ctx[col] = np.nan
 
-    # Merge FRED series causally (forward-fill up to 5 business days)
+    # Merge FRED series causally (forward-fill up to 5 business days, lagged by 1 day for publication lag)
     if not fred.empty:
         fred_piv = fred.pivot(index="date", columns="series_id", values="value").sort_index()
-        fred_piv = fred_piv.reindex(dates).ffill(limit=5)
+        fred_piv = fred_piv.shift(1).reindex(dates).ffill(limit=5)
         for sid in ["DTB3", "DGS10", "DTWEXBGS", "VIXCLS", "VXVCLS", "BAMLH0A0HYM2"]:
             if sid in fred_piv.columns:
                 ctx[sid] = fred_piv[sid]
@@ -139,14 +139,14 @@ def build_context_and_regime(
     ctx["cash_rate_apy"] = (ctx["DTB3"].ffill().combine_first(ctx["DGS10"].ffill() * 0.85).fillna(3.5)) / 100.0
 
     # Fallbacks between yfinance and FRED for VIX and VIX3M
-    vix = ctx["^VIX"].combine_first(ctx["VIXCLS"]).ffill()
+    vix = ctx["^VIX"].combine_first(ctx["VIXCLS"]).ffill().fillna(20.0)
     vix3m = ctx["^VIX3M"].combine_first(ctx["VXVCLS"]).ffill()
     vxn = ctx["^VXN"].combine_first(vix).ffill()
     vvix = ctx["^VVIX"].fillna(95.0).ffill()
     skew = ctx["^SKEW"].fillna(130.0).ffill()
 
     ctx["vix_lvl"] = vix
-    ctx["vix_ts"] = (vix / vix3m).fillna(0.95)
+    ctx["vix_ts"] = (vix / vix3m).fillna(1.05)  # Fail-closed default: missing term structure locks down
     ctx["vvix"] = vvix
 
     # VXN 5-day squeeze velocity z-score against 252d rolling distribution
@@ -174,19 +174,49 @@ def build_context_and_regime(
     ctx["smh_daily_ret"] = smh.pct_change().fillna(0.0)
     ctx["sector_rs"] = (smh.pct_change(20) - spy.pct_change(20)).fillna(0.0)
 
-    smh_ema100 = smh.ewm(span=strategy.regime.smh_ema, min_periods=50, adjust=False).mean()
-    smh_ema100_slope = smh_ema100 / smh_ema100.shift(10) - 1.0
-    smh_ema50 = smh.ewm(span=50, min_periods=30, adjust=False).mean()
-    smh_ema50_slope = smh_ema50 / smh_ema50.shift(10) - 1.0
+    rcfg = strategy.regime
+    smh_ema200 = smh.ewm(span=rcfg.smh_ema_slow, min_periods=50, adjust=False).mean()
+    smh_ema50 = smh.ewm(span=rcfg.smh_ema_fast, min_periods=30, adjust=False).mean()
 
-    ctx["regime_on"] = (
-        (smh > smh_ema100)
-        & (smh_ema100_slope > 0.0)
-        & (smh_ema50_slope > 0.0)
-        & (ctx["vix_ts"] < strategy.regime.vix_ts_max)
-        & (ctx["vix_lvl"] < strategy.regime.vix_max)
-    ).astype(int)
-    ctx["smh_secular_bull"] = (smh > smh_ema100).astype(int)
+    upper_band = smh_ema200 * (1.0 + rcfg.hysteresis_band_pct)
+    lower_band = smh_ema200 * (1.0 - rcfg.hysteresis_band_pct)
+
+    n_bars = len(ctx)
+    r_state = np.zeros(n_bars, dtype=int)
+    m_scalar = np.zeros(n_bars, dtype=np.float64)
+
+    current_r = 0
+    for i in range(n_bars):
+        price = smh.iloc[i]
+        u = upper_band.iloc[i]
+        l = lower_band.iloc[i]
+        e50 = smh_ema50.iloc[i]
+        e200 = smh_ema200.iloc[i]
+        v = vix.iloc[i]
+        ts = ctx["vix_ts"].iloc[i]
+
+        # 1. Evaluate Stateful Hysteresis (Schmitt Trigger)
+        if np.isnan(price) or np.isnan(u) or np.isnan(l):
+            current_r = 0
+        elif price > u and price > e50:
+            current_r = 1
+        elif price < l:
+            current_r = 0
+        # Else: price in [l, u] -> retains previous current_r
+
+        r_state[i] = current_r
+
+        # 2. Evaluate Continuous Macro Multiplier M_t
+        if current_r == 0 or ts >= rcfg.vix_ts_max or v >= rcfg.vix_kill_switch:
+            m_scalar[i] = 0.0
+        elif e50 < e200 or v >= rcfg.vix_max_entry:
+            m_scalar[i] = 0.5
+        else:
+            m_scalar[i] = 1.0
+
+    ctx["smh_secular_bull"] = r_state
+    ctx["regime_on"] = (m_scalar > 0.0).astype(int)
+    ctx["macro_scalar"] = m_scalar
 
     # FOMC calendar features (causal check against scheduled calendar)
     fomc_dt = np.sort(pd.to_datetime(events.fomc_dates).values)

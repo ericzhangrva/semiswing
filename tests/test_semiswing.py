@@ -106,7 +106,7 @@ def test_causal_lookahead_invariance():
     sub_trunc = panel_trunc[panel_trunc["date"] == cutoff_date].sort_values("ticker").reset_index(drop=True)
 
     assert len(sub_full) == len(sub_trunc)
-    for col in FEATURE_COLUMNS:
+    for col in FEATURE_COLUMNS + ["regime_on", "smh_secular_bull", "macro_scalar"]:
         v_full = sub_full[col].values
         v_trunc = sub_trunc[col].values
         mask = ~np.isnan(v_full) & ~np.isnan(v_trunc)
