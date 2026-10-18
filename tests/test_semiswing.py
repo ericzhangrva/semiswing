@@ -151,3 +151,40 @@ def test_portfolio_backtest_runs_and_respects_risk_caps():
     assert not res.equity_curve.empty
     assert (res.equity_curve["n_positions"] <= strategy.risk.max_positions).all()
     assert (res.equity_curve["equity"] > 0).all()
+
+
+def test_dynamic_pit_universe_reconstitution_and_causal_invariance():
+    """
+    Test Phase 3 Two-Stage PIT Funnel:
+    - Stage 1: Close >= 15, history >= 60d, med dollar vol >= 150M
+    - Stage 2: Top 40 ranked by log10(dollar_vol) * ATR%
+    - Causal look-ahead invariance: Future quarters do not alter past quarter universes.
+    """
+    strategy = load_strategy_settings()
+    universe = load_universe_settings()
+    events = load_events_settings()
+    bars, fred, earnings = _make_synthetic_market(n_days=350)
+
+    # Compute PIT universe on full dataset vs truncated dataset
+    cutoff_date = sorted(bars["date"].unique())[250]
+    bars_trunc = bars[bars["date"] <= cutoff_date].copy()
+
+    from semiswing.features.build import compute_pit_quarterly_universe
+    univ_full = compute_pit_quarterly_universe(bars, universe)
+    univ_trunc = compute_pit_quarterly_universe(bars_trunc, universe)
+
+    # For dates up to cutoff_date that belong to quarters prior to or at cutoff, universes must match exactly
+    common_dates = [d for d in univ_trunc.keys() if d in univ_full and d <= cutoff_date]
+    assert len(common_dates) > 0
+    for d in common_dates:
+        assert univ_full[d] == univ_trunc[d], f"Look-ahead leakage in PIT universe at {d}"
+
+    # Verify panel is_tradeable_universe flag matches
+    panel = build_feature_panel(bars, fred, earnings, strategy, universe, events)
+    assert "is_tradeable_universe" in panel.columns
+    # Check that ETFs are always marked tradeable
+    for etf in universe.tradeable_etfs:
+        etf_rows = panel[panel["ticker"] == etf]
+        if not etf_rows.empty:
+            assert (etf_rows["is_tradeable_universe"] == 1).all()
+

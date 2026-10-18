@@ -141,6 +141,13 @@ class UniverseSettings(BaseModel):
     training_only_stocks: List[str]
     context_tickers: List[str]
     fred_series: Dict[str, str]
+    dynamic_pit_reconstitution: bool = True
+    pit_min_price: float = 15.0
+    pit_min_history_days: int = 60
+    pit_min_dollar_vol_60d: float = 150_000_000.0
+    pit_top_n: int = 40
+    pit_atr_window: int = 20
+    pit_volume_window: int = 60
 
     @property
     def all_tradeable(self) -> List[str]:

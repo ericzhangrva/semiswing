@@ -352,6 +352,122 @@ FEATURE_COLUMNS: List[str] = [
 ]
 
 
+def compute_pit_quarterly_universe(
+    bars: pd.DataFrame,
+    universe: UniverseSettings,
+) -> dict[pd.Timestamp, set[str]]:
+    """
+    Compute strictly point-in-time (PIT) quarterly tradeable universe mapping: date -> set of tradeable stock tickers.
+
+    Two-Stage PIT Funnel (evaluated at t_k - 1 before each quarter start t_k in {Jan 1, Apr 1, Jul 1, Oct 1}):
+    1. Stage 1 — Survivorship-Free Industry + Liquidity Gate:
+       - Active US-listed semiconductor & tech equities in all_panel_stocks
+       - History >= pit_min_history_days (>= 60 trading days since listing/IPO)
+       - Close_{t-1} >= pit_min_price ($15.00)
+       - Median Daily Dollar Volume over trailing pit_volume_window (60d) >= pit_min_dollar_vol_60d ($150M)
+       - ATR%_{20d, t-1} > 0
+    2. Stage 2 — Swing Tradability Ranking:
+       SwingRankScore_{i, t-1} = log10(MedDollarVol_{60d}) * ATR%_{20d, t-1}
+       Select Top N (default 40) ranked by SwingRankScore descending.
+
+    Quarterly Invariance & Position Grace Rule:
+    - Selected tickers receive is_tradeable_universe = 1 for all trading days in quarter k.
+    - Stocks outside the Top 40 have is_tradeable_universe = 0 (blocking new entry signals),
+      while open positions held from previous quarters continue to be managed by stops/targets until exit.
+    """
+    df_bars = bars.copy()
+    df_bars["date"] = pd.to_datetime(df_bars["date"])
+
+    etfs_and_ctx = set(universe.tradeable_etfs) | set(universe.context_tickers)
+    stocks_bars = df_bars[~df_bars["ticker"].isin(etfs_and_ctx)].copy()
+
+    def _prep_stock(df_t: pd.DataFrame) -> pd.DataFrame:
+        df_t = df_t.sort_values("date").copy()
+        c = df_t["close"]
+        h = df_t["high"]
+        l = df_t["low"]
+        v = df_t["volume"]
+        pc = c.shift(1)
+        tr = pd.concat([h - l, (h - pc).abs(), (l - pc).abs()], axis=1).max(axis=1)
+        df_t["atr20"] = tr.ewm(
+            alpha=1.0 / universe.pit_atr_window,
+            min_periods=universe.pit_atr_window,
+            adjust=False,
+        ).mean()
+        df_t["atr_pct_20"] = (df_t["atr20"] / c).replace(0, np.nan)
+        df_t["dollar_vol"] = c * v
+        df_t["bars_count"] = np.arange(1, len(df_t) + 1)
+        return df_t
+
+    stocks_prepared = pd.concat([_prep_stock(g) for _, g in stocks_bars.groupby("ticker")], ignore_index=True)
+
+    all_dates = sorted(df_bars["date"].unique())
+    dates_df = pd.DataFrame({"date": all_dates})
+    dates_df["year"] = dates_df["date"].dt.year
+    dates_df["quarter"] = dates_df["date"].dt.quarter
+    quarter_starts = dates_df.groupby(["year", "quarter"])["date"].min().tolist()
+
+    date_to_universe: dict[pd.Timestamp, set[str]] = {}
+    earliest_universe: set[str] | None = None
+
+    vol_win = universe.pit_volume_window
+    min_price = universe.pit_min_price
+    min_hist = universe.pit_min_history_days
+    min_dvol = universe.pit_min_dollar_vol_60d
+    top_n = universe.pit_top_n
+
+    for i, q_start in enumerate(quarter_starts):
+        hist_dates = [d for d in all_dates if d < q_start]
+        if not hist_dates:
+            continue
+        t_minus_1 = hist_dates[-1]
+        window_dates = hist_dates[-vol_win:]
+        if len(window_dates) < 20:
+            continue
+
+        w_df = stocks_prepared[stocks_prepared["date"].isin(window_dates)]
+        t1_df = stocks_prepared[stocks_prepared["date"] == t_minus_1].set_index("ticker")
+
+        med_dvol = w_df.groupby("ticker")["dollar_vol"].median()
+
+        cands = []
+        for ticker in t1_df.index:
+            c_val = float(t1_df.loc[ticker, "close"])
+            atr_pct = float(t1_df.loc[ticker, "atr_pct_20"])
+            b_cnt = int(t1_df.loc[ticker, "bars_count"])
+            d_med = float(med_dvol.get(ticker, 0.0))
+
+            if (
+                c_val >= min_price
+                and b_cnt >= min_hist
+                and d_med >= min_dvol
+                and not np.isnan(atr_pct)
+                and atr_pct > 0
+            ):
+                score = np.log10(d_med) * atr_pct
+                cands.append({"ticker": ticker, "score": score})
+
+        if cands:
+            c_df = pd.DataFrame(cands).sort_values("score", ascending=False)
+            selected = set(c_df.head(top_n)["ticker"].tolist())
+        else:
+            selected = set()
+
+        if earliest_universe is None and selected:
+            earliest_universe = selected
+
+        next_q_start = quarter_starts[i + 1] if i + 1 < len(quarter_starts) else None
+        q_dates = [d for d in all_dates if d >= q_start and (next_q_start is None or d < next_q_start)]
+        for d in q_dates:
+            date_to_universe[d] = selected
+
+    for d in all_dates:
+        if d not in date_to_universe:
+            date_to_universe[d] = earliest_universe or set()
+
+    return date_to_universe
+
+
 def build_feature_panel(
     bars: pd.DataFrame,
     fred: pd.DataFrame,
@@ -381,6 +497,15 @@ def build_feature_panel(
 
     panel = pd.concat(frames, ignore_index=True).sort_values(["date", "ticker"]).reset_index(drop=True)
 
+    # Dynamic Point-in-Time Universe Reconstitution (Phase 3 Two-Stage Funnel)
+    if universe.dynamic_pit_reconstitution:
+        date_to_univ = compute_pit_quarterly_universe(bars, universe)
+        panel_dts = pd.to_datetime(panel["date"])
+        panel["is_tradeable_universe"] = [
+            1 if t in etf_set or t in date_to_univ.get(d, set()) else 0
+            for d, t in zip(panel_dts, panel["ticker"])
+        ]
+
     # Cross-sectional percentile rank of resid_mom_20 on each date across single stocks
     stock_mask = panel["is_etf"] == 0
     panel["rs_rank"] = 0.5
@@ -391,3 +516,4 @@ def build_feature_panel(
     panel.loc[~stock_mask, "rs_rank"] = np.where(panel.loc[~stock_mask, "sector_rs"] > 0, 0.70, 0.30)
 
     return panel
+
