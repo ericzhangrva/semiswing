@@ -8,7 +8,7 @@ Unallocated portfolio cash earns daily risk-free interest indexed to the 3-Month
 - **Live Daily Trade Tickets (Passcode-Protected):** [https://semiswing.pages.dev/daily/latest_recommendations.html](https://semiswing.pages.dev/daily/latest_recommendations.html)
 - **Live Interactive Backtest Report:** [https://semiswing.pages.dev/backtests/backtest_report.html](https://semiswing.pages.dev/backtests/backtest_report.html)
 - **Static Markdown Backtest Report:** [reports/backtests/backtest_report.md](reports/backtests/backtest_report.md)
-- **AI Implementation Specification:** [docs/instruction.md](docs/instruction.md) (and [instruction.md](instruction.md))
+- **AI Implementation Specification:** [docs/instruction.md](docs/instruction.md)
 
 ---
 
