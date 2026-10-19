@@ -31,8 +31,8 @@ flowchart TD
     Pool["Active US Equities in Expanded Semi/AI Panel (all_panel_stocks)"] --> Stage1{"Stage 1: Hard Liquidity & Listing Floor (at t_k - 1)\n- Listing history >= 60 trading days\n- Close >= $15.00\n- Trailing 60d Median Daily Dollar Vol >= $150M\n- 20d ATR% > 0"}
     Stage1 -->|Pass| Stage2["Stage 2: Swing Tradability Ranking\nScore = log10(MedDollarVol_60d) * ATR%_20d"]
     Stage1 -->|Fail| Exclude["Excluded from Quarter k Tradeable Universe"]
-    Stage2 --> Top40["Select Top N = 40 Highest-Ranked Tickers"]
-    Top40 --> Universe["Tradeable Universe for Quarter k (is_tradeable_universe = 1)"]
+    Stage2 --> Select["Admit Qualifying Tickers (pit_top_n: None / Uncapped)\nNaturally scales from ~28 (2022) to ~50 (2026)"]
+    Select --> Universe["Tradeable Universe for Quarter k (is_tradeable_universe = 1)"]
 ```
 
 ### Stage 1: Survivorship-Free Industry + Liquidity Gate (at $t_k - 1$)
@@ -49,12 +49,12 @@ For all qualifying stocks passing Stage 1:
 $$\text{SwingRankScore}_{i, t_k - 1} = \log_{10}\!\left(\text{MedDollarVol}_{60d}\right) \times \text{ATR\%}_{20d, t_k - 1}$$
 where $\text{ATR\%}_{20d} = \frac{\text{ATR}_{20d}}{\text{Close}}$.
 - The $\log_{10}$ compression scales volume variation down to a $1.28\times$ factor across mega-caps vs mid-caps, allowing 20-day $\text{ATR\%}$ to prioritize high-velocity momentum leaders over sluggish value traps.
-- Select the **Top $N = 40$** tickers.
+- **Uncapped Configuration (`pit_top_n = None`):** All qualifying stocks passing the Stage 1 institutional liquidity floor are admitted to the tradeable universe, naturally expanding from ~28 stocks in 2022 to ~50 stocks by 2026 as the AI infrastructure ecosystem expanded. If a finite integer $N$ is configured, it truncates to the Top $N$ highest-ranked tickers.
 
 ### Quarterly Invariance & Position Grace Rule
-- All selected Top 40 tickers receive `is_tradeable_universe = 1` for every trading day in quarter $k$.
+- All selected qualifying tickers receive `is_tradeable_universe = 1` for every trading day in quarter $k$.
 - Tradeable ETFs (`SMH`, `SOXX`, `QQQ`, `SPY`, `VGT`, `AIQ`, `IGV`) permanently have `is_tradeable_universe = 1`.
-- **Position Grace Rule:** If an open position entered in quarter $k-1$ drops out of the Top 40 in quarter $k$, it is **never forcibly fire-sold**. It continues to be managed under its stops, trailing chandelier, and profit targets until natural exit. `is_tradeable_universe = 0` simply blocks new entries.
+- **Position Grace Rule:** If an open position entered in quarter $k-1$ fails Stage 1 in quarter $k$, it is **never forcibly fire-sold**. It continues to be managed under its stops, trailing chandelier, and profit targets until natural exit. `is_tradeable_universe = 0` simply blocks new entries.
 
 ---
 

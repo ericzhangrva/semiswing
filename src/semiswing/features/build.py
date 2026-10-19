@@ -449,7 +449,10 @@ def compute_pit_quarterly_universe(
 
         if cands:
             c_df = pd.DataFrame(cands).sort_values("score", ascending=False)
-            selected = set(c_df.head(top_n)["ticker"].tolist())
+            if top_n and top_n > 0:
+                selected = set(c_df.head(top_n)["ticker"].tolist())
+            else:
+                selected = set(c_df["ticker"].tolist())
         else:
             selected = set()
 

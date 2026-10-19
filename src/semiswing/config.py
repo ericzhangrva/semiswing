@@ -145,7 +145,7 @@ class UniverseSettings(BaseModel):
     pit_min_price: float = 15.0
     pit_min_history_days: int = 60
     pit_min_dollar_vol_60d: float = 150_000_000.0
-    pit_top_n: int = 40
+    pit_top_n: int | None = None
     pit_atr_window: int = 20
     pit_volume_window: int = 60
 
