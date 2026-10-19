@@ -1526,9 +1526,14 @@ def generate_reports(
             net_pnl = float(r.get("net_pnl", 0.0))
             r_mult = float(r.get("r_multiple", 0.0))
             raw_reason = str(r.get("exit_reason", "")).replace("_", " ").title()
+            sh = float(r.get("shares", 0.0))
+            sh_str = f"{sh:,.0f}" if sh.is_integer() else f"{sh:,.1f}"
+            notional = float(r.get("notional", 0.0))
             records.append({
                 "Ticker": str(r.get("ticker", "")),
                 "Tier": str(r.get("tier", "MEDIUM")),
+                "Shares": sh_str,
+                "Position ($)": f"${notional:,.2f}",
                 "Entry Date": pd.to_datetime(r.get("entry_date")).strftime("%Y-%m-%d"),
                 "Exit Date": pd.to_datetime(r.get("exit_date")).strftime("%Y-%m-%d"),
                 "Days Held": int(r.get("days_held", 0)),
@@ -1638,7 +1643,11 @@ def generate_reports(
             <strong>Tier:</strong>
             <span style="display:inline-block; padding:1px 6px; background:#dcfce7; color:#166534; border-radius:4px; font-size:11px; font-weight:700;">CONSENSUS</span> Dual-engine alignment (both Baseline OLS trend significance t_norm &ge; 1.8 and ML classifier agree; 1.0% risk). &nbsp;
             <span style="display:inline-block; padding:1px 6px; background:#e0f2fe; color:#0369a1; border-radius:4px; font-size:11px; font-weight:700;">HIGH</span> Standalone ML qualification with top-quintile residual momentum (1.0% risk). &nbsp;
-            <span style="display:inline-block; padding:1px 6px; background:#f1f5f9; color:#475569; border-radius:4px; font-size:11px; font-weight:700;">MEDIUM</span> Baseline trend qualification or secondary ML score (0.75% conservative risk).
+            <span style="display:inline-block; padding:1px 6px; background:#f1f5f9; color:#475569; border-radius:4px; font-size:11px; font-weight:700;">MEDIUM</span> Baseline trend qualification or secondary ML score (0.75% conservative risk). &nbsp;
+            <span style="display:inline-block; padding:1px 6px; background:#fff1f2; color:#be123c; border-radius:4px; font-size:11px; font-weight:700;">LOW</span> Lower-conviction meta-labeling score (S_i,t &lt; 0.85; 0.50% risk or conservative bottom tier).
+          </div>
+          <div style="margin-bottom:6px;">
+            <strong>Shares &amp; Position ($):</strong> Dynamically calculated via Volatility-Parity / Fixed-Fractional Risk Sizing: <code>Shares = (Portfolio Equity &times; Base Risk &times; M_t &times; S_i,t) / Stop Distance</code>. Each trade risks a fixed fraction of total portfolio equity at execution, so position dollar allocations and share counts vary according to individual stock ATR volatility, tier conviction, meta-labeling multiplier S_i,t, and compounding portfolio equity over time.
           </div>
           <div style="margin-bottom:6px;">
             <strong>Partial Profit Taking (TP1) &amp; Blended Returns:</strong> When Take Profit 1 (TP1) triggers, partial shares are sold and stop is moved to breakeven. <code>Exit ($)</code> reports the final runner share exit price, while <code>Return (%)</code> and <code>R Multiple</code> reflect the blended net performance across the entire position.
@@ -1673,8 +1682,9 @@ def generate_reports(
     def _render_trade_legend_md() -> str:
         return (
             "> **Section 8 Trade Blotter Legend & Quantitative Diagnostics**\n"
+            "> - **Shares & Position ($):** Dynamically calculated via Volatility-Parity / Fixed-Fractional Risk Sizing: $\\text{Shares} = (\\text{Portfolio Equity} \\times \\text{Base Risk} \\times M_t \\times S_{i,t}) / \\text{Stop Distance}$. Each trade risks a fixed fraction of portfolio equity, so share counts and dollar allocations vary based on stock ATR volatility, tier conviction, meta-labeling multiplier $S_{i,t}$, and compounding portfolio equity over time.\n"
             "> - **Partial Exits (TP1) & Blended Returns:** When Take Profit 1 triggers, partial shares are sold and stop ratchets to breakeven. `Exit ($)` reports final runner exit; `Return (%)` is the blended net return.\n"
-            "> - **Tier:** `CONSENSUS` (dual-engine alignment, 1.0% risk), `HIGH` (standalone ML top-quintile RS, 1.0% risk), `MEDIUM` (conservative 0.75% risk).\n"
+            "> - **Tier:** `CONSENSUS` (dual-engine alignment, 1.0% risk), `HIGH` (standalone ML top-quintile RS, 1.0% risk), `MEDIUM` (conservative 0.75% risk), `LOW` (lower-conviction meta-labeling score $S_{i,t} < 0.85$, 0.50% risk).\n"
             "> - **Win Prob:** Platt-calibrated out-of-fold probability $P(\\text{TP1 before Stop})$. Break-even threshold is $> 40.0\\%$ with a 1.5:1 payoff ratio.\n"
             "> - **Sizing Scalar:** Meta-labeling sizing multiplier $S_{i,t} = 0.50 + \\text{Rank}_{\\text{OOF}}(\\hat{p}) \\in [0.50, 1.50]$ scaling allocation by model confidence.\n"
             "> - **Top Model Drivers (SHAP):** Single-feature marginal attributions detailing model conviction:\n"

@@ -1,0 +1,58 @@
+# SEMISWING SOURCE-AVAILABLE NON-COMMERCIAL RESEARCH LICENSE
+**Version 1.0 — October 2026**
+**Copyright (c) 2026 Eric Zhang / SemiSwing Contributors. All Rights Reserved.**
+
+---
+
+### IMPORTANT LEGAL NOTICE — READ CAREFULLY BEFORE ACCESSING OR USING THIS REPOSITORY
+
+By accessing, downloading, viewing, cloning, copying, compiling, or executing any part of the SemiSwing codebase, algorithms, mathematical formulations, models, weights, signals, tickets, or documentation (collectively, the "Software"), you ("Licensee") unconditionally agree to be bound by the terms and conditions of this Source-Available Non-Commercial Research License ("License"). 
+
+**IF YOU DO NOT AGREE TO THESE TERMS, YOU DO NOT HAVE PERMISSION TO ACCESS, DOWNLOAD, COPY, RUN, OR USE THE SOFTWARE FOR ANY PURPOSE.**
+
+---
+
+### 1. GRANT OF LIMITED RESEARCH LICENSE
+
+Subject to the strict restrictions set forth in Section 2, Licensor grants Licensee a personal, non-exclusive, non-transferable, revocable, royalty-free, limited license solely to:
+1. **Academic and Personal Research:** View, download, compile, and run the Software for private, non-commercial research, academic study, statistical inquiry, and algorithmic backtesting evaluation.
+2. **Private Modifications:** Adapt, modify, or extend the source code solely for personal, non-commercial experimentation and research, provided that all copyright notices, disclaimers, and this License file remain intact in all copies and derivatives.
+
+---
+
+### 2. STRICT PROHIBITION ON COMMERCIAL AND FOR-PROFIT USE
+
+**COMMERCIAL USE, FOR-PROFIT EXPLOITATION, AND COMMERCIAL MONETIZATION OF THE SOFTWARE ARE STRICTLY AND UNCONDITIONALLY PROHIBITED.**
+
+Without limiting the generality of the foregoing, Licensee shall **NOT**, directly or indirectly, under any circumstances:
+1. **Live Commercial Trading:** Deploy, execute, or integrate the Software (or any derived models or algorithms) to trade, manage, or execute orders in any commercial investment account, proprietary trading firm, hedge fund, family office, investment partnership, asset management vehicle, or broker-dealer entity.
+2. **Third-Party Capital Management:** Use the Software, directly or indirectly, to manage, advise, or allocate capital for any client, investor, or third party in exchange for any fee, commission, management allocation, incentive allocation, carry, performance fee, profit share, or compensation of any kind.
+3. **Commercial Signal, Advisory, or Alert Services:** Use the Software or its outputs (including signals, scores, rankings, tickets, or portfolio plans) to operate, syndicate, or power any paid or monetized newsletter, trade alert service, Discord/Telegram bot, subscription channel, API service, SaaS platform, financial advisory, or commercial data feed.
+4. **Commercial Sublicensing or Distribution:** Sell, lease, rent, sublicense, assign, redistribute for value, or incorporate the Software into any proprietary commercial software, hardware appliance, cloud service, or financial product.
+5. **Commercial AI/ML Training:** Use the Software, its feature engineering pipeline, or its proprietary labels to train commercial artificial intelligence or machine learning models intended for commercial sale or deployment.
+
+---
+
+### 3. WILLFUL VIOLATION, ENFORCEMENT, AND LEGAL PROSECUTION
+
+1. **Willful Infringement & Trade Secret Misappropriation:** Any unauthorized commercial exploitation, deployment, redistribution, or for-profit utilization of the Software constitutes **willful copyright infringement, intentional trade secret misappropriation, and a material breach of contract** under the United States Copyright Act (17 U.S.C. § 101 *et seq.*), the Defend Trade Secrets Act of 2016 (18 U.S.C. § 1836), the Computer Fraud and Abuse Act (18 U.S.C. § 1030), and applicable state and international intellectual property laws.
+2. **Aggressive Legal Remedies:** In the event of any commercial or for-profit violation, Licensor shall be immediately entitled to seek and obtain, without the necessity of posting a bond:
+   - **Immediate Injunctive Relief:** Temporary restraining orders, preliminary injunctions, and permanent injunctions prohibiting continued commercial operation, deployment, or dissemination.
+   - **Full Disgorgement of Profits:** Complete accounting and disgorgement of all gross revenues, fees, profits, capital gains, carried interest, and financial benefits generated directly or indirectly from the unauthorized use.
+   - **Maximum Statutory & Punitive Damages:** Statutory damages of up to **$150,000 per copyrighted work infringed** pursuant to 17 U.S.C. § 504(c), exemplary and treble damages for willful and malicious trade secret misappropriation under 18 U.S.C. § 1836(b)(3)(C), and punitive damages.
+   - **Recovery of Legal Fees & Costs:** Mandatory recovery of all reasonable attorneys' fees, forensic auditing costs, expert witness fees, and litigation expenses incurred by Licensor in enforcing this License pursuant to 17 U.S.C. § 505 and applicable statutory provisions.
+3. **Fullest Prosecution Under Law:** Licensor reserves all rights to prosecute violators to the maximum extent permitted by civil and criminal law across all federal, state, and international jurisdictions of competent authority.
+
+---
+
+### 4. NO FINANCIAL ADVICE & REGULATORY DISCLAIMERS
+
+1. **Research & Educational Software Only:** The Software is provided strictly for academic, scientific, and educational research purposes. The Software does **NOT** constitute investment advice, financial planning, tax advice, legal counsel, or a recommendation or solicitation to buy, hold, or sell any security, ETF, derivative, or financial instrument.
+2. **No Fiduciary Duty:** Neither Licensor nor any contributor is registered as an Investment Adviser with the U.S. Securities and Exchange Commission (SEC), a Commodity Trading Advisor with the Commodity Futures Trading Commission (CFTC), or a broker-dealer with FINRA. No fiduciary relationship is created by access to or use of this Software.
+3. **Substantial Risk of Capital Loss:** Systematic trading, swing trading, and investing in equities and leveraged instruments involve substantial risk of loss, including the possible loss of all principal invested. Past backtested performance is theoretical, hypothetical, and not indicative of future market results.
+
+---
+
+### 5. DISCLAIMER OF ALL WARRANTIES & LIMITATION OF LIABILITY
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE, ACCURACY, AND NON-INFRINGEMENT. IN NO EVENT SHALL THE AUTHORS, LICENSOR, OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES, LOSS OF CAPITAL, TRADING LOSSES, LOST PROFITS, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.

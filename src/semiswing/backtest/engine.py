@@ -313,6 +313,8 @@ def run_portfolio_backtest(
                 {
                     "ticker": ticker,
                     "tier": pos.tier,
+                    "shares": round(pos.initial_shares, 1),
+                    "notional": round(pos.entry_notional, 2),
                     "entry_date": pos.entry_date,
                     "exit_date": dt,
                     "days_held": pos.days_held + 1,
@@ -525,6 +527,8 @@ def run_portfolio_backtest(
                 {
                     "ticker": ticker,
                     "tier": pos.tier,
+                    "shares": round(pos.initial_shares, 1),
+                    "notional": round(pos.entry_notional, 2),
                     "entry_date": pos.entry_date,
                     "exit_date": dt,
                     "days_held": pos.days_held,

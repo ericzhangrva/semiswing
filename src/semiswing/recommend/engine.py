@@ -71,8 +71,11 @@ class BuyCandidate:
     # Standard per-$10,000 sizing
     buy_dollars_per_10k: float
     buy_shares_per_10k: float
-    shap_summary: str
-    gate_notes: str
+    # Gap-Up Protection Ceiling (max chasing limit)
+    max_chase_px: float = 0.0
+    max_chase_pct: float = 0.0
+    shap_summary: str = ""
+    gate_notes: str = ""
 
 
 @dataclass
@@ -94,6 +97,8 @@ class DailyRecommendationPlan:
     current_cash: float
     rotate_proceeds: float
     deployable_cash_with_rotate: float
+    smh_premarket_circuit_breaker: float = 0.0
+    smh_circuit_breaker_pct: float = 1.5
     holdings_actions: List[HoldingAction] = field(default_factory=list)
     active_buys: List[BuyCandidate] = field(default_factory=list)
     watchlist_candidates: List[BuyCandidate] = field(default_factory=list)
@@ -484,6 +489,10 @@ def build_daily_recommendation_plan(
         tp1_px = round(c_px + rcfg.tp1_atr * atr_val, 2)
         tp1_pct = round(((tp1_px / c_px) - 1.0) * 100.0, 2)
 
+        # Gap-Up Protection Ceiling (max chasing limit)
+        max_chase_px = round(min(c_px + 1.0 * atr_val, c_px * 1.04), 2)
+        max_chase_pct = round(((max_chase_px / c_px) - 1.0) * 100.0, 2)
+
         # Standard per-$10,000 sizing
         ref_risk_frac = rcfg.risk_per_trade if tier in ("CONSENSUS", "HIGH") else rcfg.risk_per_trade_medium
         ref_desired_sh = (10_000.0 * ref_risk_frac) / max(stop_dist, 1e-4)
@@ -556,6 +565,8 @@ def build_daily_recommendation_plan(
             risk_dollars_with_rotate=stand_risk_rot,
             buy_dollars_per_10k=round(ref_notional, 2),
             buy_shares_per_10k=round(ref_shares, 3),
+            max_chase_px=max_chase_px,
+            max_chase_pct=max_chase_pct,
             shap_summary=shap_str,
             gate_notes=gate_note,
         )
@@ -677,6 +688,8 @@ def build_daily_recommendation_plan(
         current_cash=round(current_cash, 2),
         rotate_proceeds=round(rotate_proceeds, 2),
         deployable_cash_with_rotate=deployable_with_rotate,
+        smh_premarket_circuit_breaker=round(smh_close * (1.0 - strategy.regime.premarket_gap_down_max), 2),
+        smh_circuit_breaker_pct=round(strategy.regime.premarket_gap_down_max * 100.0, 1),
         holdings_actions=holdings_actions,
         active_buys=active_buys,
         watchlist_candidates=watchlist_candidates,
@@ -698,6 +711,12 @@ def render_recommendation_email_text(plan: DailyRecommendationPlan) -> str:
         f"Account: {plan.account_name} (Snapshot: {plan.snapshot_date})",
         f"Total Equity: ${plan.total_equity:,.2f} | Settled Cash: ${plan.current_cash:,.2f} | Cash + Rotation: ${plan.deployable_cash_with_rotate:,.2f}",
         f"Swing Regime: {'ON (Risk-On)' if plan.regime_on else 'OFF (Defensive)'} | SMH Bull Core: {'ON' if plan.smh_secular_bull else 'OFF'} (SMH ${plan.smh_close:.2f})",
+        "",
+        "====================================================================",
+        "PREMARKET EXECUTION CHECKLIST (09:20–09:29 ET)",
+        "====================================================================",
+        f"* SMH Prior Close: ${plan.smh_close:,.2f} | Abort Trigger (-{plan.smh_circuit_breaker_pct:.1f}%): ${plan.smh_premarket_circuit_breaker:,.2f}",
+        f"* Action Rule: Check premarket SMH before 09:30 ET. If SMH < ${plan.smh_premarket_circuit_breaker:,.2f}, CANCEL ALL PENDING BUYS.",
         "",
         "====================================================================",
         "STEP 1: WHAT TO DO WITH YOUR CURRENT HOLDINGS",
@@ -726,6 +745,9 @@ def render_recommendation_email_text(plan: DailyRecommendationPlan) -> str:
                 f"* #{b.rank} BUY {b.ticker} ({b.tier} | {b.signal_source}) @ ~${b.close_price:.2f}"
             )
             lines.append(
+                f"  - Order Type: Market on Open (MOO) or Limit <= ${b.max_chase_px:.2f} (+{b.max_chase_pct:.1f}% max chasing limit)"
+            )
+            lines.append(
                 f"  - Order (Cash Only Pool):      BUY ${b.buy_dollars_cash_only:,.2f} (~{b.buy_shares_cash_only:.3f} sh)"
             )
             lines.append(
@@ -748,6 +770,9 @@ def render_recommendation_email_text(plan: DailyRecommendationPlan) -> str:
         for w in plan.watchlist_candidates[:4]:
             lines.append(
                 f"* #{w.rank} {w.ticker} (Tier {w.tier}) @ ${w.close_price:.2f} | ML Score: {w.ml_prob:.3f} (RS {w.rs_rank * 100:.0f}th pct)"
+            )
+            lines.append(
+                f"  - Order Type: Market on Open (MOO) or Limit <= ${w.max_chase_px:.2f} (+{w.max_chase_pct:.1f}% max chasing limit)"
             )
             lines.append(
                 f"  - Order (Cash Only Pool):      BUY ${w.buy_dollars_cash_only:,.2f} (~{w.buy_shares_cash_only:.2f} sh)"
@@ -989,6 +1014,14 @@ def _render_single_plan_body(plan: DailyRecommendationPlan) -> str:
               </tr>
             </table>
 
+            <!-- Order Execution & Gap-Up Protection -->
+            <div style="font-size:12px; color:#0369a1; background:#f0f9ff; border:1px solid #bae6fd; border-radius:6px; padding:7px 12px; margin-bottom:10px; line-height:1.45;">
+              <div><strong>Order Execution:</strong> Market on Open (MOO) or Limit &le; <strong>${c.max_chase_px:,.2f}</strong></div>
+              <div style="font-size:11px; color:#0284c7; margin-top:2px;">
+                <strong>Gap-Up Protection:</strong> Max chasing ceiling is <strong>${c.max_chase_px:,.2f}</strong> (+{c.max_chase_pct:.1f}% max). If stock opens above ${c.max_chase_px:,.2f} at 09:30 ET, skip/cancel order.
+              </div>
+            </div>
+
             <!-- Trigger Condition & Top SHAP Drivers -->
             <div style="font-size:12px; color:#334155; background:#f8fafc; border-radius:6px; padding:8px 12px; line-height:1.45;">
               <div><strong>Entry Condition:</strong> {c.gate_notes} &nbsp;|&nbsp; <strong>Max Hold:</strong> 25 trading days &nbsp;|&nbsp; <strong>Earnings:</strong> {earn_str}</div>
@@ -1169,6 +1202,25 @@ def _render_single_plan_body(plan: DailyRecommendationPlan) -> str:
                     Cash + Rotation
                   </div>
                   <div style="font-size:18px; font-weight:800; color:#4ade80; margin-top:2px;">${plan.deployable_cash_with_rotate:,.2f}</div>
+                </td>
+              </tr>
+            </table>
+          </div>
+
+          <!-- Premarket Execution Checklist Card (09:15-09:29 ET) -->
+          <div style="background:#fffbeb; border:1px solid #fef3c7; border-left:5px solid #d97706; border-radius:10px; padding:14px 18px; margin-bottom:20px; font-size:12.5px; color:#92400e; line-height:1.55;">
+            <div style="font-weight:800; font-size:13px; color:#b45309; margin-bottom:6px; text-transform:uppercase; letter-spacing:0.4px;">
+              Premarket Sector Shock Circuit Breaker (Check at 09:20&ndash;09:29 ET)
+            </div>
+            <table width="100%" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td width="48%" valign="top">
+                  <div><strong>SMH Prior Close:</strong> ${plan.smh_close:,.2f}</div>
+                  <div style="margin-top:2px;"><strong>Abort Trigger (-{plan.smh_circuit_breaker_pct:.1f}%):</strong> <span style="font-weight:800; color:#b45309;">${plan.smh_premarket_circuit_breaker:,.2f}</span></div>
+                </td>
+                <td width="52%" valign="top" style="padding-left:14px; border-left:1px dashed #fcd34d;">
+                  <div><strong>Action Rule:</strong> Check premarket SMH quote on your brokerage or TradingView before 09:30 ET open.</div>
+                  <div style="color:#78350f; font-weight:700; margin-top:3px;">If SMH trades below ${plan.smh_premarket_circuit_breaker:,.2f}, CANCEL ALL PENDING BUY ORDERS for today.</div>
                 </td>
               </tr>
             </table>

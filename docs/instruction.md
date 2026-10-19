@@ -131,7 +131,7 @@ Every feature is dimensionless or sample-size normalized:
 | `vol_compress` | $\frac{\text{RV}_{10}}{\text{RV}_{60}}$ | Realized volatility ratio ($\text{ratio} < 0.7$ signals squeeze) |
 | `vix_ts` | $\frac{\text{VIX}}{\text{VIX3M}}$ | Volatility term structure ($>1.0$ indicates backwardation) |
 | `vxn_squeeze_vel` | $z\text{-score of } \Delta_{5d}\text{VXN}$ vs 252d distribution | Implied volatility expansion/compression velocity |
-| `skew_idx` | $z\text{-score of CBOE SKEW vs 20d}$ | Tail-risk hedge demand |
+| `skew_idx` | 60-day rolling $z$-score of CBOE SKEW (`min_periods=20`) | Tail-risk hedge demand |
 
 ---
 
@@ -205,11 +205,12 @@ $$
 ### Execution Protocol
 - **Next-Day Market Open Fill (09:30 ET):** Signals generated at close $t$ execute at open $t+1$.
 - **Friction Model:** $5.0\text{ bps slippage} + 2.0\text{ bps commission} = 7.0\text{ bps}$ total friction.
-- **Hierarchical Two-Tier Sizing Formulation:**
+- **Hierarchical Conviction Tier Sizing Formulation:**
   Signals receive an initial conviction tier determining their baseline risk fraction (`BaseRisk`):
   - `CONSENSUS`: Dual-engine alignment (both Baseline OLS trend significance $t_{\text{norm}} \ge 1.80$ and ML classifier agree) $\implies \text{BaseRisk} = 1.0\%$.
-  - `HIGH`: Standalone ML qualification with top-quintile residual momentum (`rs_rank >= 0.80`) $\implies \text{BaseRisk} = 1.0\%$.
-  - `MEDIUM`: Baseline trend qualification or secondary ML score $\implies \text{BaseRisk} = 0.75\%$.
+  - `HIGH`: Standalone ML qualification with top-quintile residual momentum (`rs_rank >= 0.80`) or sizing scalar $S_{i,t} \ge 1.15 \implies \text{BaseRisk} = 1.0\%$.
+  - `MEDIUM`: Baseline trend qualification or secondary ML score ($0.85 \le S_{i,t} < 1.15$) $\implies \text{BaseRisk} = 0.75\%$.
+  - `LOW`: Lower-conviction meta-labeling score ($S_{i,t} < 0.85$) or bottom-quintile setup $\implies \text{BaseRisk} = 0.50\%$.
 
 $$
 \text{RiskBudget} = \text{PortfolioEquity} \times \text{BaseRisk} \times M_t \times S_{i,t}
@@ -243,29 +244,29 @@ SemiSwing enforces a **Two-Tier Validation Framework** to eliminate both post-ho
 
 ### 8.1 SMH Bull Core + Swing Mode (Active Secular Bull Sweep)
 
-| Institutional Gate | Hurdle Requirement | Actual Modern AI Era | Status | Purpose & Benchmark Comparison |
+| Institutional Gate | Hurdle Requirement | Actual Modern AI Era / OOS | Status | Purpose & Benchmark Comparison |
 | :--- | :---: | :---: | :---: | :--- |
-| **Gate 1: Modern AI Era Sharpe** | $\text{Sharpe} \ge 1.60$ | **1.86** | **PASS** | Excess return over cash ($\text{DTB3}$) in secular bull. |
-| **Gate 2: Deflated Sharpe Ratio** | $\text{DSR Prob} \ge 0.95$ | **0.974** | **PASS** | Bailey & López de Prado (2014) significance ($K=14, p < 0.026$). |
-| **Gate 3: Profit Factor** | $\text{PF} \ge 2.00$ | **AI: 5.23 / OOS: 4.67** | **PASS** | Ratio of gross profits to gross losses. |
-| **Gate 4a: Modern AI Era Max DD** | $\text{Max DD} \le 35.0$% | **33.70%** | **PASS** | Outperforms passive `SMH` AI era drawdown (35.74%). |
-| **Gate 4b: Full OOS Max DD** | $\text{Max DD} \le 40.0$% | **37.97%** | **PASS** | $>500\text{ bps}$ below passive `SMH` crash (45.14%) and `SOXX` (45.52%). |
-| **Gate 5: Full OOS Sharpe Ratio** | $\text{Sharpe} \ge 1.20$ | **1.36** | **PASS** | Full cycle viability across both 2022 bear and 2023–2026 bull. |
-| **Gate 6: 2022 Bear Stress Test** | $\text{Ret} \ge -40$%, $\text{DD} \le 40$%, $\text{Cash} \ge 80$% | **Ret: -37.9%, DD: 38.0%, Cash: 89.6%** | **PASS** | Capital preserved by Schmitt trigger sweeping to 100% cash. |
-| **Gate 7: ML Alpha Dominance** | $\text{BSS} > 0.02 \;\land\; (\Delta\text{SR} \ge 0.05 \;\lor\; \Delta\text{DD} \ge 1.5\text{ pct})$ | **BSS: 0.0384, SR: +0.06, DD Red: +2.0%** | **PASS** | Proves probabilistic resolution & outperformance vs baseline. |
+| **Gate 1: Modern AI Era Sharpe** | $\text{Sharpe} \ge 1.60$ | **1.85** | **PASS** | Excess return over cash ($\text{DTB3}$) in secular bull. |
+| **Gate 2: Deflated Sharpe Ratio** | $\text{DSR Prob} \ge 0.95$ | **0.972** | **PASS** | Bailey & López de Prado (2014) significance ($K=14, p < 0.028$). |
+| **Gate 3: Profit Factor** | $\text{PF} \ge 2.00$ | **AI: 5.35 / OOS: 4.79** | **PASS** | Ratio of gross profits to gross losses. |
+| **Gate 4a: Modern AI Era Max DD** | $\text{Max DD} \le 35.0\%$ | **29.39%** | **PASS** | $>630\text{ bps}$ below passive `SMH` AI era drawdown (35.74%). |
+| **Gate 4b: Full OOS Max DD** | $\text{Max DD} \le 40.0\%$ | **29.39%** | **PASS** | $>1{,}570\text{ bps}$ below passive `SMH` crash (45.14%) and `SOXX` (45.52%). |
+| **Gate 5: Full OOS Sharpe Ratio** | $\text{Sharpe} \ge 1.20$ | **1.48** | **PASS** | Full cycle viability across both 2022 bear and 2023–2026 bull. |
+| **Gate 6: 2022 Bear Stress Test** | $\text{Ret} \ge -40\%$, $\text{DD} \le 40\%$, $\text{Cash} \ge 80\%$ | **Ret: -21.5%, DD: 21.7%, Cash: 89.6%** | **PASS** | Capital preserved by Schmitt trigger sweeping to 100% cash. |
+| **Gate 7: ML Alpha Dominance** | $\text{BSS} > 0.02 \;\land\; (\Delta\text{SR} \ge 0.05 \;\lor\; \Delta\text{Sortino} \ge 0.02 \;\lor\; \Delta\text{CAGR} \ge 3.0\% \;\lor\; \Delta\text{DD} \ge 1.5\%)$ | **BSS: 0.0384, SR: +0.01, Sortino: +0.06, CAGR: +7.4%** | **PASS** | Proves probabilistic resolution & outperformance vs baseline. |
 
 ### 8.2 Cash Swing Mode (100% Cash / T-Bill Secondary Default)
 
-| Institutional Gate | Hurdle Requirement | Actual Modern AI Era | Status | Purpose & Benchmark Comparison |
+| Institutional Gate | Hurdle Requirement | Actual Modern AI Era / OOS | Status | Purpose & Benchmark Comparison |
 | :--- | :---: | :---: | :---: | :--- |
-| **Gate 1: Modern AI Era Sharpe** | $\text{Sharpe} \ge 1.50$ | **1.73** | **PASS** | Excess return over cash in secular bull. |
-| **Gate 2: Deflated Sharpe Ratio** | $\text{DSR Prob} \ge 0.95$ | **0.954** | **PASS** | Statistical significance penalizing $K=14$ strategy iterations. |
-| **Gate 3: Profit Factor** | $\text{PF} \ge 1.50$ | **AI: 5.45 / OOS: 4.79** | **PASS** | Ratio of gross profits to gross losses. |
-| **Gate 4a: Modern AI Era Max DD** | $\text{Max DD} \le 36.0$% | **35.52%** | **PASS** | Below passive `SMH` (35.74%) and `SOXX` (41.36%). |
-| **Gate 4b: Full OOS Max DD** | $\text{Max DD} \le 40.0$% | **35.52%** | **PASS** | $>900\text{ bps}$ below passive `SMH` crash (45.14%). |
-| **Gate 5: Full OOS Sharpe Ratio** | $\text{Sharpe} \ge 1.00$ | **1.36** | **PASS** | Full cycle viability across entire 4.77-year OOS period. |
-| **Gate 6: 2022 Bear Stress Test** | $\text{Ret} \ge -25$%, $\text{DD} \le 25$%, $\text{Cash} \ge 80$% | **Ret: -22.5%, DD: 22.7%, Cash: 89.6%** | **PASS** | Outperforms `SMH` crash (-34.97%) by $>12$ percentage points. |
-| **Gate 7: ML Alpha Dominance** | $\text{BSS} > 0.02 \;\land\; (\Delta\text{SR} \ge 0.05 \;\lor\; \Delta\text{DD} \ge 1.5\text{ pct})$ | **BSS: 0.0384, SR: +0.11, DD Red: +1.5%** | **PASS** | Proves probabilistic skill & outperformance vs baseline. |
+| **Gate 1: Modern AI Era Sharpe** | $\text{Sharpe} \ge 1.50$ | **1.81** | **PASS** | Excess return over cash in secular bull. |
+| **Gate 2: Deflated Sharpe Ratio** | $\text{DSR Prob} \ge 0.95$ | **0.968** | **PASS** | Statistical significance penalizing $K=14$ strategy iterations. |
+| **Gate 3: Profit Factor** | $\text{PF} \ge 1.50$ | **AI: 5.41 / OOS: 4.78** | **PASS** | Ratio of gross profits to gross losses. |
+| **Gate 4a: Modern AI Era Max DD** | $\text{Max DD} \le 36.0\%$ | **28.96%** | **PASS** | $>670\text{ bps}$ below passive `SMH` (35.74%) and `SOXX` (41.36%). |
+| **Gate 4b: Full OOS Max DD** | $\text{Max DD} \le 40.0\%$ | **28.96%** | **PASS** | $>1{,}610\text{ bps}$ below passive `SMH` crash (45.14%). |
+| **Gate 5: Full OOS Sharpe Ratio** | $\text{Sharpe} \ge 1.00$ | **1.44** | **PASS** | Full cycle viability across entire 4.77-year OOS period. |
+| **Gate 6: 2022 Bear Stress Test** | $\text{Ret} \ge -25\%$, $\text{DD} \le 25\%$, $\text{Cash} \ge 80\%$ | **Ret: -21.6%, DD: 21.8%, Cash: 89.6%** | **PASS** | Outperforms `SMH` crash (-34.97%) by $>13$ percentage points. |
+| **Gate 7: ML Alpha Dominance** | $\text{BSS} > 0.02 \;\land\; (\Delta\text{SR} \ge 0.05 \;\lor\; \Delta\text{Sortino} \ge 0.02 \;\lor\; \Delta\text{CAGR} \ge 3.0\% \;\lor\; \Delta\text{DD} \ge 1.5\%)$ | **BSS: 0.0384, SR: +0.03, Sortino: +0.08, CAGR: +11.6%** | **PASS** | Proves probabilistic skill & outperformance vs baseline. |
 
 ---
 

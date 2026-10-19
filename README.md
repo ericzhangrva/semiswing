@@ -17,8 +17,8 @@ Quantitative backtests frequently suffer from subtle biases (look-ahead peeking,
 ### 1.1 Realistic Next-Day Execution (Zero Close-Fill Illusion)
 - **Next-Day Market Open Fills (09:30 ET):** Signals generated at the close of trading day $t$ (16:00 ET) are executed strictly at the **Market Open of day $t+1$ (09:30 ET)** using that day's real open price.
 - **Transaction Costs & Slippage:** A realistic friction of **$5.0\text{ bps slippage} + 2.0\text{ bps commission} = 7.0\text{ bps}$** round-turn is subtracted from every execution.
-- **Gap-Up Protection:** New entries are blocked if the stock opens $> 1.0\times\text{ATR}$ above signal close or gaps up $> +4.0\%$ overnight, preventing chasing opening spikes.
-- **Premarket Gap-Down Abort (09:15–09:30 ET):** If the semiconductor benchmark (`SMH`) opens or gaps down $< -1.5\%$, all pending candidate buy orders are cancelled.
+- **Gap-Up Protection:** New entries are blocked if the stock opens $> 1.0\times\text{ATR}$ above signal close or gaps up $> +4.0\%$ overnight, preventing chasing opening spikes. In live execution, each daily recommendation ticket specifies the exact **Max Chasing Limit Price** ($\min(\text{Close} + 1.0\times\text{ATR}_{14}, \text{Close} \times 1.04)$). Place orders as Limit-on-Open (LOO) or limit orders capped at this price; if the market opens above this level, the order is unexecuted.
+- **Premarket Gap-Down Abort (09:15–09:30 ET):** If the semiconductor benchmark (`SMH`) opens or gaps down $< -1.5\%$, all pending candidate buy orders are cancelled. The daily recommendation report displays the exact **SMH Premarket Circuit Breaker Level** ($\text{Prior Close} \times 0.985$). Between 09:15 and 09:30 ET, check SMH premarket quotes; if trading below this threshold, cancel all pending buy orders prior to 09:30 ET.
 
 ### 1.2 Two-Stage Dynamic Point-in-Time (PIT) Universe Reconstitution
 To eliminate look-ahead selection bias and survivorship bias, the tradeable universe is reconstituted dynamically at the start of each calendar quarter $t_k \in \{\text{Jan 1, Apr 1, Jul 1, Oct 1}\}$ strictly using trailing market data ending at $t_k - 1$:
@@ -111,10 +111,11 @@ $$
 S_{i,t} = 0.50 + 1.00 \times q_{i,t} \in [0.50, 1.50]
 $$
 
-### 2.5 Hierarchical Two-Tier Risk Allocation
+### 2.5 Hierarchical Conviction Tier Risk Allocation
+Signals receive an initial conviction tier determining their baseline risk fraction (`BaseRisk`: $1.0\%$ for `CONSENSUS`/`HIGH`, $0.75\%$ for `MEDIUM`, $0.50\%$ for `LOW`):
 
 $$
-\text{RiskBudget} = \text{Equity} \times 0.010 \times M_t \times S_{i,t}
+\text{RiskBudget} = \text{Equity} \times \text{BaseRisk} \times M_t \times S_{i,t}
 $$
 
 $$
@@ -156,3 +157,14 @@ where $\gamma \approx 0.5772$ is the Euler-Mascheroni constant, $Z(p) = \Phi^{-1
 # 4. Run automated daily market pipeline (refresh data + backtest + recommendations)
 .venv/bin/semiswing daily-run --force --no-email
 ```
+
+---
+
+## 4. License & Usage Rights
+
+This software is licensed under the **SemiSwing Source-Available Non-Commercial Research License** ([`LICENSE`](file:///Users/eric/Dropbox/ai/stock/LICENSE)). 
+
+- **Permitted Use:** Academic research, personal education, statistical inquiry, backtesting, and private non-commercial source code modification.
+- **Strict Commercial Prohibitions:** Live trading in commercial or institutional accounts, third-party capital management for fees/profit, commercial signal or trade alert services, sublicensing, or commercial redistribution.
+- **Legal Remedies:** Unauthorized commercial or for-profit exploitation constitutes willful copyright infringement and intentional trade secret misappropriation, subject to statutory damages up to $150,000 per violation, immediate injunctive relief, disgorgement of profits, and prosecution to the fullest extent permitted by law.
+

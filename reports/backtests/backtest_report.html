@@ -1860,7 +1860,11 @@
             <strong>Tier:</strong>
             <span style="display:inline-block; padding:1px 6px; background:#dcfce7; color:#166534; border-radius:4px; font-size:11px; font-weight:700;">CONSENSUS</span> Dual-engine alignment (both Baseline OLS trend significance t_norm &ge; 1.8 and ML classifier agree; 1.0% risk). &nbsp;
             <span style="display:inline-block; padding:1px 6px; background:#e0f2fe; color:#0369a1; border-radius:4px; font-size:11px; font-weight:700;">HIGH</span> Standalone ML qualification with top-quintile residual momentum (1.0% risk). &nbsp;
-            <span style="display:inline-block; padding:1px 6px; background:#f1f5f9; color:#475569; border-radius:4px; font-size:11px; font-weight:700;">MEDIUM</span> Baseline trend qualification or secondary ML score (0.75% conservative risk).
+            <span style="display:inline-block; padding:1px 6px; background:#f1f5f9; color:#475569; border-radius:4px; font-size:11px; font-weight:700;">MEDIUM</span> Baseline trend qualification or secondary ML score (0.75% conservative risk). &nbsp;
+            <span style="display:inline-block; padding:1px 6px; background:#fff1f2; color:#be123c; border-radius:4px; font-size:11px; font-weight:700;">LOW</span> Lower-conviction meta-labeling score (S_i,t &lt; 0.85; 0.50% risk or conservative bottom tier).
+          </div>
+          <div style="margin-bottom:6px;">
+            <strong>Shares &amp; Position ($):</strong> Dynamically calculated via Volatility-Parity / Fixed-Fractional Risk Sizing: <code>Shares = (Portfolio Equity &times; Base Risk &times; M_t &times; S_i,t) / Stop Distance</code>. Each trade risks a fixed fraction of total portfolio equity at execution, so position dollar allocations and share counts vary according to individual stock ATR volatility, tier conviction, meta-labeling multiplier S_i,t, and compounding portfolio equity over time.
           </div>
           <div style="margin-bottom:6px;">
             <strong>Partial Profit Taking (TP1) &amp; Blended Returns:</strong> When Take Profit 1 (TP1) triggers, partial shares are sold and stop is moved to breakeven. <code>Exit ($)</code> reports the final runner share exit price, while <code>Return (%)</code> and <code>R Multiple</code> reflect the blended net performance across the entire position.
@@ -1896,6 +1900,8 @@
     <tr style="text-align: right;">
       <th>Ticker</th>
       <th>Tier</th>
+      <th>Shares</th>
+      <th>Position ($)</th>
       <th>Entry Date</th>
       <th>Exit Date</th>
       <th>Days Held</th>
@@ -1915,6 +1921,8 @@
     <tr>
       <td>PLTR</td>
       <td>HIGH</td>
+      <td>168.5</td>
+      <td>$6,070.64</td>
       <td>2024-09-20</td>
       <td>2025-02-24</td>
       <td>106</td>
@@ -1932,6 +1940,8 @@
     <tr>
       <td>LRCX</td>
       <td>MEDIUM</td>
+      <td>55.6</td>
+      <td>$4,753.85</td>
       <td>2025-02-24</td>
       <td>2025-02-27</td>
       <td>4</td>
@@ -1949,6 +1959,8 @@
     <tr>
       <td>STX</td>
       <td>MEDIUM</td>
+      <td>68.3</td>
+      <td>$6,557.59</td>
       <td>2025-01-31</td>
       <td>2025-02-28</td>
       <td>20</td>
@@ -1966,6 +1978,8 @@
     <tr>
       <td>META</td>
       <td>MEDIUM</td>
+      <td>7</td>
+      <td>$4,802.21</td>
       <td>2025-01-31</td>
       <td>2025-02-28</td>
       <td>20</td>
@@ -1983,6 +1997,8 @@
     <tr>
       <td>INTC</td>
       <td>HIGH</td>
+      <td>299.3</td>
+      <td>$7,353.36</td>
       <td>2025-02-24</td>
       <td>2025-02-28</td>
       <td>5</td>
@@ -2000,6 +2016,8 @@
     <tr>
       <td>CEG</td>
       <td>MEDIUM</td>
+      <td>8.5</td>
+      <td>$2,370.85</td>
       <td>2025-05-13</td>
       <td>2025-09-02</td>
       <td>77</td>
@@ -2017,6 +2035,8 @@
     <tr>
       <td>STX</td>
       <td>HIGH</td>
+      <td>43.8</td>
+      <td>$4,402.69</td>
       <td>2025-05-13</td>
       <td>2025-10-10</td>
       <td>105</td>
@@ -2034,6 +2054,8 @@
     <tr>
       <td>AMD</td>
       <td>LOW</td>
+      <td>25.9</td>
+      <td>$5,709.21</td>
       <td>2025-10-13</td>
       <td>2025-11-18</td>
       <td>27</td>
@@ -2051,6 +2073,8 @@
     <tr>
       <td>VRT</td>
       <td>MEDIUM</td>
+      <td>22.3</td>
+      <td>$2,253.93</td>
       <td>2025-05-13</td>
       <td>2025-12-17</td>
       <td>152</td>
@@ -2068,6 +2092,8 @@
     <tr>
       <td>GOOGL</td>
       <td>HIGH</td>
+      <td>56.6</td>
+      <td>$18,435.56</td>
       <td>2025-11-25</td>
       <td>2025-12-31</td>
       <td>25</td>
@@ -2085,6 +2111,8 @@
     <tr>
       <td>APP</td>
       <td>HIGH</td>
+      <td>3.9</td>
+      <td>$2,861.08</td>
       <td>2025-12-24</td>
       <td>2026-01-02</td>
       <td>6</td>
@@ -2102,6 +2130,8 @@
     <tr>
       <td>LRCX</td>
       <td>LOW</td>
+      <td>13.8</td>
+      <td>$2,627.08</td>
       <td>2026-01-05</td>
       <td>2026-03-06</td>
       <td>43</td>
@@ -2119,6 +2149,8 @@
     <tr>
       <td>MU</td>
       <td>HIGH</td>
+      <td>59.4</td>
+      <td>$17,527.43</td>
       <td>2026-01-02</td>
       <td>2026-03-30</td>
       <td>60</td>
@@ -2136,6 +2168,8 @@
     <tr>
       <td>WDC</td>
       <td>MEDIUM</td>
+      <td>62.7</td>
+      <td>$2,939.56</td>
       <td>2025-05-13</td>
       <td>2026-07-07</td>
       <td>288</td>
@@ -2153,6 +2187,8 @@
     <tr>
       <td>LITE</td>
       <td>HIGH</td>
+      <td>97.2</td>
+      <td>$12,869.22</td>
       <td>2025-09-03</td>
       <td>2026-07-07</td>
       <td>211</td>
@@ -2170,6 +2206,8 @@
     <tr>
       <td>ARM</td>
       <td>HIGH</td>
+      <td>108.3</td>
+      <td>$16,738.03</td>
       <td>2026-04-01</td>
       <td>2026-07-14</td>
       <td>71</td>
@@ -2187,6 +2225,8 @@
     <tr>
       <td>META</td>
       <td>HIGH</td>
+      <td>64.2</td>
+      <td>$41,874.98</td>
       <td>2026-07-14</td>
       <td>2026-07-27</td>
       <td>10</td>
@@ -2204,6 +2244,8 @@
     <tr>
       <td>ANET</td>
       <td>MEDIUM</td>
+      <td>125.1</td>
+      <td>$23,031.04</td>
       <td>2026-07-15</td>
       <td>2026-08-03</td>
       <td>14</td>
@@ -2221,6 +2263,8 @@
     <tr>
       <td>AAPL</td>
       <td>MEDIUM</td>
+      <td>125.9</td>
+      <td>$39,623.43</td>
       <td>2026-07-10</td>
       <td>2026-08-13</td>
       <td>25</td>
@@ -2238,6 +2282,8 @@
     <tr>
       <td>AMZN</td>
       <td>MEDIUM</td>
+      <td>124.8</td>
+      <td>$35,168.42</td>
       <td>2026-08-05</td>
       <td>2026-08-20</td>
       <td>12</td>
@@ -2255,6 +2301,8 @@
     <tr>
       <td>MRVL</td>
       <td>HIGH</td>
+      <td>182.5</td>
+      <td>$46,090.61</td>
       <td>2026-08-21</td>
       <td>2026-08-25</td>
       <td>3</td>
@@ -2272,6 +2320,8 @@
     <tr>
       <td>PLTR</td>
       <td>MEDIUM</td>
+      <td>152.2</td>
+      <td>$23,742.61</td>
       <td>2026-08-06</td>
       <td>2026-09-10</td>
       <td>25</td>
@@ -2289,6 +2339,8 @@
     <tr>
       <td>ORCL</td>
       <td>LOW</td>
+      <td>120.9</td>
+      <td>$18,782.32</td>
       <td>2026-08-14</td>
       <td>2026-09-10</td>
       <td>19</td>
@@ -2306,6 +2358,8 @@
     <tr>
       <td>SNDK</td>
       <td>MEDIUM</td>
+      <td>16.5</td>
+      <td>$23,980.35</td>
       <td>2026-08-26</td>
       <td>2026-10-12</td>
       <td>33</td>
@@ -2323,6 +2377,8 @@
     <tr>
       <td>MU</td>
       <td>HIGH</td>
+      <td>41.3</td>
+      <td>$41,066.49</td>
       <td>2026-09-11</td>
       <td>2026-10-15</td>
       <td>25</td>
