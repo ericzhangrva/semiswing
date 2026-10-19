@@ -162,7 +162,7 @@ where $\gamma \approx 0.5772$ is the Euler-Mascheroni constant, $Z(p) = \Phi^{-1
 
 ## 4. License & Usage Rights
 
-This software is licensed under the **SemiSwing Source-Available Non-Commercial Research License** ([`LICENSE`](file:///Users/eric/Dropbox/ai/stock/LICENSE)). 
+This software is licensed under the **SemiSwing Source-Available Non-Commercial Research License** ([`LICENSE`](LICENSE)). 
 
 - **Permitted Use:** Academic research, personal education, statistical inquiry, backtesting, and private non-commercial source code modification.
 - **Strict Commercial Prohibitions:** Live trading in commercial or institutional accounts, third-party capital management for fees/profit, commercial signal or trade alert services, sublicensing, or commercial redistribution.
