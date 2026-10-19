@@ -41,7 +41,11 @@ flowchart TD
 
 ### Stage 1: Survivorship-Free Industry + Liquidity Gate (at $t_k - 1$)
 Evaluated over the trailing 60 trading days $[t_k - 60, t_k - 1]$:
-1. **Industry Universe:** Active US-listed equities in Semiconductors, Semiconductor Equipment, Computer Hardware/Storage, Communications Equipment, and Electronic Components (`universe.all_panel_stocks`).
+1. **Industry Universe:** Active US-listed equities across the semiconductor and AI infrastructure ecosystem (`universe.all_panel_stocks`), comprising:
+   - **Semiconductors & Equipment:** `NVDA`, `AVGO`, `AMD`, `TSM`, `ASML`, `MU`, `KLAC`, `LRCX`, `AMAT`, `MRVL`, `QCOM`, `TXN`, `ON`, `MCHP`, `INTC`, `SNPS`, `CDNS`, `MPWR`, `ADI`, `NXPI`, `TER`, `WDC`, `STX`, `SNDK`, `COHR`, `LITE`, etc.
+   - **AI Hyperscalers & Hardware Platforms:** `AAPL`, `MSFT`, `GOOGL`, `AMZN`, `META`.
+   - **AI Enterprise & Data Analytics Software:** `PLTR`, `ORCL`, `APP`.
+   - **AI Datacenter Power & Electrical Infrastructure:** `CEG`, `VRT`, `GEV`.
 2. **Seasoning / IPO Guard:** Total historical daily bars $\ge 60$ trading days since listing.
 3. **Price Floor:** $\text{Close}_{t_k - 1} \ge 15.00$ ($\$15.00$).
 4. **Institutional Dollar Volume Floor:**
@@ -202,9 +206,13 @@ $$
 - **Next-Day Market Open Fill (09:30 ET):** Signals generated at close $t$ execute at open $t+1$.
 - **Friction Model:** $5.0\text{ bps slippage} + 2.0\text{ bps commission} = 7.0\text{ bps}$ total friction.
 - **Hierarchical Two-Tier Sizing Formulation:**
+  Signals receive an initial conviction tier determining their baseline risk fraction (`BaseRisk`):
+  - `CONSENSUS`: Dual-engine alignment (both Baseline OLS trend significance $t_{\text{norm}} \ge 1.80$ and ML classifier agree) $\implies \text{BaseRisk} = 1.0\%$.
+  - `HIGH`: Standalone ML qualification with top-quintile residual momentum (`rs_rank >= 0.80`) $\implies \text{BaseRisk} = 1.0\%$.
+  - `MEDIUM`: Baseline trend qualification or secondary ML score $\implies \text{BaseRisk} = 0.75\%$.
 
 $$
-\text{RiskBudget} = \text{PortfolioEquity} \times 0.010 \times M_t \times S_{i,t}
+\text{RiskBudget} = \text{PortfolioEquity} \times \text{BaseRisk} \times M_t \times S_{i,t}
 $$
 
 $$
@@ -219,8 +227,8 @@ $$
 1. **Initial Stop Loss:** $2.0 \times \text{ATR}_{14}$ below signal close (`STOP`).
 2. **Take Profit 1 (TP1):** $3.0 \times \text{ATR}_{14}$ above entry. Sell 50% of shares; ratchet stop to breakeven (`avg_cost`).
 3. **Trailing Chandelier Stop:** After TP1, trail highest close minus $2.5 \times \text{ATR}_{14}$ (`TRAIL_STOP_EOD`).
-4. **Early Time Stop (Day 10):** If days held $= 10$ and unrealized gain $< 0.50R$, exit at close (`TIME_STOP_12D`).
-5. **Hard Time Stop (Day 20):** If days held $\ge 20$, not TP1 hit, and unrealized gain $< 0.50R$, exit at close (`TIME_STOP_25D`).
+4. **Early Time Stop (Day 12):** If days held $\ge 12$ and unrealized gain $< 0.50R$, exit at close (`TIME_STOP_12D`).
+5. **Hard Time Stop (Day 25):** If days held $\ge 25$, not TP1 hit, and unrealized gain $< 0.50R$, exit at close (`TIME_STOP_25D`).
 6. **Earnings Blackout Exit:** Exit 1 day prior to earnings if unrealized gain $< 0.25R$ (`EARNINGS_EXIT`).
 7. **Regime Kill:** If $M_t = 0.0$ and secular bull $= 0$, exit all open swing trades at close (`REGIME_OFF`).
 8. **Cooldown:** 10-trading-day cooldown after any stop-loss before re-entering that ticker.

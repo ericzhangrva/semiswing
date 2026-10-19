@@ -15,6 +15,7 @@ window:
 regime:
   smh_ema: 100
   vix_max: 30.0
+  vix_max_entry: 22.0
   vix_ts_max: 1.0
   vvix_max: 110.0
 

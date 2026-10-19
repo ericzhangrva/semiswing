@@ -132,7 +132,13 @@ $$
 \text{DSR} = \Phi\left( \frac{(\widehat{\text{SR}} - \text{SR}^*) \sqrt{T - 1}}{\sqrt{1 - \hat{\gamma}_3 \widehat{\text{SR}} + \frac{\hat{\gamma}_4 - 1}{4} \widehat{\text{SR}}^2}} \right)
 $$
 
-where $\text{SR}^* = \sqrt{2 \ln K} + \frac{\gamma}{\sqrt{2 \ln K}}$, $\hat{\gamma}_3$ is return skewness, and $\hat{\gamma}_4$ is return kurtosis.
+where the expected maximum Sharpe ratio under the null across $K$ trials scales with sample size $T$ via the two-point Euler-Mascheroni extreme-value quantile:
+
+$$
+\text{SR}^* = \sqrt{\frac{1}{T}} \left( (1 - \gamma) Z\left(1 - \frac{1}{K}\right) + \gamma Z\left(1 - \frac{1}{K \cdot e}\right) \right) \times \sqrt{252}
+$$
+
+where $\gamma \approx 0.5772$ is the Euler-Mascheroni constant, $Z(p) = \Phi^{-1}(p)$ is the standard normal quantile function, $\hat{\gamma}_3$ is excess return skewness, and $\hat{\gamma}_4$ is return kurtosis.
 
 ---
 

@@ -188,3 +188,46 @@ def test_dynamic_pit_universe_reconstitution_and_causal_invariance():
         if not etf_rows.empty:
             assert (etf_rows["is_tradeable_universe"] == 1).all()
 
+
+def test_missing_single_stock_bar_forward_fills_mark_to_market():
+    """
+    Verify Task 1 regression fix:
+    - Missing single-stock bar on day t forward-fills last_valid_close rather than crashing to entry price or $0.
+    - Missing benchmark ETFs (SMH/SPY) prevents the master calendar from advancing onto a partial ingestion day.
+    """
+    strategy = load_strategy_settings()
+    d0 = pd.Timestamp("2023-01-02")
+    d1 = pd.Timestamp("2023-01-03")
+    d2 = pd.Timestamp("2023-01-04")
+    d3 = pd.Timestamp("2023-01-05")  # Partial date missing SMH/SPY
+
+    rows = [
+        # Day 0: Signal generation day
+        {"date": d0, "ticker": "SMH", "open": 200.0, "high": 202.0, "low": 198.0, "close": 201.0, "atr": 4.0, "regime_on": 1, "smh_secular_bull": 1, "baseline_signal": 0, "baseline_score": 0.0, "baseline_tier": "HIGH", "baseline_prob": 0.5},
+        {"date": d0, "ticker": "SPY", "open": 400.0, "high": 402.0, "low": 398.0, "close": 401.0, "atr": 4.0, "regime_on": 1, "smh_secular_bull": 1, "baseline_signal": 0, "baseline_score": 0.0, "baseline_tier": "HIGH", "baseline_prob": 0.5},
+        {"date": d0, "ticker": "NVDA", "open": 98.0, "high": 101.0, "low": 97.0, "close": 100.0, "atr": 3.0, "regime_on": 1, "smh_secular_bull": 1, "baseline_signal": 1, "baseline_score": 2.5, "baseline_tier": "HIGH", "baseline_prob": 0.8},
+
+        # Day 1: Order fills at Open (100.0), Closes at 104.0 (last_valid_close = 104.0)
+        {"date": d1, "ticker": "SMH", "open": 201.0, "high": 203.0, "low": 200.0, "close": 202.0, "atr": 4.0, "regime_on": 1, "smh_secular_bull": 1, "baseline_signal": 0, "baseline_score": 0.0, "baseline_tier": "HIGH", "baseline_prob": 0.5},
+        {"date": d1, "ticker": "SPY", "open": 401.0, "high": 403.0, "low": 400.0, "close": 402.0, "atr": 4.0, "regime_on": 1, "smh_secular_bull": 1, "baseline_signal": 0, "baseline_score": 0.0, "baseline_tier": "HIGH", "baseline_prob": 0.5},
+        {"date": d1, "ticker": "NVDA", "open": 100.0, "high": 105.0, "low": 99.0, "close": 104.0, "atr": 3.0, "regime_on": 1, "smh_secular_bull": 1, "baseline_signal": 0, "baseline_score": 0.0, "baseline_tier": "HIGH", "baseline_prob": 0.5},
+
+        # Day 2: SMH & SPY trade normally; NVDA bar is completely missing!
+        {"date": d2, "ticker": "SMH", "open": 202.0, "high": 204.0, "low": 201.0, "close": 203.0, "atr": 4.0, "regime_on": 1, "smh_secular_bull": 1, "baseline_signal": 0, "baseline_score": 0.0, "baseline_tier": "HIGH", "baseline_prob": 0.5},
+        {"date": d2, "ticker": "SPY", "open": 402.0, "high": 404.0, "low": 401.0, "close": 403.0, "atr": 4.0, "regime_on": 1, "smh_secular_bull": 1, "baseline_signal": 0, "baseline_score": 0.0, "baseline_tier": "HIGH", "baseline_prob": 0.5},
+
+        # Day 3: Partial ingestion anomaly (SMH/SPY missing)
+        {"date": d3, "ticker": "AAPL", "open": 150.0, "high": 152.0, "low": 149.0, "close": 151.0, "atr": 3.0, "regime_on": 1, "smh_secular_bull": 1, "baseline_signal": 0, "baseline_score": 0.0, "baseline_tier": "HIGH", "baseline_prob": 0.5},
+    ]
+    panel = pd.DataFrame(rows)
+    res = run_portfolio_backtest(panel, strategy, mode="baseline", start_date="2023-01-01", bull_core_smh=False)
+
+    # 1. Master Calendar Gate verification: Day 3 dropped
+    assert d3 not in list(res.equity_curve["date"])
+
+    # 2. Verify NVDA remained in open positions on Day 2 and forward-filled at 104.0
+    row_d2 = res.equity_curve[res.equity_curve["date"] == d2].iloc[0]
+    assert row_d2["n_positions"] == 1, "Open position was lost on missing bar day!"
+    assert row_d2["equity"] > 9500.0, f"Mark-to-market cliff occurred: {row_d2['equity']}"
+
+

@@ -214,7 +214,8 @@ def build_context_and_regime(
         else:
             m_scalar[i] = 1.0
 
-    ctx["smh_secular_bull"] = r_state
+    ctx["smh_schmitt_state"] = r_state
+    ctx["smh_secular_bull"] = (m_scalar == 1.0).astype(int)
     ctx["regime_on"] = (m_scalar > 0.0).astype(int)
     ctx["macro_scalar"] = m_scalar
 

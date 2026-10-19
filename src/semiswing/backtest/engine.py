@@ -35,6 +35,7 @@ class Position:
     entry_risk_dollars: float = 0.0
     size_scalar: float = 1.0
     shap_summary: str = ""
+    last_valid_close: float = 0.0
 
 
 @dataclass
@@ -137,6 +138,7 @@ def compute_period_metrics(
     cagr = (end_val / start_val) ** (1.0 / n_years) - 1.0 if end_val > 0 else -1.0
 
     # Excess return volatility, Sharpe, and Sortino over 3M T-Bill rate
+    ann_vol_pct = float(rets.std() * np.sqrt(252.0) * 100.0) if len(rets) > 1 else 0.0
     std_ex = float(excess_rets.std())
     mean_ex = float(excess_rets.mean())
     sharpe = (mean_ex / std_ex) * np.sqrt(252.0) if std_ex > 1e-7 else 0.0
@@ -168,14 +170,31 @@ def compute_period_metrics(
         win_rate = float((sub_tr["net_pnl"] > 0).mean() * 100.0)
         pf = float(wins / losses) if losses > 1e-6 else (10.0 if wins > 0 else 0.0)
         avg_r = float(sub_tr["r_multiple"].mean())
+
+        # Winsorized robustness: trim top 2 right-tail outlier trades if >= 10 trades, or top 1 if >= 5 trades
+        trim_n = 2 if n_trades >= 10 else (1 if n_trades >= 5 else 0)
+        if trim_n > 0:
+            sorted_tr = sub_tr.sort_values("net_pnl", ascending=True)
+            trimmed_tr = sorted_tr.iloc[:-trim_n]
+            w_wins = trimmed_tr[trimmed_tr["net_pnl"] > 0]["net_pnl"].sum()
+            w_losses = abs(trimmed_tr[trimmed_tr["net_pnl"] < 0]["net_pnl"].sum())
+            pf_winsor = float(w_wins / w_losses) if w_losses > 1e-6 else (10.0 if w_wins > 0 else 0.0)
+            avg_r_winsor = float(trimmed_tr["r_multiple"].mean())
+        else:
+            pf_winsor = pf
+            avg_r_winsor = avg_r
     else:
         win_rate = 0.0
         pf = 0.0
         avg_r = 0.0
+        pf_winsor = 0.0
+        avg_r_winsor = 0.0
 
     return {
         "total_return_pct": round(tot_ret * 100.0, 2),
         "cagr_pct": round(cagr * 100.0, 2),
+        "vol_pct": round(ann_vol_pct, 2),
+        "vol": round(ann_vol_pct, 2),
         "sharpe": round(sharpe, 2),
         "deflated_sharpe_prob": round(dsr_prob, 3),
         "sortino": round(sortino, 2),
@@ -185,6 +204,8 @@ def compute_period_metrics(
         "win_rate_pct": round(win_rate, 1),
         "profit_factor": round(pf, 2),
         "avg_r": round(avg_r, 2),
+        "profit_factor_winsor": round(pf_winsor, 2),
+        "avg_r_winsor": round(avg_r_winsor, 2),
     }
 
 
@@ -216,6 +237,12 @@ def run_portfolio_backtest(
     prob_col = "ml_prob" if mode == "ml" else "baseline_prob"
 
     df = panel[panel["date"] >= b_start].sort_values(["date", "ticker"]).copy()
+
+    # Master Trading Calendar Gate: only advance on dates where core benchmark ETFs (SMH & SPY) have valid bars
+    smh_dates = set(df[df["ticker"] == "SMH"]["date"])
+    spy_dates = set(df[df["ticker"] == "SPY"]["date"])
+    valid_trading_dates = smh_dates & spy_dates
+    df = df[df["date"].isin(valid_trading_dates)].copy()
     dates = np.sort(df["date"].unique())
 
     cash = float(rcfg.paper_equity)
@@ -225,6 +252,7 @@ def run_portfolio_backtest(
     pause_until_idx = -1
     prev_regime_on = 0
     prev_secular_bull = 0
+    prev_schmitt_state = 0
     pending_candidates: List[dict] = []
 
     eq_rows = []
@@ -242,6 +270,11 @@ def run_portfolio_backtest(
             if ("smh_secular_bull" in day_slice.columns and len(day_slice) > 0)
             else regime_today
         )
+        schmitt_today = (
+            int(day_slice["smh_schmitt_state"].iloc[0])
+            if ("smh_schmitt_state" in day_slice.columns and len(day_slice) > 0)
+            else secular_bull_today
+        )
         cash_rate_apy = (
             float(day_slice["cash_rate_apy"].iloc[0])
             if ("cash_rate_apy" in day_slice.columns and len(day_slice) > 0)
@@ -256,15 +289,6 @@ def run_portfolio_backtest(
         )
         if np.isnan(smh_daily_ret):
             smh_daily_ret = 0.0
-
-        # 0. Accrue return on unallocated cash from previous close to today's close:
-        #    - Mode 1 (bull_core_smh=False): always accrues daily 3-Month T-Bill interest (DTB3 / 252)
-        #    - Mode 2 (bull_core_smh=True): accrues SMH return when prev_secular_bull == 1, or T-Bill interest otherwise
-        if cash > 0:
-            if bull_core_smh and prev_secular_bull == 1 and d_idx > 0:
-                cash *= 1.0 + smh_daily_ret
-            else:
-                cash *= 1.0 + (cash_rate_apy / 252.0)
 
         # 1. MORNING (09:30 ET OPEN):
         # (a) Check overnight gaps below stop on existing positions
@@ -322,7 +346,7 @@ def run_portfolio_backtest(
 
         if d_idx > pause_until_idx and pending_candidates and len(open_positions) < rcfg.max_positions:
             open_pos_val = sum(
-                pos.shares * (float(day_slice.loc[t, "open"]) if t in day_slice.index else pos.entry_price)
+                pos.shares * (float(day_slice.loc[t, "open"]) if (t in day_slice.index and not np.isnan(day_slice.loc[t, "open"])) else pos.last_valid_close)
                 for t, pos in open_positions.items()
             )
             open_equity = cash + open_pos_val
@@ -409,7 +433,19 @@ def run_portfolio_backtest(
                     entry_risk_dollars=actual_risk_dollars,
                     size_scalar=meta_s,
                     shap_summary=cand["shap_summary"],
+                    last_valid_close=entry_px,
                 )
+
+        # (c) Post-Market-Open Unallocated Cash Sweep for Day t:
+        # After morning 09:30 ET executions, accrue return on unallocated cash from previous close to today's close:
+        # - Mode 1 (bull_core_smh=False): always accrues daily 3-Month T-Bill interest (DTB3 / 252)
+        # - Mode 2 (bull_core_smh=True): accrues SMH return when prev_secular_bull == 1 and secular_bull_today == 1,
+        #   or T-Bill interest otherwise.
+        if cash > 0:
+            if bull_core_smh and prev_secular_bull == 1 and secular_bull_today == 1 and d_idx > 0:
+                cash *= 1.0 + smh_daily_ret
+            else:
+                cash *= 1.0 + (cash_rate_apy / 252.0)
 
         # 2. INTRADAY & EOD: Process price action for all currently open positions
         to_close: List[tuple[str, float, str]] = []
@@ -422,6 +458,8 @@ def run_portfolio_backtest(
             h_px = float(row["high"])
             l_px = float(row["low"])
             c_px = float(row["close"])
+            if not np.isnan(c_px) and c_px > 0:
+                pos.last_valid_close = c_px
             atr_now = float(row["atr"]) if not np.isnan(row["atr"]) else pos.atr_at_entry
             pos.days_held += 1
 
@@ -458,11 +496,11 @@ def run_portfolio_backtest(
                 pos.current_stop = max(pos.current_stop, chandelier)
 
             # Check EOD exit rules:
-            if prev_secular_bull == 0 and prev_regime_on == 0:
+            if prev_schmitt_state == 0 and prev_regime_on == 0:
                 to_close.append((ticker, c_px, "REGIME_OFF"))
                 continue
 
-            if int(row["days_to_earnings"]) <= 1 and unrealized_r < 0.25 and not pos.tp1_hit:
+            if "days_to_earnings" in row.index and int(row["days_to_earnings"]) <= 1 and unrealized_r < 0.25 and not pos.tp1_hit:
                 to_close.append((ticker, c_px, "EARNINGS_EXIT"))
                 continue
 
@@ -544,7 +582,7 @@ def run_portfolio_backtest(
 
         # End-of-day mark-to-market
         eod_pos_val = sum(
-            pos.shares * (float(day_slice.loc[t, "close"]) if t in day_slice.index else pos.entry_price)
+            pos.shares * (float(day_slice.loc[t, "close"]) if (t in day_slice.index and not np.isnan(day_slice.loc[t, "close"])) else pos.last_valid_close)
             for t, pos in open_positions.items()
         )
         eod_equity = cash + eod_pos_val
@@ -560,6 +598,7 @@ def run_portfolio_backtest(
         )
         prev_regime_on = regime_today
         prev_secular_bull = secular_bull_today
+        prev_schmitt_state = schmitt_today
         if "SMH" in day_slice.index:
             smh_c = float(day_slice.loc["SMH", "close"])
             if not np.isnan(smh_c) and smh_c > 0:

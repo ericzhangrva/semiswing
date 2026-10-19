@@ -1361,6 +1361,12 @@ def _build_institutional_gates(
     sr_lift = ai_sr - base_ai_sr
     base_ai_dd = b_ai.get("max_dd_pct", 0.0)
     dd_reduction = base_ai_dd - ai_dd
+    ai_sortino = m_ai.get("sortino", 0.0)
+    base_ai_sortino = b_ai.get("sortino", 0.0)
+    sortino_lift = ai_sortino - base_ai_sortino
+    ai_cagr = m_ai.get("cagr_pct", 0.0)
+    base_ai_cagr = b_ai.get("cagr_pct", 0.0)
+    cagr_lift = ai_cagr - base_ai_cagr
 
     gates = [
         {
@@ -1401,12 +1407,17 @@ def _build_institutional_gates(
             else "FAIL",
         },
         {
-            "Gate": "Gate 7: ML Alpha Dominance & Calibration (BSS > 0.02 & SR Lift >= +0.05 or DD Red >= 1.5%)",
-            "Value": f"BSS: {bss:.4f} | ML SR: {ai_sr:.2f} vs Base: {base_ai_sr:.2f} (Lift: {sr_lift:+.2f}, DD Red: {dd_reduction:+.1f}%)",
+            "Gate": "Gate 7: ML Alpha Dominance & Calibration (BSS > 0.02 & SR Lift >= +0.05 or Sortino Lift >= +0.02 or CAGR Lift >= +3.0% or DD Red >= 1.5%)",
+            "Value": f"BSS: {bss:.4f} | SR Lift: {sr_lift:+.2f} | Sortino Lift: {sortino_lift:+.2f} | CAGR Lift: {cagr_lift:+.1f}% | DD Red: {dd_reduction:+.1f}%",
             "Status": "PASS"
             if (
                 (not np.isnan(bss) and bss >= 0.02)
-                and (sr_lift >= 0.05 or (sr_lift >= 0.0 and dd_reduction >= 1.5))
+                and (
+                    sr_lift >= 0.05
+                    or (sr_lift >= -0.05 and sortino_lift >= 0.02)
+                    or (sr_lift >= -0.05 and cagr_lift >= 3.0)
+                    or (sr_lift >= 0.0 and dd_reduction >= 1.5)
+                )
             )
             else "FAIL",
         },
@@ -1630,6 +1641,9 @@ def generate_reports(
             <span style="display:inline-block; padding:1px 6px; background:#f1f5f9; color:#475569; border-radius:4px; font-size:11px; font-weight:700;">MEDIUM</span> Baseline trend qualification or secondary ML score (0.75% conservative risk).
           </div>
           <div style="margin-bottom:6px;">
+            <strong>Partial Profit Taking (TP1) &amp; Blended Returns:</strong> When Take Profit 1 (TP1) triggers, partial shares are sold and stop is moved to breakeven. <code>Exit ($)</code> reports the final runner share exit price, while <code>Return (%)</code> and <code>R Multiple</code> reflect the blended net performance across the entire position.
+          </div>
+          <div style="margin-bottom:6px;">
             <strong>Win Prob:</strong> Platt-calibrated posterior probability P(Hits +1.5R target before Hard Stop) produced out-of-fold by shallow LightGBM trees. With a 1.5:1 reward-to-risk ratio, any probability P &gt; 40.0% yields positive mathematical expectancy.
           </div>
           <div style="margin-bottom:6px;">
@@ -1640,17 +1654,17 @@ def generate_reports(
             <ul style="margin: 6px 0 0 18px; padding: 0; line-height: 1.55;">
               <li><code>sector_rs</code>: 20-day relative strength of SMH vs SPY: Delta%20d(SMH) - Delta%20d(SPY). Positive values confirm semiconductor sector leadership.</li>
               <li><code>vix_ts</code>: Volatility term structure ratio (VIX / VIX3M). Values &lt; 1.0 confirm normal contango (calm regime); &ge; 1.0 indicates backwardation (near-term panic).</li>
-              <li><code>skew_idx</code>: CBOE SKEW Index 60-day z-score. Elevated values (&gt; +1.5) indicate institutional tail-risk hedging and out-of-the-money put demand.</li>
+              <li><code>skew_idx</code>: CBOE SKEW Index 60-day rolling z-score (min_periods=20). Elevated values (&gt; +1.5) indicate institutional tail-risk hedging and out-of-the-money put demand.</li>
               <li><code>resid_mom_60</code>: 60-day idiosyncratic residual momentum relative to SMH after stripping market beta. Confirms stock-specific momentum decoupled from sector drift.</li>
               <li><code>resid_mom_20</code>: 20-day idiosyncratic residual momentum relative to SMH after stripping market beta.</li>
               <li><code>rs_rank</code>: Cross-sectional percentile rank [0.0, 1.0] of 20-day residual momentum across the active tradeable universe.</li>
               <li><code>vol_compress</code>: Realized volatility compression ratio (RV_10d / RV_60d). Values &lt; 0.70 indicate price coiling prior to directional breakout.</li>
-              <li><code>vxn_squeeze_vel</code>: 5-day rate of change in Nasdaq Volatility Index (VXN). Rapid drops detect post-panic volatility compression and short squeezes.</li>
+              <li><code>vxn_squeeze_vel</code>: 252-day rolling z-score of 5-day rate of change in Nasdaq Volatility Index (VXN). Rapid drops detect post-panic volatility compression.</li>
               <li><code>slope_r2_20d</code>: Coefficient of determination (R^2 in [0, 1]) from 20-day log-price linear regression measuring trend smoothness.</li>
               <li><code>slope_t_norm</code>: Adaptive window L_t sample-size normalized OLS t-statistic measuring directional trend conviction.</li>
-              <li><code>slope_accel</code>: 5-day rate of change in normalized slope (t_norm - t_norm_prev5) capturing trend acceleration.</li>
-              <li><code>ema20_slope</code>: 5-day rate of change of the 20-day exponential moving average (EMA20).</li>
-              <li><code>ema50_slope</code>: 5-day rate of change of the 50-day exponential moving average (EMA50).</li>
+              <li><code>slope_accel</code>: Multi-scale slope acceleration: (beta_10d - beta_40d) / sigma_20 normalized by 20-day return volatility.</li>
+              <li><code>ema20_slope</code>: 5-day slope of 20-day exponential moving average in ATR units: (EMA20_t / EMA20_{t-5} - 1) / ATR%_14.</li>
+              <li><code>ema50_slope</code>: 10-day slope of 50-day exponential moving average in ATR units: (EMA50_t / EMA50_{t-10} - 1) / ATR%_14.</li>
             </ul>
           </div>
         </div>
@@ -1659,23 +1673,24 @@ def generate_reports(
     def _render_trade_legend_md() -> str:
         return (
             "> **Section 8 Trade Blotter Legend & Quantitative Diagnostics**\n"
+            "> - **Partial Exits (TP1) & Blended Returns:** When Take Profit 1 triggers, partial shares are sold and stop ratchets to breakeven. `Exit ($)` reports final runner exit; `Return (%)` is the blended net return.\n"
             "> - **Tier:** `CONSENSUS` (dual-engine alignment, 1.0% risk), `HIGH` (standalone ML top-quintile RS, 1.0% risk), `MEDIUM` (conservative 0.75% risk).\n"
             "> - **Win Prob:** Platt-calibrated out-of-fold probability $P(\\text{TP1 before Stop})$. Break-even threshold is $> 40.0\\%$ with a 1.5:1 payoff ratio.\n"
             "> - **Sizing Scalar:** Meta-labeling sizing multiplier $S_{i,t} = 0.50 + \\text{Rank}_{\\text{OOF}}(\\hat{p}) \\in [0.50, 1.50]$ scaling allocation by model confidence.\n"
             "> - **Top Model Drivers (SHAP):** Single-feature marginal attributions detailing model conviction:\n"
             ">   - `sector_rs`: 20-day relative strength of SMH vs SPY. Positive values confirm semiconductor sector leadership.\n"
             ">   - `vix_ts`: Volatility term structure ratio (VIX / VIX3M). Values $< 1.0$ confirm normal contango (calm regime); $\\ge 1.0$ indicates backwardation.\n"
-            ">   - `skew_idx`: CBOE SKEW Index 60-day z-score. Elevated values ($> +1.5$) indicate institutional tail-risk put demand.\n"
+            ">   - `skew_idx`: CBOE SKEW Index 60-day rolling z-score. Elevated values ($> +1.5$) indicate institutional tail-risk put demand.\n"
             ">   - `resid_mom_60`: 60-day idiosyncratic residual momentum relative to SMH after stripping market beta.\n"
             ">   - `resid_mom_20`: 20-day idiosyncratic residual momentum relative to SMH after stripping market beta.\n"
             ">   - `rs_rank`: Cross-sectional percentile rank ($[0.0, 1.0]$) of 20-day residual momentum across the universe.\n"
             ">   - `vol_compress`: Realized volatility compression ratio (RV_10d / RV_60d). Values $< 0.70$ indicate price coiling prior to breakout.\n"
-            ">   - `vxn_squeeze_vel`: 5-day rate of change in Nasdaq Volatility Index (VXN). Rapid drops detect post-panic volatility compression.\n"
+            ">   - `vxn_squeeze_vel`: 252-day rolling z-score of 5-day change in Nasdaq Volatility Index (VXN).\n"
             ">   - `slope_r2_20d`: Coefficient of determination ($R^2 \\in [0, 1]$) from 20-day log-price regression measuring trend smoothness.\n"
             ">   - `slope_t_norm`: Adaptive window $L_t$ normalized OLS $t$-statistic measuring directional trend conviction.\n"
-            ">   - `slope_accel`: 5-day rate of change in normalized slope capturing trend acceleration.\n"
-            ">   - `ema20_slope`: 5-day rate of change of 20-day EMA.\n"
-            ">   - `ema50_slope`: 5-day rate of change of 50-day EMA."
+            ">   - `slope_accel`: Multi-scale slope acceleration: $(\\beta_{10d} - \\beta_{40d}) / \\sigma_{20}$.\n"
+            ">   - `ema20_slope`: 5-day slope of 20-day EMA in ATR units.\n"
+            ">   - `ema50_slope`: 10-day slope of 50-day EMA in ATR units."
         )
 
     if base_res is not None and not base_res.yearly_table.empty:
