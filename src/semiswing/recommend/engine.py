@@ -765,13 +765,29 @@ def render_recommendation_email_text(plan: DailyRecommendationPlan) -> str:
 
 
 SHAP_FEATURE_TIPS = {
-    "vix_ts": "Volatility term structure ratio (VIX / VIX3M). Values < 1.0 confirm normal contango (calm regime); >= 1.0 indicates backwardation (near-term panic).",
-    "skew_idx": "CBOE SKEW Index 60-day z-score. Elevated values (> +1.5) indicate institutional tail-risk hedging and out-of-the-money put demand.",
-    "resid_mom_60": "60-day idiosyncratic residual momentum relative to SMH after stripping market beta. Confirms stock-specific momentum decoupled from sector drift.",
+    # Sector & Relative Momentum Features
     "sector_rs": "20-day relative strength of SMH vs SPY: Delta%20d(SMH) - Delta%20d(SPY). Positive values confirm semiconductor sector leadership.",
+    "rs_rank": "Cross-sectional percentile rank [0.0, 1.0] of 20-day residual momentum across the active tradeable universe.",
+    "resid_mom_60": "60-day idiosyncratic residual momentum relative to SMH after stripping market beta. Confirms stock-specific momentum decoupled from sector drift.",
+    "resid_mom_20": "20-day idiosyncratic residual momentum relative to SMH after stripping market beta.",
+    # Macro & Volatility Features
+    "vix_ts": "Volatility term structure ratio (VIX / VIX3M). Values < 1.0 confirm normal contango (calm regime); >= 1.0 indicates backwardation (near-term panic).",
     "vxn_squeeze_vel": "5-day rate of change in Nasdaq Volatility Index (VXN). Rapid drops detect post-panic volatility compression and short squeezes.",
+    "skew_idx": "CBOE SKEW Index 60-day z-score. Elevated values (> +1.5) indicate institutional tail-risk hedging and out-of-the-money put demand.",
     "vol_compress": "Realized volatility compression ratio (RV_10d / RV_60d). Values < 0.70 indicate price coiling prior to directional breakout.",
-    "slope_r2_20d": "Coefficient of determination (R^2 in [0, 1]) from 20-day log-price linear regression measuring trend smoothness.",
+    # Trend Linear Regression Features
+    "slope_t_norm": "Adaptive window L_t sample-size normalized OLS t-statistic measuring directional trend conviction.",
+    "slope_t_norm_10d": "10-day short-horizon normalized OLS t-statistic measuring fast momentum.",
+    "slope_t_norm_20d": "20-day benchmark normalized OLS t-statistic.",
+    "slope_t_norm_40d": "40-day intermediate-horizon normalized OLS t-statistic measuring intermediate trend persistence.",
+    "slope_r2": "Adaptive window L_t regression coefficient of determination (R^2 in [0, 1]) measuring trend smoothness.",
+    "slope_r2_20d": "20-day regression R^2 in [0, 1] measuring trend linearity and absence of whipsaw.",
+    "slope_sharpe": "Trend slope annualized Sharpe ratio proxy: beta / sigma_residual.",
+    "slope_accel": "5-day rate of change in normalized slope (t_norm - t_norm_prev5) capturing trend acceleration.",
+    # Moving Average & Volatility Extension Features
+    "ema20_slope": "5-day rate of change of the 20-day exponential moving average (EMA20).",
+    "ema50_slope": "5-day rate of change of the 50-day exponential moving average (EMA50).",
+    "ext_atr": "Extension ratio: (Close - EMA20) / ATR_20d measuring overbought/oversold stretch relative to volatility.",
 }
 
 
@@ -782,7 +798,7 @@ def _render_metric_tooltip(label: str, tip_text: str | None = None, align: str =
     clean_tip = tip_text.replace('"', '&quot;').replace("'", "&#39;")
     align_cls = f" tip-{align}" if align in ("left", "right") else ""
     return (
-        f'<span class="metric-tip{align_cls}" title="{clean_tip}">'
+        f'<span class="metric-tip{align_cls}">'
         f'{label}<sup class="metric-tip-sup">ⓘ</sup>'
         f'<span class="metric-tip-popup" role="tooltip">{clean_tip}</span>'
         f'</span>'
@@ -790,18 +806,20 @@ def _render_metric_tooltip(label: str, tip_text: str | None = None, align: str =
 
 
 def _decorate_shap_summary_html(shap_str: str | None) -> str:
-    """Decorate individual SHAP feature tokens with text-based tooltips."""
+    """Decorate individual SHAP feature tokens with text-based tooltips, aligning edge tokens to avoid card clipping."""
     if not shap_str or shap_str == "N/A":
         return "<code>N/A</code>"
     parts = shap_str.split(" | ")
+    n_parts = len(parts)
     decorated_parts = []
-    for part in parts:
+    for idx, part in enumerate(parts):
         if "=" in part:
             k, rest = part.split("=", 1)
             k_clean = k.strip()
             tip = SHAP_FEATURE_TIPS.get(k_clean)
             if tip:
-                rendered_k = _render_metric_tooltip(k_clean, tip)
+                align = "left" if idx < 2 else ("right" if idx >= n_parts - 2 else "center")
+                rendered_k = _render_metric_tooltip(k_clean, tip, align=align)
                 decorated_parts.append(f"{rendered_k}={rest.strip()}")
             else:
                 decorated_parts.append(part)
@@ -897,8 +915,8 @@ def _render_single_plan_body(plan: DailyRecommendationPlan) -> str:
         earn_str = f"{c.days_to_earnings}d" if c.days_to_earnings < 90 else "None nearby"
 
         return f"""
-        <div style="background:#ffffff; border:1px solid #cbd5e1; border-radius:10px; overflow:hidden; margin-bottom:14px;">
-          <div style="background:{header_bg}; color:#ffffff; padding:10px 16px;">
+        <div style="background:#ffffff; border:1px solid #cbd5e1; border-radius:10px; overflow:visible; margin-bottom:14px;">
+          <div style="background:{header_bg}; color:#ffffff; padding:10px 16px; border-top-left-radius:9px; border-top-right-radius:9px;">
             <table width="100%" cellpadding="0" cellspacing="0" border="0">
               <tr>
                 <td align="left" valign="middle">
@@ -961,7 +979,7 @@ def _render_single_plan_body(plan: DailyRecommendationPlan) -> str:
                 <td width="33%" valign="top" style="padding-left:6px;">
                   <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:8px 10px;">
                     <div style="font-size:10px; color:#475569; font-weight:700; text-transform:uppercase;">
-                      {_render_metric_tooltip("ML Score &amp; RS", "Composite conviction score combining Platt-calibrated win probability P(TP1 before Stop) with 20-day beta-neutral residual momentum percentile rank across the active universe.")}
+                      {_render_metric_tooltip("ML Score &amp; RS", "Composite conviction score combining Platt-calibrated win probability P(TP1 before Stop) with 20-day beta-neutral residual momentum percentile rank across the active universe.", align="right")}
                     </div>
                     <div style="font-size:14px; font-weight:700; color:#0f172a; margin-top:2px;">
                       {c.ml_prob * 100:.1f}% <span style="font-size:11px; color:#64748b;">(RS {c.rs_rank * 100:.0f}th)</span>
@@ -1047,11 +1065,11 @@ def _render_single_plan_body(plan: DailyRecommendationPlan) -> str:
               line-height: 0;
               vertical-align: super;
               margin-left: 2px;
-              color: #64748b;
+              color: #0f172a;
               font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
               font-style: normal;
-              font-weight: 700;
-              opacity: 0.85;
+              font-weight: 800;
+              opacity: 0.95;
               user-select: none;
             }}
             .metric-tip:hover .metric-tip-sup {{
@@ -1066,8 +1084,8 @@ def _render_single_plan_body(plan: DailyRecommendationPlan) -> str:
               left: 50%;
               transform: translateX(-50%) translateY(4px);
               width: max-content;
-              max-width: 270px;
-              min-width: 150px;
+              max-width: 250px;
+              min-width: 140px;
               padding: 8px 12px;
               background-color: #0f172a;
               color: #f8fafc;

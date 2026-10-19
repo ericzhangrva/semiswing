@@ -133,7 +133,20 @@
 > - **Tier:** `CONSENSUS` (dual-engine alignment, 1.0% risk), `HIGH` (standalone ML top-quintile RS, 1.0% risk), `MEDIUM` (conservative 0.75% risk).
 > - **Win Prob:** Platt-calibrated out-of-fold probability $P(\text{TP1 before Stop})$. Break-even threshold is $> 40.0\%$ with a 1.5:1 payoff ratio.
 > - **Sizing Scalar:** Meta-labeling sizing multiplier $S_{i,t} = 0.50 + \text{Rank}_{\text{OOF}}(\hat{p}) \in [0.50, 1.50]$ scaling allocation by model confidence.
-> - **Top Model Drivers (SHAP):** Single-feature marginal attributions detailing `sector_rs` (20d RS vs SMH), `vix_ts` (VIX/VIX3M contango), `skew_idx` (tail-risk hedging), `resid_mom_60` (beta-neutral momentum), `vol_compress` (volatility squeeze), and `slope_r2_20d` (trend smoothness).
+> - **Top Model Drivers (SHAP):** Single-feature marginal attributions detailing model conviction:
+>   - `sector_rs`: 20-day relative strength of SMH vs SPY. Positive values confirm semiconductor sector leadership.
+>   - `vix_ts`: Volatility term structure ratio (VIX / VIX3M). Values $< 1.0$ confirm normal contango (calm regime); $\ge 1.0$ indicates backwardation.
+>   - `skew_idx`: CBOE SKEW Index 60-day z-score. Elevated values ($> +1.5$) indicate institutional tail-risk put demand.
+>   - `resid_mom_60`: 60-day idiosyncratic residual momentum relative to SMH after stripping market beta.
+>   - `resid_mom_20`: 20-day idiosyncratic residual momentum relative to SMH after stripping market beta.
+>   - `rs_rank`: Cross-sectional percentile rank ($[0.0, 1.0]$) of 20-day residual momentum across the universe.
+>   - `vol_compress`: Realized volatility compression ratio (RV_10d / RV_60d). Values $< 0.70$ indicate price coiling prior to breakout.
+>   - `vxn_squeeze_vel`: 5-day rate of change in Nasdaq Volatility Index (VXN). Rapid drops detect post-panic volatility compression.
+>   - `slope_r2_20d`: Coefficient of determination ($R^2 \in [0, 1]$) from 20-day log-price regression measuring trend smoothness.
+>   - `slope_t_norm`: Adaptive window $L_t$ normalized OLS $t$-statistic measuring directional trend conviction.
+>   - `slope_accel`: 5-day rate of change in normalized slope capturing trend acceleration.
+>   - `ema20_slope`: 5-day rate of change of 20-day EMA.
+>   - `ema50_slope`: 5-day rate of change of 50-day EMA.
 
 | Ticker | Tier | Entry Date | Exit Date | Days Held | Entry ($) | Exit ($) | Initial Stop ($) | Return (%) | Net P&L ($) | R-Multiple | Exit Reason | Win Prob | Sizing Scalar | Top Model Drivers |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |

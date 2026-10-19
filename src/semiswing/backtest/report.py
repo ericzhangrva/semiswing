@@ -462,6 +462,8 @@ WHITELIST_METRIC_TIPS = {
     "Ann. Vol (%)": "Annualized standard deviation of daily percentage portfolio returns: std(r) * sqrt(252).",
     "Sharpe": "Annualized Sharpe ratio measuring excess return over 3M US Treasury bills per unit annual volatility: (CAGR - Rf) / Vol.",
     "Sortino": "Downside risk-adjusted ratio measuring excess return divided by downside semi-deviation (penalizes negative volatility only).",
+    "Deflated SR Prob": "Deflated Sharpe Ratio (Bailey & López de Prado, 2014): statistical probability that the Sharpe ratio is not a false discovery after penalizing for selection bias across multiple strategy iterations.",
+    "Deflated Sharpe (Prob)": "Deflated Sharpe Ratio (Bailey & López de Prado, 2014): statistical probability that the Sharpe ratio is not a false discovery after penalizing for selection bias across multiple strategy iterations.",
     "Profit Factor": "Gross payoff asymmetry: ratio of gross dollar profits to gross dollar losses (Target > 1.5).",
     "Avg R": "Average profit per trade expressed in units of initial dollar risk (1.0R). Target > 1.5R.",
 }
@@ -474,7 +476,7 @@ def _render_metric_tooltip(label: str, tip_text: str | None = None, align: str =
     clean_tip = tip_text.replace('"', '&quot;').replace("'", "&#39;")
     align_cls = f" tip-{align}" if align in ("left", "right") else ""
     return (
-        f'<span class="metric-tip{align_cls}" title="{clean_tip}">'
+        f'<span class="metric-tip{align_cls}">'
         f'{label}<sup class="metric-tip-sup">ⓘ</sup>'
         f'<span class="metric-tip-popup" role="tooltip">{clean_tip}</span>'
         f'</span>'
@@ -1546,7 +1548,7 @@ def generate_reports(
             "total_return_pct": "Total Return (%)",
             "cagr_pct": "CAGR (%)",
             "sharpe": "Sharpe",
-            "deflated_sharpe_prob": "Deflated Sharpe (Prob)",
+            "deflated_sharpe_prob": "Deflated SR Prob",
             "sortino": "Sortino",
             "max_dd_pct": "Max Drawdown (%)",
             "profit_factor": "Profit Factor",
@@ -1634,13 +1636,22 @@ def generate_reports(
             <strong>Sizing Scalar:</strong> Continuous meta-labeling position sizing multiplier S_i,t &isin; [0.50, 1.50] (L&oacute;pez de Prado framework). Maps predicted win probability into historical out-of-fold percentile rank: S_i,t = 0.50 + Rank_OOF(p). Conviction scales position sizes dynamically between 0.50x and 1.50x without expanding total risk caps.
           </div>
           <div>
-            <strong>Top Model Drivers (SHAP):</strong> Single-feature marginal contributions detailing which factors boosted (+) or penalized (-) trade conviction:
-            <code>sector_rs</code> (20d relative strength vs SMH),
-            <code>vix_ts</code> (volatility term structure VIX/VIX3M; &lt;1.0 indicates contango stability),
-            <code>skew_idx</code> (CBOE SKEW tail-risk hedging demand),
-            <code>resid_mom_60</code> (60d idiosyncratic residual momentum),
-            <code>vol_compress</code> (realized volatility squeeze ratio RV_10d / RV_60d), and
-            <code>slope_r2_20d</code> (trend smoothness R^2).
+            <strong>Top Model Drivers (SHAP):</strong> Single-feature marginal contributions detailing model conviction:
+            <ul style="margin: 6px 0 0 18px; padding: 0; line-height: 1.55;">
+              <li><code>sector_rs</code>: 20-day relative strength of SMH vs SPY: Delta%20d(SMH) - Delta%20d(SPY). Positive values confirm semiconductor sector leadership.</li>
+              <li><code>vix_ts</code>: Volatility term structure ratio (VIX / VIX3M). Values &lt; 1.0 confirm normal contango (calm regime); &ge; 1.0 indicates backwardation (near-term panic).</li>
+              <li><code>skew_idx</code>: CBOE SKEW Index 60-day z-score. Elevated values (&gt; +1.5) indicate institutional tail-risk hedging and out-of-the-money put demand.</li>
+              <li><code>resid_mom_60</code>: 60-day idiosyncratic residual momentum relative to SMH after stripping market beta. Confirms stock-specific momentum decoupled from sector drift.</li>
+              <li><code>resid_mom_20</code>: 20-day idiosyncratic residual momentum relative to SMH after stripping market beta.</li>
+              <li><code>rs_rank</code>: Cross-sectional percentile rank [0.0, 1.0] of 20-day residual momentum across the active tradeable universe.</li>
+              <li><code>vol_compress</code>: Realized volatility compression ratio (RV_10d / RV_60d). Values &lt; 0.70 indicate price coiling prior to directional breakout.</li>
+              <li><code>vxn_squeeze_vel</code>: 5-day rate of change in Nasdaq Volatility Index (VXN). Rapid drops detect post-panic volatility compression and short squeezes.</li>
+              <li><code>slope_r2_20d</code>: Coefficient of determination (R^2 in [0, 1]) from 20-day log-price linear regression measuring trend smoothness.</li>
+              <li><code>slope_t_norm</code>: Adaptive window L_t sample-size normalized OLS t-statistic measuring directional trend conviction.</li>
+              <li><code>slope_accel</code>: 5-day rate of change in normalized slope (t_norm - t_norm_prev5) capturing trend acceleration.</li>
+              <li><code>ema20_slope</code>: 5-day rate of change of the 20-day exponential moving average (EMA20).</li>
+              <li><code>ema50_slope</code>: 5-day rate of change of the 50-day exponential moving average (EMA50).</li>
+            </ul>
           </div>
         </div>
         """
@@ -1651,7 +1662,20 @@ def generate_reports(
             "> - **Tier:** `CONSENSUS` (dual-engine alignment, 1.0% risk), `HIGH` (standalone ML top-quintile RS, 1.0% risk), `MEDIUM` (conservative 0.75% risk).\n"
             "> - **Win Prob:** Platt-calibrated out-of-fold probability $P(\\text{TP1 before Stop})$. Break-even threshold is $> 40.0\\%$ with a 1.5:1 payoff ratio.\n"
             "> - **Sizing Scalar:** Meta-labeling sizing multiplier $S_{i,t} = 0.50 + \\text{Rank}_{\\text{OOF}}(\\hat{p}) \\in [0.50, 1.50]$ scaling allocation by model confidence.\n"
-            "> - **Top Model Drivers (SHAP):** Single-feature marginal attributions detailing `sector_rs` (20d RS vs SMH), `vix_ts` (VIX/VIX3M contango), `skew_idx` (tail-risk hedging), `resid_mom_60` (beta-neutral momentum), `vol_compress` (volatility squeeze), and `slope_r2_20d` (trend smoothness)."
+            "> - **Top Model Drivers (SHAP):** Single-feature marginal attributions detailing model conviction:\n"
+            ">   - `sector_rs`: 20-day relative strength of SMH vs SPY. Positive values confirm semiconductor sector leadership.\n"
+            ">   - `vix_ts`: Volatility term structure ratio (VIX / VIX3M). Values $< 1.0$ confirm normal contango (calm regime); $\\ge 1.0$ indicates backwardation.\n"
+            ">   - `skew_idx`: CBOE SKEW Index 60-day z-score. Elevated values ($> +1.5$) indicate institutional tail-risk put demand.\n"
+            ">   - `resid_mom_60`: 60-day idiosyncratic residual momentum relative to SMH after stripping market beta.\n"
+            ">   - `resid_mom_20`: 20-day idiosyncratic residual momentum relative to SMH after stripping market beta.\n"
+            ">   - `rs_rank`: Cross-sectional percentile rank ($[0.0, 1.0]$) of 20-day residual momentum across the universe.\n"
+            ">   - `vol_compress`: Realized volatility compression ratio (RV_10d / RV_60d). Values $< 0.70$ indicate price coiling prior to breakout.\n"
+            ">   - `vxn_squeeze_vel`: 5-day rate of change in Nasdaq Volatility Index (VXN). Rapid drops detect post-panic volatility compression.\n"
+            ">   - `slope_r2_20d`: Coefficient of determination ($R^2 \\in [0, 1]$) from 20-day log-price regression measuring trend smoothness.\n"
+            ">   - `slope_t_norm`: Adaptive window $L_t$ normalized OLS $t$-statistic measuring directional trend conviction.\n"
+            ">   - `slope_accel`: 5-day rate of change in normalized slope capturing trend acceleration.\n"
+            ">   - `ema20_slope`: 5-day rate of change of 20-day EMA.\n"
+            ">   - `ema50_slope`: 5-day rate of change of 50-day EMA."
         )
 
     if base_res is not None and not base_res.yearly_table.empty:
@@ -1729,9 +1753,11 @@ def generate_reports(
     .color-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
     .two-col-charts { display: grid; grid-template-columns: 1.15fr 1fr; gap: 18px; }
     @media (max-width: 1100px) { .two-col-charts { grid-template-columns: 1fr; } }
-    .chart-card { background: #ffffff; padding: 18px; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
-    table { border-collapse: collapse; width: 100%; background: #ffffff; margin-bottom: 28px; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.08); font-size: 13.5px; }
-    th { background: #1e293b; color: #ffffff; text-align: left; padding: 10px 12px; font-weight: 600; }
+    .chart-card { background: #ffffff; padding: 18px; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); overflow: visible; }
+    table { border-collapse: separate; border-spacing: 0; width: 100%; background: #ffffff; margin-bottom: 28px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); font-size: 13.5px; }
+    table tr:first-child th:first-child { border-top-left-radius: 8px; }
+    table tr:first-child th:last-child { border-top-right-radius: 8px; }
+    th { background: #1e293b; color: #ffffff; text-align: left; padding: 10px 12px; font-weight: 600; position: relative; }
     td { padding: 9px 12px; border-bottom: 1px solid #e5e7eb; }
     tr:nth-child(even) { background: #f8fafc; }
     
@@ -1754,13 +1780,17 @@ def generate_reports(
       line-height: 0;
       vertical-align: super;
       margin-left: 2.5px;
-      color: #64748b;
+      color: #0f172a;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       font-style: normal;
-      font-weight: 700;
-      opacity: 0.85;
+      font-weight: 800;
+      opacity: 0.95;
       user-select: none;
       transition: color 0.15s ease, transform 0.15s ease;
+    }
+    th .metric-tip-sup {
+      color: #38bdf8 !important;
+      opacity: 1 !important;
     }
     .metric-tip:hover .metric-tip-sup {
       color: #0284c7;
@@ -1817,6 +1847,28 @@ def generate_reports(
     .metric-tip.tip-right .metric-tip-popup { left: auto; right: 0; transform: translateX(0) translateY(4px); }
     .metric-tip.tip-right:hover .metric-tip-popup { transform: translateX(0) translateY(0); }
     .metric-tip.tip-right .metric-tip-popup::after { left: auto; right: 14px; transform: none; }
+
+    /* Table Header Specific: Pop downward so popups are never clipped by table tops */
+    th .metric-tip-popup {
+      bottom: auto;
+      top: calc(100% + 7px);
+      transform: translateX(-50%) translateY(-4px);
+    }
+    th .metric-tip:hover .metric-tip-popup {
+      transform: translateX(-50%) translateY(0);
+    }
+    th .metric-tip-popup::after {
+      top: auto;
+      bottom: 100%;
+      border-width: 0 5px 5px 5px;
+      border-color: transparent transparent #0f172a transparent;
+    }
+    th .metric-tip.tip-left .metric-tip-popup { left: 0; transform: translateX(0) translateY(-4px); }
+    th .metric-tip.tip-left:hover .metric-tip-popup { transform: translateX(0) translateY(0); }
+    th .metric-tip.tip-left .metric-tip-popup::after { left: 14px; transform: none; }
+    th .metric-tip.tip-right .metric-tip-popup { left: auto; right: 0; transform: translateX(0) translateY(-4px); }
+    th .metric-tip.tip-right:hover .metric-tip-popup { transform: translateX(0) translateY(0); }
+    th .metric-tip.tip-right .metric-tip-popup::after { left: auto; right: 14px; transform: none; }
     """
 
     interactive_html = _build_interactive_dashboard_html(results)

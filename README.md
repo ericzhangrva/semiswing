@@ -25,12 +25,20 @@ To eliminate look-ahead selection bias and survivorship bias, the tradeable univ
 1. **Stage 1 (Institutional Liquidity Floor at $t_k - 1$):**
    - Active US-listed semiconductor & tech equities in `universe.all_panel_stocks`.
    - Listing history $\ge 60$ trading days since listing/IPO (eliminates unseasoned listings).
-   - $\operatorname{Close}_{t_k - 1} \ge 15.00\text{ USD}$ (eliminates penny stocks below 15 USD).
+   - $\text{Close}_{t_k - 1} \ge 15.00\text{ USD}$ (eliminates penny stocks below 15 USD).
    - Trailing 60-day median daily dollar volume:
-     $$\operatorname{MedDollarVol}_{60\text{d}} = \operatorname{median}_{t \in [t_k - 60, t_k - 1]}\!\left(\operatorname{Close}_t \times \operatorname{Volume}_t\right) \ge 150{,}000{,}000\text{ USD}$$
-   - Volatility condition: 20-day $\operatorname{ATR}_{\text{pct}, 20\text{d}, t_k - 1} > 0$.
+
+     $$
+     \text{MedDollarVol}_{60\text{d}} = \text{median}_{t \in [t_k - 60, t_k - 1]} \left(\text{Close}_t \times \text{Volume}_t\right) \ge 150{,}000{,}000\text{ USD}
+     $$
+
+   - Volatility condition: 20-day $\text{ATR}_{\text{pct}, 20\text{d}, t_k - 1} > 0$.
 2. **Stage 2 (Swing Tradability Ranking at $t_k - 1$):**
-   $$\operatorname{SwingRankScore}_{i, t_k - 1} = \log_{10}\!\left(\operatorname{MedDollarVol}_{60\text{d}}\right) \times \operatorname{ATR}_{\text{pct}, 20\text{d}, t_k - 1}$$
+
+   $$
+   \text{SwingRankScore}_{i, t_k - 1} = \log_{10}\left(\text{MedDollarVol}_{60\text{d}}\right) \times \text{ATR}_{\text{pct}, 20\text{d}, t_k - 1}
+   $$
+
    - The $\log_{10}$ compression scales volume variation down to a $1.28\times$ factor between mid-caps and mega-caps, allowing 20-day $\text{ATR\%}$ to prioritize high-velocity momentum leaders over sluggish value traps.
    - **Uncapped Selection (`pit_top_n = None`):** All qualifying tickers passing the Stage 1 liquidity floor receive `is_tradeable_universe = 1` for quarter $k$, naturally expanding from ~28 stocks in 2022 to ~50 in 2026 as the AI infrastructure ecosystem expanded (with Stage 2 tradability scores governing relative ranking and execution priority).
 3. **Position Grace Rule:** Open positions held across quarterly boundaries are **never forcibly liquidated**; they remain managed under their stops and profit targets until natural exit, while new entries for dropped tickers are blocked.
@@ -38,7 +46,11 @@ To eliminate look-ahead selection bias and survivorship bias, the tradeable univ
 ### 1.3 Causal Macro Data & Volatility Hygiene
 - **FRED Publication Lag:** All Federal Reserve economic series (`DTB3`, `DGS10`, `DTWEXBGS`, `VIXCLS`, `VXVCLS`, `BAMLH0A0HYM2`) are lagged by 1 business day (`shift(1)`) to account for publication schedules.
 - **Fail-Closed Volatility Fallback:**
-  $$\text{vix}_{\text{ts}} = \left(\frac{\text{VIX}}{\text{VIX3M}}\right).\text{fillna}(1.05)$$
+
+  $$
+  \text{vix}_{\text{ts}} = \left(\frac{\text{VIX}}{\text{VIX3M}}\right).\text{fillna}(1.05)
+  $$
+
   Missing volatility term structure data defaults to backwardation ($1.05$), immediately locking down long exposure.
 
 ### 1.4 Purged & Embargoed Machine Learning Validation
@@ -55,11 +67,21 @@ To prove that outperformance is driven by signal extraction and macro regime gat
 
 ### 2.1 Sample-Size Normalized OLS Trend Conviction (`slope_t_norm`)
 Over a lookback window $L$, we fit the log-price regression $\ln C_i = \alpha + \beta t_i$ using Newey-West lag-1 HAC standard errors to account for residual autocorrelation. Because raw $t$-statistics scale with $\sqrt{L}$, we normalize to a constant 20-day baseline:
-$$t_{\text{norm}} = t(\beta) \times \sqrt{\frac{20}{L}}$$
-$$R^2 = 1.0 - \frac{\sum (y_i - \hat{y}_i)^2}{\sum (y_i - \bar{y})^2}$$
+
+$$
+t_{\text{norm}} = t(\beta) \times \sqrt{\frac{20}{L}}
+$$
+
+$$
+R^2 = 1.0 - \frac{\sum (y_i - \hat{y}_i)^2}{\sum (y_i - \bar{y})^2}
+$$
 
 ### 2.2 Volatility-Scaled Adaptive Window ($L_t$)
-$$L_t = \text{clip}\left(\text{round}\left(20 \times \frac{\sigma_{250}}{\sigma_{20}}\right), 10, 60\right)$$
+
+$$
+L_t = \text{clip}\left(\text{round}\left(20 \times \frac{\sigma_{250}}{\sigma_{20}}\right), 10, 60\right)
+$$
+
 where $\sigma_n$ is the $n$-day sample standard deviation of daily log returns $\ln(C_t / C_{t-1})$.
 
 ### 2.3 Macro Regime Schmitt Trigger & Continuous Multiplier ($M_t$)
@@ -69,26 +91,48 @@ To prevent whipsaw churn near moving averages while avoiding recovery lag, regim
 - **Inside Band:** Retains previous regime state.
 
 The continuous macro multiplier $M_t$ scales capital allocation:
-$$M_t = \begin{cases} 
-0.0 & \text{if } \operatorname{Regime} = 0 \;\lor\; \operatorname{vix}_{\text{ts}} \ge 1.0 \;\lor\; \operatorname{VIX} \ge 30.0 \quad \text{(Deep Bear / Crisis)} \\[4pt]
-0.5 & \text{if } \operatorname{Regime} = 1 \;\land\; (\operatorname{EMA50} \lt \operatorname{EMA200} \;\lor\; \operatorname{VIX} \ge 22.0) \quad \text{(Recovery / Transition)} \\[4pt]
-1.0 & \text{if } \operatorname{Regime} = 1 \;\land\; \operatorname{EMA50} \ge \operatorname{EMA200} \;\land\; \operatorname{VIX} \lt 22.0 \quad \text{(Confirmed Bull)}
-\end{cases}$$
+
+$$
+M_t = \begin{cases} 
+0.0 & \text{if } \text{Regime} = 0 \lor \text{vix}_{\text{ts}} \ge 1.0 \lor \text{VIX} \ge 30.0 \quad \text{(Deep Bear / Crisis)} \\
+0.5 & \text{if } \text{Regime} = 1 \land (\text{EMA50} < \text{EMA200} \lor \text{VIX} \ge 22.0) \quad \text{(Recovery / Transition)} \\
+1.0 & \text{if } \text{Regime} = 1 \land \text{EMA50} \ge \text{EMA200} \land \text{VIX} < 22.0 \quad \text{(Confirmed Bull)}
+\end{cases}
+$$
 
 ### 2.4 Continuous Meta-Labeling Sizing ($S_{i,t}$)
 Following Marcos López de Prado's Meta-Labeling framework, shallow decision trees (`max_depth = 2`, `num_leaves = 4`, `min_child_samples = 60`) predict trade success probability $p_{i,t}$. Probabilities are mapped into out-of-fold empirical percentile ranks $q_{i,t} \in [0.0, 1.0]$:
-$$q_{i,t} = \frac{1}{|OOF|} \sum_{j \in OOF} \mathbf{1}\{p_j \le p_{i,t}\}$$
-$$S_{i,t} = 0.50 + 1.00 \times q_{i,t} \in [0.50, 1.50]$$
+
+$$
+q_{i,t} = \frac{1}{|OOF|} \sum_{j \in OOF} \mathbf{1}\{p_j \le p_{i,t}\}
+$$
+
+$$
+S_{i,t} = 0.50 + 1.00 \times q_{i,t} \in [0.50, 1.50]
+$$
 
 ### 2.5 Hierarchical Two-Tier Risk Allocation
-$$\operatorname{RiskBudget} = \operatorname{Equity} \times 0.010 \times M_t \times S_{i,t}$$
-$$\operatorname{PositionCap} = \min\left(\operatorname{Equity} \times 0.35 \times M_t \times S_{i,t},\; \operatorname{Cash} \times 0.99\right)$$
-$$\operatorname{Shares} = \min\left(\left\lfloor \frac{\operatorname{RiskBudget}}{\operatorname{OpenPrice} - \operatorname{InitialStop}} \right\rfloor,\; \left\lfloor \frac{\operatorname{PositionCap}}{\operatorname{OpenPrice}} \right\rfloor\right)$$
+
+$$
+\text{RiskBudget} = \text{Equity} \times 0.010 \times M_t \times S_{i,t}
+$$
+
+$$
+\text{PositionCap} = \min\left(\text{Equity} \times 0.35 \times M_t \times S_{i,t},\; \text{Cash} \times 0.99\right)
+$$
+
+$$
+\text{Shares} = \min\left(\left\lfloor \frac{\text{RiskBudget}}{\text{OpenPrice} - \text{InitialStop}} \right\rfloor,\; \left\lfloor \frac{\text{PositionCap}}{\text{OpenPrice}} \right\rfloor\right)
+$$
 
 ### 2.6 Deflated Sharpe Ratio (DSR)
-Following David Bailey and Marcos López de Prado (2014), the Deflated Sharpe Ratio evaluates the statistical probability that the annualized Sharpe ratio $\widehat{\operatorname{SR}}$ exceeds the expected maximum Sharpe ratio under the null hypothesis of zero skill given $K$ strategy trials:
-$$\operatorname{DSR} = \Phi\left( \frac{(\widehat{\operatorname{SR}} - \operatorname{SR}^{\ast}) \sqrt{T - 1}}{\sqrt{1 - \hat{\gamma}_3 \widehat{\operatorname{SR}} + \frac{\hat{\gamma}_4 - 1}{4} \widehat{\operatorname{SR}}^2}} \right)$$
-where $\operatorname{SR}^{\ast} = \sqrt{2 \ln K} + \frac{\gamma}{\sqrt{2 \ln K}}$, $\hat{\gamma}_3$ is return skewness, and $\hat{\gamma}_4$ is return kurtosis.
+Following David Bailey and Marcos López de Prado (2014), the Deflated Sharpe Ratio evaluates the statistical probability that the annualized Sharpe ratio $\widehat{\text{SR}}$ exceeds the expected maximum Sharpe ratio under the null hypothesis of zero skill given $K$ strategy trials:
+
+$$
+\text{DSR} = \Phi\left( \frac{(\widehat{\text{SR}} - \text{SR}^*) \sqrt{T - 1}}{\sqrt{1 - \hat{\gamma}_3 \widehat{\text{SR}} + \frac{\hat{\gamma}_4 - 1}{4} \widehat{\text{SR}}^2}} \right)
+$$
+
+where $\text{SR}^* = \sqrt{2 \ln K} + \frac{\gamma}{\sqrt{2 \ln K}}$, $\hat{\gamma}_3$ is return skewness, and $\hat{\gamma}_4$ is return kurtosis.
 
 ---
 
