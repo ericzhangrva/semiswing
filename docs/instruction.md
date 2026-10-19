@@ -47,7 +47,7 @@ Evaluated over the trailing 60 trading days $[t_k - 60, t_k - 1]$:
    - **AI Enterprise & Data Analytics Software:** `PLTR`, `ORCL`, `APP`.
    - **AI Datacenter Power & Electrical Infrastructure:** `CEG`, `VRT`, `GEV`.
 2. **Seasoning / IPO Guard:** Total historical daily bars $\ge 60$ trading days since listing.
-3. **Price Floor:** $\text{Close}_{t_k - 1} \ge 15.00$ ($\$15.00$).
+3. **Price Floor:** $\text{Close}_{t_k - 1} \ge 15.00\text{ USD}$ (eliminates penny stocks below 15 USD).
 4. **Institutional Dollar Volume Floor:**
 
 $$
@@ -63,7 +63,7 @@ $$
 \text{SwingRankScore}_{i, t_k - 1} = \log_{10}\left(\text{MedDollarVol}_{60d}\right) \times \text{ATR}_{\text{pct}, 20d, t_k - 1}
 $$
 
-where $\text{ATR}_{\text{pct}, 20d} = \frac{\text{ATR}_{20d}}{\text{Close}}$.
+where $ATR_{pct, 20d} = ATR_{20d} / Close$.
 - The $\log_{10}$ compression scales volume variation down to a $1.28\times$ factor across mega-caps vs mid-caps, allowing 20-day $\text{ATR}_{\text{pct}}$ to prioritize high-velocity momentum leaders over sluggish value traps.
 - **Uncapped Configuration (`pit_top_n = None`):** All qualifying stocks passing the Stage 1 institutional liquidity floor are admitted to the tradeable universe, naturally expanding from ~28 stocks in 2022 to ~50 stocks by 2026 as the AI infrastructure ecosystem expanded. If a finite integer $N$ is configured, it truncates to the Top $N$ highest-ranked tickers.
 
@@ -121,16 +121,16 @@ Every feature is dimensionless or sample-size normalized:
 | `slope_t_norm_20d` | $t(\beta_{20d}) \times \sqrt{20 / 20}$ | Medium-term 20-day normalized trend conviction |
 | `slope_t_norm_40d` | $t(\beta_{40d}) \times \sqrt{20 / 40}$ | Intermediate 40-day normalized trend conviction |
 | `slope_r2_20d` | $R^2$ of 20-day log price regression | 20-day trend linearity |
-| `ema20_slope` | $\frac{(\text{EMA20}_t / \text{EMA20}_{t-5}) - 1}{\text{ATR}_{\text{pct}, 14}}$ | 5-day slope of 20-day EMA in ATR units |
-| `ema50_slope` | $\frac{(\text{EMA50}_t / \text{EMA50}_{t-10}) - 1}{\text{ATR}_{\text{pct}, 14}}$ | 10-day slope of 50-day EMA in ATR units |
-| `ext_atr` | $\frac{C_t - \text{EMA20}_t}{\text{ATR}_{14}}$ | Overextension above 20d EMA in ATR units |
+| `ema20_slope` | $(EMA20_t / EMA20_{t-5} - 1) / ATR_{pct, 14}$ | 5-day slope of 20-day EMA in ATR units |
+| `ema50_slope` | $(EMA50_t / EMA50_{t-10} - 1) / ATR_{pct, 14}$ | 10-day slope of 50-day EMA in ATR units |
+| `ext_atr` | $(C_t - EMA20_t) / ATR_{14}$ | Overextension above 20d EMA in ATR units |
 | `resid_mom_20` | Cumulative residual return vs `SMH` over 20d | Beta-decoupled single-stock idiosyncratic momentum |
 | `resid_mom_60` | Cumulative residual return vs `SMH` over 60d | Intermediate beta-decoupled relative strength |
 | `rs_rank` | Percentile rank of `resid_mom_20` across panel | Cross-sectional leadership (decile rank $[0.0, 1.0]$) |
 | `sector_rs` | $R_{20d}(\text{SMH}) - R_{20d}(\text{SPY})$ | Semiconductor sector excess momentum vs broad market |
-| `vol_compress` | $\frac{\text{RV}_{10}}{\text{RV}_{60}}$ | Realized volatility ratio ($\text{ratio} < 0.7$ signals squeeze) |
-| `vix_ts` | $\frac{\text{VIX}}{\text{VIX3M}}$ | Volatility term structure ($>1.0$ indicates backwardation) |
-| `vxn_squeeze_vel` | $z\text{-score of } \Delta_{5d}\text{VXN}$ vs 252d distribution | Implied volatility expansion/compression velocity |
+| `vol_compress` | $RV_{10} / RV_{60}$ | Realized volatility ratio (ratio &lt; 0.7 signals squeeze) |
+| `vix_ts` | $VIX / VIX3M$ | Volatility term structure (&gt; 1.0 indicates backwardation) |
+| `vxn_squeeze_vel` | Rolling 252d $z$-score of $\Delta_{5d}VXN$ | Implied volatility expansion/compression velocity |
 | `skew_idx` | 60-day rolling $z$-score of CBOE SKEW (`min_periods=20`) | Tail-risk hedge demand |
 
 ---
@@ -177,7 +177,7 @@ flowchart LR
 ### Layer 1: Deterministic Baseline Rules
 A candidate triggers an entry signal if all hold on closed bar $t$:
 1. `is_tradeable_universe == 1` & `regime_on == 1` & `data_health >= 80`.
-2. `close >= $10.00` & `dollar_vol_20d >= $150,000,000`.
+2. `close >= 10.00 USD` & `dollar_vol_20d >= 150,000,000 USD`.
 3. `slope_t_norm >= 1.50` & `slope_r2 >= 0.35` (over $L_t$).
 4. `slope_accel > 0.0` & `ema20_slope > 0.0`.
 5. `rs_rank >= 0.80` (top 20% relative strength across semiconductor peers).
