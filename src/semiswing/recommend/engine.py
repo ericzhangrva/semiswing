@@ -927,6 +927,13 @@ def _render_single_plan_body(plan: DailyRecommendationPlan) -> str:
         </div>
         """
 
+    if not holdings_cards_html:
+        holdings_cards_html = f"""
+        <div style="background:#ffffff; border:1px solid #cbd5e1; border-left:5px solid #0284c7; border-radius:8px; padding:14px 16px; margin-bottom:10px; font-size:13px; color:#334155; line-height:1.5;">
+          <strong>Clean Cash Account (0 Existing Positions):</strong> 100% of capital (${plan.total_equity:,.2f}) is dry powder ready to deploy into today's qualified swing setups and core semiconductor ETF / treasury cash below.
+        </div>
+        """
+
     # Helper to render a Buy Trade Ticket Card (for either active_buys or top watchlist_candidates)
     def _render_ticket_card(c: BuyCandidate, is_active: bool) -> str:
         header_bg = "#0284c7" if is_active else "#1e293b"
@@ -1041,33 +1048,35 @@ def _render_single_plan_body(plan: DailyRecommendationPlan) -> str:
         for b in plan.active_buys:
             step2_html += _render_ticket_card(b, is_active=True)
 
-    # Always show the Immediate Core ETF Option + Top 4 Pre-Sized Stock Trade Tickets
+    # Always show Parking Unallocated Cash (Dual Strategy Paths: SMH Bull Core vs 3M Treasury Cash) + Top 4 Pre-Sized Stock Trade Tickets
     step2_html += f"""
     <div style="background:#ffffff; border:1px solid #cbd5e1; border-left:5px solid #0284c7; border-radius:8px; padding:14px 16px; margin-bottom:14px;">
       <div style="font-size:14px; font-weight:700; color:#0f172a;">
-        Option A — Immediate Core Semiconductor ETF Allocation ({plan.core_sweep_Instrument})
+        Parking Unallocated Cash (${plan.core_sweep_dollars_cash_only:,.2f}) — Dual Strategy Paths
       </div>
       <div style="font-size:12px; color:#475569; margin-top:4px; line-height:1.45;">
-        While waiting for individual stocks to dip back inside their volatility band, keep unallocated cash working in your unleveraged core ETF (<strong>{plan.core_sweep_Instrument}</strong> @ <strong>${plan.smh_close:,.2f}</strong>):
+        After funding today's swing tickets (or while waiting for pullbacks), choose how to park your unallocated dry powder:
       </div>
       <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:10px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px;">
         <tr>
-          <td width="50%" style="padding:8px 12px; border-right:1px solid #e2e8f0;">
-            <div style="font-size:11px; color:#64748b; text-transform:uppercase; font-weight:600;">Using Settled Cash Only</div>
-            <div style="font-size:15px; font-weight:800; color:#0f172a;">BUY ${plan.core_sweep_dollars_cash_only:,.2f} of {plan.core_sweep_Instrument}</div>
+          <td width="50%" valign="top" style="padding:10px 12px; border-right:1px solid #e2e8f0;">
+            <div style="font-size:11px; color:#0284c7; text-transform:uppercase; font-weight:700;">Path 1: Semiconductor Bull Core (Growth Track)</div>
+            <div style="font-size:15px; font-weight:800; color:#0f172a; margin-top:2px;">BUY ${plan.core_sweep_dollars_cash_only:,.2f} of {plan.core_sweep_Instrument}</div>
             <div style="font-size:12px; color:#475569;">~{plan.core_sweep_shares_cash_only:.3f} shares @ ${plan.smh_close:,.2f}</div>
+            <div style="font-size:11px; color:#64748b; margin-top:4px;">Keeps core long-term semiconductor secular bull exposure intact.</div>
           </td>
-          <td width="50%" style="padding:8px 12px;">
-            <div style="font-size:11px; color:#64748b; text-transform:uppercase; font-weight:600;">With ETF Rotation (SNXX / SPCX / TQQQ)</div>
-            <div style="font-size:15px; font-weight:800; color:#0f172a;">BUY ${plan.core_sweep_dollars_with_rotate:,.2f} of {plan.core_sweep_Instrument}</div>
-            <div style="font-size:12px; color:#475569;">~{plan.core_sweep_shares_with_rotate:.3f} shares @ ${plan.smh_close:,.2f}</div>
+          <td width="50%" valign="top" style="padding:10px 12px;">
+            <div style="font-size:11px; color:#16a34a; text-transform:uppercase; font-weight:700;">Path 2: 3M T-Bills / Treasury Cash (Preservation Track)</div>
+            <div style="font-size:15px; font-weight:800; color:#0f172a; margin-top:2px;">HOLD ${plan.core_sweep_dollars_cash_only:,.2f} in SGOV / BIL</div>
+            <div style="font-size:12px; color:#16a34a; font-weight:600;">Earning {plan.cash_rate_apy_pct:.2f}% APY Risk-Free</div>
+            <div style="font-size:11px; color:#64748b; margin-top:4px;">Zero drawdowns; leaves dry powder ready to pounce on new swing dips.</div>
           </td>
         </tr>
       </table>
     </div>
 
     <div style="font-size:14px; font-weight:700; color:#0f172a; margin:16px 0 8px 0;">
-      Option B — Top 4 New AI &amp; Semiconductor Trade Tickets (Pre-Sized in $)
+      Pre-Sized Watchlist Candidates — Top 4 Near Trigger (Pre-Sized in $)
     </div>
     <div style="font-size:12px; color:#475569; margin-bottom:12px;">
       Pick <strong>2 to 3 tickets</strong> below (sized from your deployable cash pool while capping single-trade risk):
@@ -1610,5 +1619,75 @@ def write_recommendation_reports(
     html_path.write_text(encrypted_html, encoding="utf-8")
     dated_html_path.write_text(encrypted_html, encoding="utf-8")
     return html_path, md_path
+
+
+def render_starter_10k_html(plan: DailyRecommendationPlan, created_ts: str | None = None) -> str:
+    """Render a standalone, public HTML page for the $10,000 Starter Portfolio & Trade Allocation Guide."""
+    if created_ts is None:
+        created_ts = pd.Timestamp.now(tz="America/New_York").strftime("%Y-%m-%d %H:%M:%S %Z")
+    body_card = _render_single_plan_body(plan)
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SemiSwing $10K Starter Portfolio &amp; Trade Allocation Guide ({plan.as_of_date})</title>
+</head>
+<body style="margin:0; padding:20px 12px; background-color:#f1f5f9; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color:#0f172a;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td align="center">
+        <!-- Top Navigation Bar -->
+        <div style="max-width:680px; width:100%; text-align:left; margin-bottom:14px;">
+          <div style="background:#0f172a; border:1px solid #1e293b; border-radius:12px; padding:12px 18px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap;">
+            <div>
+              <div style="font-size:10px; text-transform:uppercase; letter-spacing:1px; color:#38bdf8; font-weight:700;">
+                SemiSwing Public Reference Desk
+              </div>
+              <div style="font-size:15px; font-weight:800; color:#f8fafc; margin-top:2px;">
+                $10K Starter Portfolio &bull; Clean Cash Allocation Guide
+              </div>
+            </div>
+            <div style="margin-top:4px;">
+              <a href="../index.html" style="font-size:12px; color:#38bdf8; text-decoration:none; font-weight:600; margin-right:12px;">&larr; Dashboard</a>
+              <a href="../backtests/backtest_report.html" style="font-size:12px; color:#4ade80; text-decoration:none; font-weight:600; margin-right:12px;">Backtest ($10K) &rarr;</a>
+              <a href="latest_recommendations.html" style="font-size:12px; color:#cbd5e1; text-decoration:none; font-weight:600;">Multi-Portfolio Vault &#128274;</a>
+            </div>
+          </div>
+        </div>
+
+        {body_card}
+
+        <!-- Footer -->
+        <div style="max-width:680px; width:100%; text-align:center; padding:20px 0 28px 0; font-size:12px; color:#64748b; border-top:1px solid #cbd5e1; margin-top:20px;">
+          SemiSwing Public Model Desk &bull; Report Created: <strong>{created_ts}</strong>
+        </div>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+"""
+
+
+def write_starter_10k_report(
+    plan: DailyRecommendationPlan,
+    out_dir: Path | None = None,
+    created_ts: str | None = None,
+) -> Path:
+    """Write public unencrypted $10,000 Starter Portfolio HTML trade recommendation report."""
+    target_dir = out_dir or (PROJECT_ROOT / "reports" / "daily")
+    target_dir.mkdir(parents=True, exist_ok=True)
+    html_path = target_dir / "starter_10k.html"
+    dated_html_path = target_dir / f"{plan.as_of_date}_starter_10k.html"
+
+    if created_ts is None:
+        created_ts = pd.Timestamp.now(tz="America/New_York").strftime("%Y-%m-%d %H:%M:%S %Z")
+
+    html_content = render_starter_10k_html(plan, created_ts=created_ts)
+    html_path.write_text(html_content, encoding="utf-8")
+    dated_html_path.write_text(html_content, encoding="utf-8")
+    return html_path
+
 
 

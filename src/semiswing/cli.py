@@ -19,6 +19,7 @@ from semiswing.backtest.report import (
 )
 from semiswing.config import (
     PROJECT_ROOT,
+    PortfolioSettings,
     export_private_portfolios_json,
     load_all_portfolio_settings,
     load_events_settings,
@@ -37,7 +38,9 @@ from semiswing.recommend.engine import (
     build_daily_recommendation_plan,
     render_recommendation_email_html,
     render_recommendation_email_text,
+    render_starter_10k_html,
     write_recommendation_reports,
+    write_starter_10k_report,
 )
 
 app = typer.Typer(help="SemiSwing: Semiconductor & AI 2-4 Week Momentum Swing System")
@@ -294,6 +297,24 @@ def recommend(
         console.print(f"[bold green]Local Plain-Text / Markdown Ticket written to:[/bold green] {md_out}")
     except ValueError as e:
         console.print(f"\n[bold yellow]Skipped Encrypted Daily Trade Tickets: {e}[/bold yellow]")
+
+    starter_pcfg = PortfolioSettings(
+        account_name="Reference Starter Account ($10K Cash)",
+        snapshot_date=primary_plan.as_of_date,
+        cash=10_000.0,
+        positions=[],
+    )
+    starter_plan = build_daily_recommendation_plan(
+        panel=panel,
+        strategy=strategy,
+        universe=universe,
+        portfolio=starter_pcfg,
+        health_score=health_score,
+        capital_override=10_000.0,
+    )
+    starter_out = write_starter_10k_report(starter_plan)
+    console.print(f"[bold green]Public $10K Starter Trade Report written to:[/bold green] {starter_out}")
+
     idx_out = _write_cloudflare_pages_index(primary_plan.as_of_date, primary_plan.regime_on, len(all_plans))
 
     for slug, plan in all_plans.items():
@@ -409,9 +430,21 @@ def _write_cloudflare_pages_index(as_of_date: str, regime_on: bool, num_portfoli
     </p>
 
     <div style="display:grid; gap:16px; margin-top:24px;">
-      <a href="daily/latest_recommendations.html" style="display:block; text-decoration:none; background:#1e293b; border:1px solid #334155; border-left:5px solid #38bdf8; border-radius:10px; padding:20px;">
+      <!-- Card 1 (Top): $10K Starter Portfolio & Trade Allocation Guide (Clean Cash) - PUBLIC -->
+      <a href="daily/starter_10k.html" style="display:block; text-decoration:none; background:#1e293b; border:1px solid #334155; border-left:5px solid #38bdf8; border-radius:10px; padding:20px;">
         <div style="display:flex; justify-content:space-between; align-items:center;">
-          <div style="font-size:18px; font-weight:800; color:#f8fafc;">1. Today's Daily Trade Tickets (Passcode Locked) &rarr;</div>
+          <div style="font-size:18px; font-weight:800; color:#f8fafc;">1. $10K Starter Portfolio &amp; Trade Allocation Guide &rarr;</div>
+          <span style="background:#052e16; color:#4ade80; border:1px solid #16a34a; padding:3px 10px; border-radius:999px; font-size:11px; font-weight:700;">PUBLIC</span>
+        </div>
+        <div style="font-size:13px; color:#94a3b8; margin-top:6px;">
+          Public reference allocation assuming starting with $10,000 in cash. Provides exact dollar trade tickets for top AI &amp; semiconductor swing setups, with unallocated cash parked in SMH (Bull Core) or 3-Month T-Bills (Cash Yield).
+        </div>
+      </a>
+
+      <!-- Card 2 (Middle): Multi-Portfolio Daily Trade Tickets (Passcode Locked) - PROTECTED -->
+      <a href="daily/latest_recommendations.html" style="display:block; text-decoration:none; background:#1e293b; border:1px solid #334155; border-left:5px solid #a855f7; border-radius:10px; padding:20px;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div style="font-size:18px; font-weight:800; color:#f8fafc;">2. Today's Daily Trade Tickets (Passcode Locked) &rarr;</div>
           <span style="background:#0f172a; color:#38bdf8; border:1px solid #0284c7; padding:3px 10px; border-radius:999px; font-size:11px; font-weight:700;">PROTECTED</span>
         </div>
         <div style="font-size:13px; color:#94a3b8; margin-top:6px;">
@@ -419,9 +452,10 @@ def _write_cloudflare_pages_index(as_of_date: str, regime_on: bool, num_portfoli
         </div>
       </a>
 
+      <!-- Card 3 (Bottom): Walk-Forward Backtest Report & Equity Curves ($10K) - PUBLIC -->
       <a href="backtests/backtest_report.html" style="display:block; text-decoration:none; background:#1e293b; border:1px solid #334155; border-left:5px solid #4ade80; border-radius:10px; padding:20px;">
         <div style="display:flex; justify-content:space-between; align-items:center;">
-          <div style="font-size:18px; font-weight:800; color:#f8fafc;">2. Walk-Forward Backtest Report &amp; Equity Curves ($10K) &rarr;</div>
+          <div style="font-size:18px; font-weight:800; color:#f8fafc;">3. Walk-Forward Backtest Report &amp; Equity Curves ($10K) &rarr;</div>
           <span style="background:#052e16; color:#4ade80; border:1px solid #16a34a; padding:3px 10px; border-radius:999px; font-size:11px; font-weight:700;">PUBLIC</span>
         </div>
         <div style="font-size:13px; color:#94a3b8; margin-top:6px;">
@@ -526,8 +560,27 @@ def daily_run(
         console.print(f"[bold green]Updated Encrypted Daily Trade Tickets:[/bold green] {rec_html}")
     except ValueError as e:
         console.print(f"[bold yellow]Skipped Encrypted Daily Trade Tickets: {e}[/bold yellow]")
+
+    # Build and write public $10K Reference Starter Portfolio Report
+    starter_pcfg = PortfolioSettings(
+        account_name="Reference Starter Account ($10K Cash)",
+        snapshot_date=primary_plan.as_of_date,
+        cash=10_000.0,
+        positions=[],
+    )
+    starter_plan = build_daily_recommendation_plan(
+        panel=panel_ml,
+        strategy=strategy,
+        universe=universe,
+        portfolio=starter_pcfg,
+        health_score=health_score,
+        capital_override=10_000.0,
+    )
+    starter_html = write_starter_10k_report(starter_plan)
+
     idx_html = _write_cloudflare_pages_index(primary_plan.as_of_date, primary_plan.regime_on, len(all_plans))
 
+    console.print(f"[bold green]Updated Public $10K Starter Report:[/bold green] {starter_html}")
     console.print(f"[bold green]Updated Public Backtest Report:[/bold green] {bt_html}")
     console.print(f"[bold green]Updated Dashboard Index:[/bold green] {idx_html}")
 

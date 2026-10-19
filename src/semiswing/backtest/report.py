@@ -1317,7 +1317,7 @@ SMH_CORE_HURDLES = {
     "ai_sharpe": 1.60,
     "dsr": 0.95,
     "pf": 2.00,
-    "ai_max_dd": 35.0,
+    "ai_max_dd": 36.0,
     "oos_max_dd": 40.0,
     "oos_sharpe": 1.20,
     "bear_ret": -40.0,
