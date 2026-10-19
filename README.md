@@ -5,10 +5,8 @@ SemiSwing is a systematic momentum swing trading, walk-forward backtesting, and 
 Unallocated portfolio cash earns daily risk-free interest indexed to the 3-Month US Treasury Bill rate (`FRED DTB3`), with an **SMH Bull Core + Swing** sleeve that holds `SMH` during confirmed secular semiconductor bull markets.
 
 - **Live Cloud Dashboard:** [https://semiswing.pages.dev/](https://semiswing.pages.dev/)
-- **Live Daily Trade Tickets (Passcode-Protected):** [`https://semiswing.pages.dev/daily/latest_recommendations.html`](https://semiswing.pages.dev/daily/latest_recommendations.html)
 - **Live Interactive Backtest Report:** [`https://semiswing.pages.dev/backtests/backtest_report.html`](https://semiswing.pages.dev/backtests/backtest_report.html)
 - **Static Markdown Backtest Report:** [`reports/backtests/backtest_report.md`](reports/backtests/backtest_report.md)
-- **AI Implementation Specification:** [docs/instruction.md](docs/instruction.md)
 
 ---
 
@@ -27,12 +25,12 @@ To eliminate look-ahead selection bias and survivorship bias, the tradeable univ
 1. **Stage 1 (Institutional Liquidity Floor at $t_k - 1$):**
    - Active US-listed semiconductor & tech equities in `universe.all_panel_stocks`.
    - Listing history $\ge 60$ trading days since listing/IPO (eliminates unseasoned listings).
-   - $\text{Close}_{t_k - 1} \ge 15.00$ ($\$15.00$, eliminates penny stocks).
+   - $\operatorname{Close}_{t_k - 1} \ge 15.00\text{ USD}$ (eliminates penny stocks below 15 USD).
    - Trailing 60-day median daily dollar volume:
-     $$\text{MedDollarVol}_{60d} = \text{median}_{t \in [t_k - 60, t_k - 1]}\!\left(\text{Close}_t \times \text{Volume}_t\right) \ge 150{,}000{,}000.0$$
-   - Volatility condition: 20-day $\text{ATR}_{\text{pct}, 20d, t_k - 1} > 0$.
+     $$\operatorname{MedDollarVol}_{60\text{d}} = \operatorname{median}_{t \in [t_k - 60, t_k - 1]}\!\left(\operatorname{Close}_t \times \operatorname{Volume}_t\right) \ge 150{,}000{,}000\text{ USD}$$
+   - Volatility condition: 20-day $\operatorname{ATR}_{\text{pct}, 20\text{d}, t_k - 1} > 0$.
 2. **Stage 2 (Swing Tradability Ranking at $t_k - 1$):**
-   $$\text{SwingRankScore}_{i, t_k - 1} = \log_{10}\!\left(\text{MedDollarVol}_{60d}\right) \times \text{ATR}_{\text{pct}, 20d, t_k - 1}$$
+   $$\operatorname{SwingRankScore}_{i, t_k - 1} = \log_{10}\!\left(\operatorname{MedDollarVol}_{60\text{d}}\right) \times \operatorname{ATR}_{\text{pct}, 20\text{d}, t_k - 1}$$
    - The $\log_{10}$ compression scales volume variation down to a $1.28\times$ factor between mid-caps and mega-caps, allowing 20-day $\text{ATR\%}$ to prioritize high-velocity momentum leaders over sluggish value traps.
    - **Uncapped Selection (`pit_top_n = None`):** All qualifying tickers passing the Stage 1 liquidity floor receive `is_tradeable_universe = 1` for quarter $k$, naturally expanding from ~28 stocks in 2022 to ~50 in 2026 as the AI infrastructure ecosystem expanded (with Stage 2 tradability scores governing relative ranking and execution priority).
 3. **Position Grace Rule:** Open positions held across quarterly boundaries are **never forcibly liquidated**; they remain managed under their stops and profit targets until natural exit, while new entries for dropped tickers are blocked.
@@ -72,9 +70,9 @@ To prevent whipsaw churn near moving averages while avoiding recovery lag, regim
 
 The continuous macro multiplier $M_t$ scales capital allocation:
 $$M_t = \begin{cases} 
-0.0 & \text{if Regime} = 0 \;\lor\; \text{vix}_{\text{ts}} \ge 1.0 \;\lor\; \text{VIX} \ge 30.0 \quad \text{(Deep Bear / Crisis)} \\
-0.5 & \text{if Regime} = 1 \;\land\; (\text{EMA50} < \text{EMA200} \;\lor\; \text{VIX} \ge 22.0) \quad \text{(Recovery / Transition)} \\
-1.0 & \text{if Regime} = 1 \;\land\; \text{EMA50} \ge \text{EMA200} \;\land\; \text{VIX} < 22.0 \quad \text{(Confirmed Bull)}
+0.0 & \text{if } \operatorname{Regime} = 0 \;\lor\; \operatorname{vix}_{\text{ts}} \ge 1.0 \;\lor\; \operatorname{VIX} \ge 30.0 \quad \text{(Deep Bear / Crisis)} \\[4pt]
+0.5 & \text{if } \operatorname{Regime} = 1 \;\land\; (\operatorname{EMA50} \lt \operatorname{EMA200} \;\lor\; \operatorname{VIX} \ge 22.0) \quad \text{(Recovery / Transition)} \\[4pt]
+1.0 & \text{if } \operatorname{Regime} = 1 \;\land\; \operatorname{EMA50} \ge \operatorname{EMA200} \;\land\; \operatorname{VIX} \lt 22.0 \quad \text{(Confirmed Bull)}
 \end{cases}$$
 
 ### 2.4 Continuous Meta-Labeling Sizing ($S_{i,t}$)
@@ -83,86 +81,18 @@ $$q_{i,t} = \frac{1}{|OOF|} \sum_{j \in OOF} \mathbf{1}\{p_j \le p_{i,t}\}$$
 $$S_{i,t} = 0.50 + 1.00 \times q_{i,t} \in [0.50, 1.50]$$
 
 ### 2.5 Hierarchical Two-Tier Risk Allocation
-$$\text{Trade Risk Budget} = \text{Portfolio Equity} \times \text{Base Risk (1.0\%)} \times M_t \times S_{i,t}$$
-$$\text{Position Dollar Cap} = \min\left(\text{Portfolio Equity} \times 35\% \times M_t \times S_{i,t},\;\text{Cash} \times 0.99\right)$$
-$$\text{Shares} = \min\left(\left\lfloor \frac{\text{Trade Risk Budget}}{\text{Open Price} - \text{Initial Stop}} \right\rfloor,\; \left\lfloor \frac{\text{Position Dollar Cap}}{\text{Open Price}} \right\rfloor\right)$$
+$$\operatorname{RiskBudget} = \operatorname{Equity} \times 0.010 \times M_t \times S_{i,t}$$
+$$\operatorname{PositionCap} = \min\left(\operatorname{Equity} \times 0.35 \times M_t \times S_{i,t},\; \operatorname{Cash} \times 0.99\right)$$
+$$\operatorname{Shares} = \min\left(\left\lfloor \frac{\operatorname{RiskBudget}}{\operatorname{OpenPrice} - \operatorname{InitialStop}} \right\rfloor,\; \left\lfloor \frac{\operatorname{PositionCap}}{\operatorname{OpenPrice}} \right\rfloor\right)$$
 
 ### 2.6 Deflated Sharpe Ratio (DSR)
-Following David Bailey and Marcos López de Prado (2014), the Deflated Sharpe Ratio evaluates the statistical probability that the annualized Sharpe ratio $\widehat{\text{SR}}$ exceeds the expected maximum Sharpe ratio under the null hypothesis of zero skill given $K$ strategy trials:
-$$\text{DSR} = \Phi\left( \frac{(\widehat{\text{SR}} - \text{SR}^*) \sqrt{T - 1}}{\sqrt{1 - \hat{\gamma}_3 \widehat{\text{SR}} + \frac{\hat{\gamma}_4 - 1}{4} \widehat{\text{SR}}^2}} \right)$$
-where $\text{SR}^* = \sqrt{2 \ln K} + \frac{\gamma}{\sqrt{2 \ln K}}$, $\hat{\gamma}_3$ is return skewness, and $\hat{\gamma}_4$ is return kurtosis.
+Following David Bailey and Marcos López de Prado (2014), the Deflated Sharpe Ratio evaluates the statistical probability that the annualized Sharpe ratio $\widehat{\operatorname{SR}}$ exceeds the expected maximum Sharpe ratio under the null hypothesis of zero skill given $K$ strategy trials:
+$$\operatorname{DSR} = \Phi\left( \frac{(\widehat{\operatorname{SR}} - \operatorname{SR}^{\ast}) \sqrt{T - 1}}{\sqrt{1 - \hat{\gamma}_3 \widehat{\operatorname{SR}} + \frac{\hat{\gamma}_4 - 1}{4} \widehat{\operatorname{SR}}^2}} \right)$$
+where $\operatorname{SR}^{\ast} = \sqrt{2 \ln K} + \frac{\gamma}{\sqrt{2 \ln K}}$, $\hat{\gamma}_3$ is return skewness, and $\hat{\gamma}_4$ is return kurtosis.
 
 ---
 
-## 3. Walk-Forward Backtest Performance
-
-Every execution is audited across the full Out-of-Sample period (`2022–2026`) and the Modern AI Cycle (`2023–2026`).
-
-### 3.1 Modern AI Cycle (`2023–2026`)
-
-| Strategy / Benchmark | Total Return (%) | CAGR (%) | Sharpe | Deflated SR Prob | Sortino | Max DD (%) | Trades | Win Rate (%) | Profit Factor | Avg R |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Baseline (SMH Bull Core + Swing)** | **1291.37%** | **100.91%** | **1.80** | **0.961** | **1.78** | **35.68%** | **75** | **62.7%** | **4.65** | **1.95R** |
-| **ML (SMH Bull Core + Swing)** | **1517.44%** | **109.08%** | **1.86** | **0.974** | **1.93** | **33.70%** | **72** | **58.3%** | **5.23** | **2.10R** |
-| **Baseline (Adaptive $L_t$, Cash Swing)** | **797.83%** | **78.89%** | **1.62** | **0.925** | **1.61** | **37.06%** | **74** | **62.2%** | **4.77** | **1.92R** |
-| **ML (LightGBM + Platt, Cash Swing)** | **1034.59%** | **90.33%** | **1.73** | **0.954** | **1.79** | **35.52%** | **72** | **58.3%** | **5.45** | **2.10R** |
-| **Pure Pre-2022 Semi (SMH Core + Swing)** | **803.58%** | **79.19%** | **1.57** | **0.913** | **1.58** | **36.23%** | **73** | **64.4%** | **3.69** | **1.56R** |
-| **Pure Pre-2022 Semi (Cash Swing)** | **445.66%** | **56.77%** | **1.34** | **0.823** | **1.37** | **35.76%** | **74** | **63.5%** | **3.91** | **1.53R** |
-| **SMH Buy & Hold (Benchmark)** | 462.58% | 58.12% | 1.34 | 0.826 | 1.33 | 35.74% | 0 | 0.0% | 0.00 | 0.00R |
-| **SOXX Buy & Hold** | 359.21% | 49.83% | 1.14 | 0.707 | 1.13 | 41.36% | 0 | 0.0% | 0.00 | 0.00R |
-| **VGT Buy & Hold** | 216.20% | 35.71% | 1.22 | 0.759 | 1.17 | 27.23% | 0 | 0.0% | 0.00 | 0.00R |
-| **QQQ Buy & Hold** | 181.17% | 31.55% | 1.25 | 0.776 | 1.23 | 22.77% | 0 | 0.0% | 0.00 | 0.00R |
-| **S&P 500 (SPY) Buy & Hold** | 112.48% | 22.13% | 1.12 | 0.696 | 1.11 | 18.76% | 0 | 0.0% | 0.00 | 0.00R |
-| **3M T-Bill Cash (DTB3)** | 18.45% | 4.59% | 0.00 | 0.000 | 0.00 | 0.00% | 0 | 0.0% | 0.00 | 0.00R |
-
-### 3.2 Full Out-of-Sample Window (`2022–2026`, Includes 2022 Bear Market)
-
-| Strategy / Benchmark | Total Return (%) | CAGR (%) | Sharpe | Deflated SR Prob | Sortino | Max DD (%) | 100% Cash Days (%) |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Baseline (SMH Bull Core + Swing)** | **767.45%** | **57.29%** | **1.30** | **0.872** | **1.31** | **37.77%** | **25.8%** |
-| **ML (SMH Bull Core + Swing)** | **905.19%** | **62.23%** | **1.36** | **0.902** | **1.42** | **37.97%** | **25.8%** |
-| **Baseline (Adaptive $L_t$, Cash Swing)** | **599.27%** | **50.34%** | **1.26** | **0.857** | **1.28** | **37.06%** | **25.8%** |
-| **ML (LightGBM + Platt, Cash Swing)** | **779.94%** | **57.76%** | **1.36** | **0.904** | **1.44** | **35.52%** | **25.8%** |
-| **Pure Pre-2022 Semi (Cash Swing)** | **326.01%** | **35.51%** | **1.00** | **0.698** | **1.04** | **35.76%** | **27.5%** |
-| **SMH Buy & Hold** | 263.05% | 31.07% | 0.81 | 0.539 | 0.80 | 45.14% | 0.0% |
-| **SOXX Buy & Hold** | 189.43% | 24.98% | 0.66 | 0.414 | 0.66 | 45.52% | 0.0% |
-| **QQQ Buy & Hold** | 86.50% | 13.97% | 0.51 | 0.289 | 0.50 | 34.83% | 0.0% |
-| **S&P 500 (SPY) Buy & Hold** | 72.13% | 12.07% | 0.52 | 0.294 | 0.51 | 24.50% | 0.0% |
-
-### 3.3 Institutional Validation Gates (Two-Tier CI Architecture)
-
-SemiSwing enforces strict institutional validation hurdles across two independent capital modes, verified via automated CI regression guardrails (`tests/test_institutional_gates.py`):
-
-#### SMH Bull Core + Swing Mode (Active Secular Bull Core Sweep)
-
-| Gate | Hurdle Requirement | Actual Modern AI Era | Status | Purpose & Benchmark Comparison |
-| :--- | :---: | :---: | :---: | :--- |
-| **Gate 1: Modern AI Era Sharpe** | $\text{Sharpe} \ge 1.60$ | **1.86** | **PASS** | Excess risk-adjusted return over cash in secular bull. |
-| **Gate 2: Deflated Sharpe Ratio** | $\text{DSR Prob} \ge 0.95$ | **0.974** | **PASS** | Bailey & López de Prado (2014) significance ($K=14, p < 0.026$). |
-| **Gate 3: Profit Factor** | $\text{PF} \ge 2.00$ | **AI: 5.23 / OOS: 4.67** | **PASS** | Ratio of gross profits to gross losses. |
-| **Gate 4a: Modern AI Era Max DD** | $\text{Max DD} \le 35.0\%$ | **33.70%** | **PASS** | Outperforms passive `SMH` AI era drawdown ($35.74\%$). |
-| **Gate 4b: Full OOS Max DD** | $\text{Max DD} \le 40.0\%$ | **37.97%** | **PASS** | $>500\text{ bps}$ below passive `SMH` crash ($45.14\%$) and `SOXX` ($45.52\%$). |
-| **Gate 5: Full OOS Sharpe Ratio** | $\text{Sharpe} \ge 1.20$ | **1.36** | **PASS** | Full cycle viability across both 2022 bear and 2023–2026 bull. |
-| **Gate 6: 2022 Bear Stress Test** | $\text{Ret} \ge -40\%, \text{DD} \le 40\%, \text{Cash} \ge 80\%$ | **Ret: -37.9%, DD: 38.0%, Cash: 89.6%** | **PASS** | Downside capital preservation during systemic bear. |
-| **Gate 7: ML Alpha Dominance** | $\text{BSS} > 0.02 \;\land\; (\Delta\text{SR} \ge 0.05 \lor \Delta\text{DD} \ge 1.5\%)$ | **BSS: 0.0384, SR: +0.06, DD Red: +2.0%** | **PASS** | Proves probabilistic resolution & outperformance vs baseline. |
-
-#### Cash Swing Mode (100% Cash / T-Bill Secondary Default)
-
-| Gate | Hurdle Requirement | Actual Modern AI Era | Status | Purpose & Benchmark Comparison |
-| :--- | :---: | :---: | :---: | :--- |
-| **Gate 1: Modern AI Era Sharpe** | $\text{Sharpe} \ge 1.50$ | **1.73** | **PASS** | Excess risk-adjusted return over cash in secular bull. |
-| **Gate 2: Deflated Sharpe Ratio** | $\text{DSR Prob} \ge 0.95$ | **0.954** | **PASS** | Statistical significance penalizing $K=14$ iterations. |
-| **Gate 3: Profit Factor** | $\text{PF} \ge 1.50$ | **AI: 5.45 / OOS: 4.79** | **PASS** | Ratio of gross profits to gross losses. |
-| **Gate 4a: Modern AI Era Max DD** | $\text{Max DD} \le 36.0\%$ | **35.52%** | **PASS** | Below passive `SMH` ($35.74\%$) and `SOXX` ($41.36\%$). |
-| **Gate 4b: Full OOS Max DD** | $\text{Max DD} \le 40.0\%$ | **35.52%** | **PASS** | $>900\text{ bps}$ below passive `SMH` crash ($45.14\%$). |
-| **Gate 5: Full OOS Sharpe Ratio** | $\text{Sharpe} \ge 1.00$ | **1.36** | **PASS** | Full cycle viability across entire 4.77-year OOS period. |
-| **Gate 6: 2022 Bear Stress Test** | $\text{Ret} \ge -25\%, \text{DD} \le 25\%, \text{Cash} \ge 80\%$ | **Ret: -22.5%, DD: 22.7%, Cash: 89.6%** | **PASS** | Outperforms `SMH` crash ($-34.97\%$) by $>12$ percentage points. |
-| **Gate 7: ML Alpha Dominance** | $\text{BSS} > 0.02 \;\land\; (\Delta\text{SR} \ge 0.05 \lor \Delta\text{DD} \ge 1.5\%)$ | **BSS: 0.0384, SR: +0.11, DD Red: +1.5%** | **PASS** | Proves probabilistic skill & outperformance vs baseline. |
-
----
-
-## 4. CLI Execution & Reproduction
-
+## 3. CLI Execution & Reproduction
 ```bash
 # 1. Run unit test suite (causal look-ahead invariance, purged CV, PIT universe, risk caps)
 .venv/bin/pytest tests/

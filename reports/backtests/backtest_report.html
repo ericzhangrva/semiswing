@@ -39,12 +39,89 @@
     th { background: #1e293b; color: #ffffff; text-align: left; padding: 10px 12px; font-weight: 600; }
     td { padding: 9px 12px; border-bottom: 1px solid #e5e7eb; }
     tr:nth-child(even) { background: #f8fafc; }
-    .tooltip-wrap { position: relative; display: inline-flex; align-items: center; cursor: help; vertical-align: middle; }
-    .info-icon { display: inline-flex; align-items: center; justify-content: center; width: 14px; height: 14px; border-radius: 50%; background: #2563eb; color: #ffffff; font-size: 10px; font-weight: 700; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; line-height: 1; margin-left: 5px; border: 1px solid #60a5fa; box-shadow: 0 1px 2px rgba(0,0,0,0.15); transition: all 0.15s; }
-    .tooltip-wrap:hover .info-icon { background: #1d4ed8; transform: scale(1.15); }
-    .tooltip-wrap .tip-box { visibility: hidden; opacity: 0; width: 250px; background: #0f172a; color: #f8fafc; text-align: left; border-radius: 7px; padding: 8px 12px; position: absolute; z-index: 1000; bottom: 130%; left: 50%; transform: translateX(-50%); font-size: 11.5px; font-weight: 400; line-height: 1.45; box-shadow: 0 4px 14px rgba(0,0,0,0.3); transition: opacity 0.2s, visibility 0.2s; pointer-events: none; white-space: normal; text-transform: none; letter-spacing: normal; }
-    .tooltip-wrap .tip-box::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: #0f172a transparent transparent transparent; }
-    .tooltip-wrap:hover .tip-box { visibility: visible; opacity: 1; }
+    
+    /* Text-Based Hover Tooltip Component */
+    .metric-tip {
+      position: relative;
+      display: inline-flex;
+      align-items: baseline;
+      white-space: nowrap;
+      cursor: help;
+      border-bottom: 1px dotted rgba(100, 116, 139, 0.6);
+      transition: color 0.15s ease, border-bottom-color 0.15s ease;
+    }
+    .metric-tip:hover {
+      color: #0284c7;
+      border-bottom-color: #0284c7;
+    }
+    .metric-tip-sup {
+      font-size: 0.68em;
+      line-height: 0;
+      vertical-align: super;
+      margin-left: 2.5px;
+      color: #64748b;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-style: normal;
+      font-weight: 700;
+      opacity: 0.85;
+      user-select: none;
+      transition: color 0.15s ease, transform 0.15s ease;
+    }
+    .metric-tip:hover .metric-tip-sup {
+      color: #0284c7;
+      opacity: 1;
+      transform: translateY(-1px);
+    }
+    .metric-tip-popup {
+      visibility: hidden;
+      opacity: 0;
+      position: absolute;
+      bottom: calc(100% + 7px);
+      left: 50%;
+      transform: translateX(-50%) translateY(4px);
+      width: max-content;
+      max-width: 270px;
+      min-width: 150px;
+      padding: 8px 12px;
+      background-color: #0f172a;
+      color: #f8fafc;
+      font-size: 11.5px;
+      font-weight: 400;
+      line-height: 1.45;
+      text-align: left;
+      text-transform: none;
+      letter-spacing: normal;
+      white-space: normal;
+      border-radius: 6px;
+      border: 1px solid #334155;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+      z-index: 10000;
+      pointer-events: none;
+      transition: opacity 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+                  transform 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+                  visibility 0.18s;
+    }
+    .metric-tip-popup::after {
+      content: "";
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border-width: 5px 5px 0 5px;
+      border-style: solid;
+      border-color: #0f172a transparent transparent transparent;
+    }
+    .metric-tip:hover .metric-tip-popup {
+      visibility: visible;
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+    .metric-tip.tip-left .metric-tip-popup { left: 0; transform: translateX(0) translateY(4px); }
+    .metric-tip.tip-left:hover .metric-tip-popup { transform: translateX(0) translateY(0); }
+    .metric-tip.tip-left .metric-tip-popup::after { left: 14px; transform: none; }
+    .metric-tip.tip-right .metric-tip-popup { left: auto; right: 0; transform: translateX(0) translateY(4px); }
+    .metric-tip.tip-right:hover .metric-tip-popup { transform: translateX(0) translateY(0); }
+    .metric-tip.tip-right .metric-tip-popup::after { left: auto; right: 14px; transform: none; }
     </style></head><body>
 <h1>SemiSwing Walk-Forward Backtest &amp; Interactive Benchmark Report (2022–2026)</h1>
 <div class='meta'><b>Data Health Score:</b> 100.0/100 &nbsp;|&nbsp; <b>Initial Training Warmup:</b> 2018–2021 &nbsp;|&nbsp; <b>Platt OOF Brier:</b> 0.2404 &rarr; 0.2404 &nbsp;|&nbsp; <b>Brier Skill Score:</b> 0.0384</div>
@@ -136,16 +213,16 @@
           <table id="live_metrics_table" style="margin-bottom:0;">
             <thead>
               <tr>
-                <th>Strategy / Benchmark <span class="tooltip-wrap"><span class="info-icon" title="Model portfolio, strategy variant, or broad benchmark index.">i</span><span class="tip-box">Model portfolio, strategy variant, or broad benchmark index.</span></span></th>
-                <th>Start $ <span class="tooltip-wrap"><span class="info-icon" title="Initial capital balance at start of date window (rebased).">i</span><span class="tip-box">Initial capital balance at start of date window (rebased).</span></span></th>
-                <th>Ending $ <span class="tooltip-wrap"><span class="info-icon" title="Mark-to-market liquidation equity at end of date window.">i</span><span class="tip-box">Mark-to-market liquidation equity at end of date window.</span></span></th>
-                <th>Total Return (%) <span class="tooltip-wrap"><span class="info-icon" title="Cumulative percentage growth over the window: (End $ / Start $ - 1) * 100%.">i</span><span class="tip-box">Cumulative percentage growth over the window: (End $ / Start $ - 1) * 100%.</span></span></th>
-                <th>CAGR (%) <span class="tooltip-wrap"><span class="info-icon" title="Compound Annual Growth Rate: annualized geometric return over the window.">i</span><span class="tip-box">Compound Annual Growth Rate: annualized geometric return over the window.</span></span></th>
-                <th>Ann. Vol (%) <span class="tooltip-wrap"><span class="info-icon" title="Annualized standard deviation of daily percentage portfolio returns: std(daily_ret) * sqrt(252).">i</span><span class="tip-box">Annualized standard deviation of daily percentage portfolio returns: std(daily_ret) * sqrt(252).</span></span></th>
-                <th>Sharpe <span class="tooltip-wrap"><span class="info-icon" title="Annualized Sharpe ratio relative to 3M T-bill rate: (CAGR - RiskFree) / Ann. Volatility.">i</span><span class="tip-box">Annualized Sharpe ratio relative to 3M T-bill rate: (CAGR - RiskFree) / Ann. Volatility.</span></span></th>
-                <th>Sortino <span class="tooltip-wrap"><span class="info-icon" title="Sortino ratio: excess return divided by downside semi-deviation (penalizes negative volatility only).">i</span><span class="tip-box">Sortino ratio: excess return divided by downside semi-deviation (penalizes negative volatility only).</span></span></th>
-                <th>Max Drawdown (%) <span class="tooltip-wrap"><span class="info-icon" title="Maximum observed peak-to-trough decline in portfolio equity across the window.">i</span><span class="tip-box">Maximum observed peak-to-trough decline in portfolio equity across the window.</span></span></th>
-                <th>100% Cash Days (%) <span class="tooltip-wrap"><span class="info-icon" title="Percentage of trading days the strategy held zero market exposure and earned risk-free cash interest.">i</span><span class="tip-box">Percentage of trading days the strategy held zero market exposure and earned risk-free cash interest.</span></span></th>
+                <th>Strategy / Benchmark</th>
+                <th>Start $</th>
+                <th>Ending $</th>
+                <th>Total Return (%)</th>
+                <th><span class="metric-tip" title="Compound Annual Growth Rate: annualized geometric rate of return.">CAGR (%)<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">Compound Annual Growth Rate: annualized geometric rate of return.</span></span></th>
+                <th><span class="metric-tip" title="Annualized standard deviation of daily percentage portfolio returns: std(r) * sqrt(252).">Ann. Vol (%)<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">Annualized standard deviation of daily percentage portfolio returns: std(r) * sqrt(252).</span></span></th>
+                <th><span class="metric-tip" title="Annualized Sharpe ratio measuring excess return over 3M US Treasury bills per unit annual volatility: (CAGR - Rf) / Vol.">Sharpe<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">Annualized Sharpe ratio measuring excess return over 3M US Treasury bills per unit annual volatility: (CAGR - Rf) / Vol.</span></span></th>
+                <th><span class="metric-tip" title="Downside risk-adjusted ratio measuring excess return divided by downside semi-deviation (penalizes negative volatility only).">Sortino<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">Downside risk-adjusted ratio measuring excess return divided by downside semi-deviation (penalizes negative volatility only).</span></span></th>
+                <th>Max Drawdown (%)</th>
+                <th>100% Cash Days (%)</th>
               </tr>
             </thead>
             <tbody id="live_metrics_tbody"></tbody>
@@ -772,9 +849,9 @@
 <table class="dataframe">
   <thead>
     <tr style="text-align: right;">
-      <th>Gate <span class="tooltip-wrap"><span class="info-icon" title="Institutional quantitative risk and performance hurdles required for production sign-off.">i</span><span class="tip-box">Institutional quantitative risk and performance hurdles required for production sign-off.</span></span></th>
-      <th>Value <span class="tooltip-wrap"><span class="info-icon" title="Empirical backtest realization over the evaluated out-of-sample period.">i</span><span class="tip-box">Empirical backtest realization over the evaluated out-of-sample period.</span></span></th>
-      <th>Status <span class="tooltip-wrap"><span class="info-icon" title="PASS / FAIL verdict against predefined institutional hurdles.">i</span><span class="tip-box">PASS / FAIL verdict against predefined institutional hurdles.</span></span></th>
+      <th>Gate</th>
+      <th>Value</th>
+      <th>Status</th>
     </tr>
   </thead>
   <tbody>
@@ -824,9 +901,9 @@
 <table class="dataframe">
   <thead>
     <tr style="text-align: right;">
-      <th>Gate <span class="tooltip-wrap"><span class="info-icon" title="Institutional quantitative risk and performance hurdles required for production sign-off.">i</span><span class="tip-box">Institutional quantitative risk and performance hurdles required for production sign-off.</span></span></th>
-      <th>Value <span class="tooltip-wrap"><span class="info-icon" title="Empirical backtest realization over the evaluated out-of-sample period.">i</span><span class="tip-box">Empirical backtest realization over the evaluated out-of-sample period.</span></span></th>
-      <th>Status <span class="tooltip-wrap"><span class="info-icon" title="PASS / FAIL verdict against predefined institutional hurdles.">i</span><span class="tip-box">PASS / FAIL verdict against predefined institutional hurdles.</span></span></th>
+      <th>Gate</th>
+      <th>Value</th>
+      <th>Status</th>
     </tr>
   </thead>
   <tbody>
@@ -878,16 +955,16 @@
     <tr style="text-align: right;">
       <th>Strategy / Benchmark</th>
       <th>Total Return (%)</th>
-      <th>CAGR (%)</th>
-      <th>sharpe <span class="tooltip-wrap"><span class="info-icon" title="Annualized Sharpe ratio measuring excess return over 3-Month US Treasury bills per unit volatility.">i</span><span class="tip-box">Annualized Sharpe ratio measuring excess return over 3-Month US Treasury bills per unit volatility.</span></span></th>
+      <th><span class="metric-tip" title="Compound Annual Growth Rate: annualized geometric rate of return.">CAGR (%)<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">Compound Annual Growth Rate: annualized geometric rate of return.</span></span></th>
+      <th><span class="metric-tip" title="Annualized Sharpe ratio measuring excess return over 3M US Treasury bills per unit annual volatility: (CAGR - Rf) / Vol.">Sharpe<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">Annualized Sharpe ratio measuring excess return over 3M US Treasury bills per unit annual volatility: (CAGR - Rf) / Vol.</span></span></th>
       <th>Deflated SR Prob</th>
-      <th>sortino <span class="tooltip-wrap"><span class="info-icon" title="Downside risk-adjusted ratio measuring excess return per unit downside deviation.">i</span><span class="tip-box">Downside risk-adjusted ratio measuring excess return per unit downside deviation.</span></span></th>
+      <th><span class="metric-tip" title="Downside risk-adjusted ratio measuring excess return divided by downside semi-deviation (penalizes negative volatility only).">Sortino<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">Downside risk-adjusted ratio measuring excess return divided by downside semi-deviation (penalizes negative volatility only).</span></span></th>
       <th>Max DD (%)</th>
       <th>100% Cash Days (%)</th>
       <th>Trades</th>
       <th>Win Rate (%)</th>
-      <th>Profit Factor</th>
-      <th>Avg R</th>
+      <th><span class="metric-tip" title="Gross payoff asymmetry: ratio of gross dollar profits to gross dollar losses (Target > 1.5).">Profit Factor<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">Gross payoff asymmetry: ratio of gross dollar profits to gross dollar losses (Target > 1.5).</span></span></th>
+      <th><span class="metric-tip" title="Average profit per trade expressed in units of initial dollar risk (1.0R). Target > 1.5R.">Avg R<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">Average profit per trade expressed in units of initial dollar risk (1.0R). Target > 1.5R.</span></span></th>
     </tr>
   </thead>
   <tbody>
@@ -1109,16 +1186,16 @@
     <tr style="text-align: right;">
       <th>Strategy / Benchmark</th>
       <th>Total Return (%)</th>
-      <th>CAGR (%)</th>
-      <th>sharpe <span class="tooltip-wrap"><span class="info-icon" title="Annualized Sharpe ratio measuring excess return over 3-Month US Treasury bills per unit volatility.">i</span><span class="tip-box">Annualized Sharpe ratio measuring excess return over 3-Month US Treasury bills per unit volatility.</span></span></th>
+      <th><span class="metric-tip" title="Compound Annual Growth Rate: annualized geometric rate of return.">CAGR (%)<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">Compound Annual Growth Rate: annualized geometric rate of return.</span></span></th>
+      <th><span class="metric-tip" title="Annualized Sharpe ratio measuring excess return over 3M US Treasury bills per unit annual volatility: (CAGR - Rf) / Vol.">Sharpe<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">Annualized Sharpe ratio measuring excess return over 3M US Treasury bills per unit annual volatility: (CAGR - Rf) / Vol.</span></span></th>
       <th>Deflated SR Prob</th>
-      <th>sortino <span class="tooltip-wrap"><span class="info-icon" title="Downside risk-adjusted ratio measuring excess return per unit downside deviation.">i</span><span class="tip-box">Downside risk-adjusted ratio measuring excess return per unit downside deviation.</span></span></th>
+      <th><span class="metric-tip" title="Downside risk-adjusted ratio measuring excess return divided by downside semi-deviation (penalizes negative volatility only).">Sortino<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">Downside risk-adjusted ratio measuring excess return divided by downside semi-deviation (penalizes negative volatility only).</span></span></th>
       <th>Max DD (%)</th>
       <th>100% Cash Days (%)</th>
       <th>Trades</th>
       <th>Win Rate (%)</th>
-      <th>Profit Factor</th>
-      <th>Avg R</th>
+      <th><span class="metric-tip" title="Gross payoff asymmetry: ratio of gross dollar profits to gross dollar losses (Target > 1.5).">Profit Factor<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">Gross payoff asymmetry: ratio of gross dollar profits to gross dollar losses (Target > 1.5).</span></span></th>
+      <th><span class="metric-tip" title="Average profit per trade expressed in units of initial dollar risk (1.0R). Target > 1.5R.">Avg R<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">Average profit per trade expressed in units of initial dollar risk (1.0R). Target > 1.5R.</span></span></th>
     </tr>
   </thead>
   <tbody>
@@ -1340,16 +1417,16 @@
     <tr style="text-align: right;">
       <th>Strategy / Benchmark</th>
       <th>Total Return (%)</th>
-      <th>CAGR (%)</th>
-      <th>sharpe <span class="tooltip-wrap"><span class="info-icon" title="Annualized Sharpe ratio measuring excess return over 3-Month US Treasury bills per unit volatility.">i</span><span class="tip-box">Annualized Sharpe ratio measuring excess return over 3-Month US Treasury bills per unit volatility.</span></span></th>
+      <th><span class="metric-tip" title="Compound Annual Growth Rate: annualized geometric rate of return.">CAGR (%)<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">Compound Annual Growth Rate: annualized geometric rate of return.</span></span></th>
+      <th><span class="metric-tip" title="Annualized Sharpe ratio measuring excess return over 3M US Treasury bills per unit annual volatility: (CAGR - Rf) / Vol.">Sharpe<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">Annualized Sharpe ratio measuring excess return over 3M US Treasury bills per unit annual volatility: (CAGR - Rf) / Vol.</span></span></th>
       <th>Deflated SR Prob</th>
-      <th>sortino <span class="tooltip-wrap"><span class="info-icon" title="Downside risk-adjusted ratio measuring excess return per unit downside deviation.">i</span><span class="tip-box">Downside risk-adjusted ratio measuring excess return per unit downside deviation.</span></span></th>
+      <th><span class="metric-tip" title="Downside risk-adjusted ratio measuring excess return divided by downside semi-deviation (penalizes negative volatility only).">Sortino<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">Downside risk-adjusted ratio measuring excess return divided by downside semi-deviation (penalizes negative volatility only).</span></span></th>
       <th>Max DD (%)</th>
       <th>100% Cash Days (%)</th>
       <th>Trades</th>
       <th>Win Rate (%)</th>
-      <th>Profit Factor</th>
-      <th>Avg R</th>
+      <th><span class="metric-tip" title="Gross payoff asymmetry: ratio of gross dollar profits to gross dollar losses (Target > 1.5).">Profit Factor<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">Gross payoff asymmetry: ratio of gross dollar profits to gross dollar losses (Target > 1.5).</span></span></th>
+      <th><span class="metric-tip" title="Average profit per trade expressed in units of initial dollar risk (1.0R). Target > 1.5R.">Avg R<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">Average profit per trade expressed in units of initial dollar risk (1.0R). Target > 1.5R.</span></span></th>
     </tr>
   </thead>
   <tbody>
@@ -1569,90 +1646,90 @@
 <table class="dataframe">
   <thead>
     <tr style="text-align: right;">
-      <th>year</th>
-      <th>total_return_pct</th>
-      <th>cagr_pct</th>
-      <th>sharpe</th>
-      <th>deflated_sharpe_prob</th>
-      <th>sortino</th>
-      <th>max_dd_pct</th>
-      <th>cash_days_pct</th>
-      <th>trades</th>
-      <th>win_rate_pct</th>
-      <th>profit_factor</th>
-      <th>avg_r</th>
+      <th>Year</th>
+      <th>Total Return (%)</th>
+      <th><span class="metric-tip" title="Compound Annual Growth Rate: annualized geometric rate of return.">CAGR (%)<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">Compound Annual Growth Rate: annualized geometric rate of return.</span></span></th>
+      <th><span class="metric-tip" title="Annualized standard deviation of daily percentage portfolio returns: std(r) * sqrt(252).">Ann. Vol (%)<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">Annualized standard deviation of daily percentage portfolio returns: std(r) * sqrt(252).</span></span></th>
+      <th><span class="metric-tip" title="Annualized Sharpe ratio measuring excess return over 3M US Treasury bills per unit annual volatility: (CAGR - Rf) / Vol.">Sharpe<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">Annualized Sharpe ratio measuring excess return over 3M US Treasury bills per unit annual volatility: (CAGR - Rf) / Vol.</span></span></th>
+      <th><span class="metric-tip" title="Downside risk-adjusted ratio measuring excess return divided by downside semi-deviation (penalizes negative volatility only).">Sortino<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">Downside risk-adjusted ratio measuring excess return divided by downside semi-deviation (penalizes negative volatility only).</span></span></th>
+      <th>Max Drawdown (%)</th>
+      <th>100% Cash Days (%)</th>
+      <th>Trades</th>
+      <th>Win Rate (%)</th>
+      <th><span class="metric-tip" title="Gross payoff asymmetry: ratio of gross dollar profits to gross dollar losses (Target > 1.5).">Profit Factor<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">Gross payoff asymmetry: ratio of gross dollar profits to gross dollar losses (Target > 1.5).</span></span></th>
+      <th><span class="metric-tip" title="Average profit per trade expressed in units of initial dollar risk (1.0R). Target > 1.5R.">Avg R<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">Average profit per trade expressed in units of initial dollar risk (1.0R). Target > 1.5R.</span></span></th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td>2022</td>
-      <td>-22.13</td>
-      <td>-22.21</td>
+      <td>-22.13%</td>
+      <td>-22.21%</td>
+      <td>N/A</td>
       <td>-2.68</td>
-      <td>0.000</td>
       <td>-2.08</td>
-      <td>22.39</td>
-      <td>89.6</td>
+      <td>-22.39%</td>
+      <td>89.6%</td>
       <td>14</td>
-      <td>0.0</td>
+      <td>0.0%</td>
       <td>0.00</td>
-      <td>-0.64</td>
+      <td>-0.64R</td>
     </tr>
     <tr>
       <td>2023</td>
-      <td>40.11</td>
-      <td>40.49</td>
+      <td>+40.11%</td>
+      <td>+40.49%</td>
+      <td>N/A</td>
       <td>1.52</td>
-      <td>0.439</td>
       <td>1.57</td>
-      <td>19.99</td>
-      <td>6.0</td>
+      <td>-19.99%</td>
+      <td>6.0%</td>
       <td>24</td>
-      <td>70.8</td>
+      <td>70.8%</td>
       <td>3.60</td>
-      <td>1.04</td>
+      <td>+1.04R</td>
     </tr>
     <tr>
       <td>2024</td>
-      <td>87.36</td>
-      <td>87.36</td>
+      <td>+87.36%</td>
+      <td>+87.36%</td>
+      <td>N/A</td>
       <td>1.95</td>
-      <td>0.613</td>
       <td>2.15</td>
-      <td>21.91</td>
-      <td>7.5</td>
+      <td>-21.91%</td>
+      <td>7.5%</td>
       <td>22</td>
-      <td>63.6</td>
+      <td>63.6%</td>
       <td>4.82</td>
-      <td>1.25</td>
+      <td>+1.25R</td>
     </tr>
     <tr>
       <td>2025</td>
-      <td>75.61</td>
-      <td>76.40</td>
+      <td>+75.61%</td>
+      <td>+76.40%</td>
+      <td>N/A</td>
       <td>1.78</td>
-      <td>0.540</td>
       <td>1.77</td>
-      <td>16.46</td>
-      <td>20.4</td>
+      <td>-16.46%</td>
+      <td>20.4%</td>
       <td>16</td>
-      <td>50.0</td>
+      <td>50.0%</td>
       <td>9.76</td>
-      <td>5.31</td>
+      <td>+5.31R</td>
     </tr>
     <tr>
       <td>2026</td>
-      <td>88.09</td>
-      <td>122.56</td>
+      <td>+88.09%</td>
+      <td>+122.56%</td>
+      <td>N/A</td>
       <td>1.60</td>
-      <td>0.405</td>
       <td>1.50</td>
-      <td>37.06</td>
-      <td>0.0</td>
+      <td>-37.06%</td>
+      <td>0.0%</td>
       <td>12</td>
-      <td>58.3</td>
+      <td>58.3%</td>
       <td>1.65</td>
-      <td>0.40</td>
+      <td>+0.40R</td>
     </tr>
   </tbody>
 </table>
@@ -1660,113 +1737,138 @@
 <table class="dataframe">
   <thead>
     <tr style="text-align: right;">
-      <th>year</th>
-      <th>total_return_pct</th>
-      <th>cagr_pct</th>
-      <th>sharpe</th>
-      <th>deflated_sharpe_prob</th>
-      <th>sortino</th>
-      <th>max_dd_pct</th>
-      <th>cash_days_pct</th>
-      <th>trades</th>
-      <th>win_rate_pct</th>
-      <th>profit_factor</th>
-      <th>avg_r</th>
+      <th>Year</th>
+      <th>Total Return (%)</th>
+      <th><span class="metric-tip" title="Compound Annual Growth Rate: annualized geometric rate of return.">CAGR (%)<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">Compound Annual Growth Rate: annualized geometric rate of return.</span></span></th>
+      <th><span class="metric-tip" title="Annualized standard deviation of daily percentage portfolio returns: std(r) * sqrt(252).">Ann. Vol (%)<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">Annualized standard deviation of daily percentage portfolio returns: std(r) * sqrt(252).</span></span></th>
+      <th><span class="metric-tip" title="Annualized Sharpe ratio measuring excess return over 3M US Treasury bills per unit annual volatility: (CAGR - Rf) / Vol.">Sharpe<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">Annualized Sharpe ratio measuring excess return over 3M US Treasury bills per unit annual volatility: (CAGR - Rf) / Vol.</span></span></th>
+      <th><span class="metric-tip" title="Downside risk-adjusted ratio measuring excess return divided by downside semi-deviation (penalizes negative volatility only).">Sortino<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">Downside risk-adjusted ratio measuring excess return divided by downside semi-deviation (penalizes negative volatility only).</span></span></th>
+      <th>Max Drawdown (%)</th>
+      <th>100% Cash Days (%)</th>
+      <th>Trades</th>
+      <th>Win Rate (%)</th>
+      <th><span class="metric-tip" title="Gross payoff asymmetry: ratio of gross dollar profits to gross dollar losses (Target > 1.5).">Profit Factor<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">Gross payoff asymmetry: ratio of gross dollar profits to gross dollar losses (Target > 1.5).</span></span></th>
+      <th><span class="metric-tip" title="Average profit per trade expressed in units of initial dollar risk (1.0R). Target > 1.5R.">Avg R<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">Average profit per trade expressed in units of initial dollar risk (1.0R). Target > 1.5R.</span></span></th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td>2022</td>
-      <td>-22.46</td>
-      <td>-22.54</td>
+      <td>-22.46%</td>
+      <td>-22.54%</td>
+      <td>N/A</td>
       <td>-2.64</td>
-      <td>0.000</td>
       <td>-2.06</td>
-      <td>22.67</td>
-      <td>89.6</td>
+      <td>-22.67%</td>
+      <td>89.6%</td>
       <td>16</td>
-      <td>0.0</td>
+      <td>0.0%</td>
       <td>0.00</td>
-      <td>-0.66</td>
+      <td>-0.66R</td>
     </tr>
     <tr>
       <td>2023</td>
-      <td>47.55</td>
-      <td>48.01</td>
+      <td>+47.55%</td>
+      <td>+48.01%</td>
+      <td>N/A</td>
       <td>1.75</td>
-      <td>0.530</td>
       <td>1.85</td>
-      <td>19.27</td>
-      <td>6.0</td>
+      <td>-19.27%</td>
+      <td>6.0%</td>
       <td>25</td>
-      <td>68.0</td>
+      <td>68.0%</td>
       <td>4.37</td>
-      <td>0.89</td>
+      <td>+0.89R</td>
     </tr>
     <tr>
       <td>2024</td>
-      <td>80.05</td>
-      <td>80.05</td>
+      <td>+80.05%</td>
+      <td>+80.05%</td>
+      <td>N/A</td>
       <td>1.83</td>
-      <td>0.565</td>
       <td>2.02</td>
-      <td>24.46</td>
-      <td>7.5</td>
+      <td>-24.46%</td>
+      <td>7.5%</td>
       <td>23</td>
-      <td>52.2</td>
+      <td>52.2%</td>
       <td>4.13</td>
-      <td>1.05</td>
+      <td>+1.05R</td>
     </tr>
     <tr>
       <td>2025</td>
-      <td>133.95</td>
-      <td>135.55</td>
+      <td>+133.95%</td>
+      <td>+135.55%</td>
+      <td>N/A</td>
       <td>2.44</td>
-      <td>0.781</td>
       <td>2.68</td>
-      <td>18.80</td>
-      <td>20.4</td>
+      <td>-18.80%</td>
+      <td>20.4%</td>
       <td>12</td>
-      <td>58.3</td>
+      <td>58.3%</td>
       <td>35.06</td>
-      <td>8.39</td>
+      <td>+8.39R</td>
     </tr>
     <tr>
       <td>2026</td>
-      <td>76.09</td>
-      <td>104.72</td>
+      <td>+76.09%</td>
+      <td>+104.72%</td>
+      <td>N/A</td>
       <td>1.42</td>
-      <td>0.343</td>
       <td>1.42</td>
-      <td>35.52</td>
-      <td>0.0</td>
+      <td>-35.52%</td>
+      <td>0.0%</td>
       <td>12</td>
-      <td>50.0</td>
+      <td>50.0%</td>
       <td>1.15</td>
-      <td>0.35</td>
+      <td>+0.35R</td>
     </tr>
   </tbody>
 </table>
 <h2>8. Recent 25 OOS Trades (ML (SMH Bull Core + Swing))</h2>
+
+        <div style="background:#ffffff; border:1px solid #cbd5e1; border-left:5px solid #2563eb; border-radius:8px; padding:16px 20px; margin-bottom:20px; font-size:13px; line-height:1.55; color:#334155;">
+          <div style="font-weight:700; color:#0f172a; margin-bottom:8px; font-size:14px;">Section 8 Trade Blotter Legend &amp; Quantitative Diagnostics</div>
+          <div style="margin-bottom:6px;">
+            <strong>Tier:</strong>
+            <span style="display:inline-block; padding:1px 6px; background:#dcfce7; color:#166534; border-radius:4px; font-size:11px; font-weight:700;">CONSENSUS</span> Dual-engine alignment (both Baseline OLS trend significance t_norm &ge; 1.8 and ML classifier agree; 1.0% risk). &nbsp;
+            <span style="display:inline-block; padding:1px 6px; background:#e0f2fe; color:#0369a1; border-radius:4px; font-size:11px; font-weight:700;">HIGH</span> Standalone ML qualification with top-quintile residual momentum (1.0% risk). &nbsp;
+            <span style="display:inline-block; padding:1px 6px; background:#f1f5f9; color:#475569; border-radius:4px; font-size:11px; font-weight:700;">MEDIUM</span> Baseline trend qualification or secondary ML score (0.75% conservative risk).
+          </div>
+          <div style="margin-bottom:6px;">
+            <strong>Win Prob:</strong> Platt-calibrated posterior probability P(Hits +1.5R target before Hard Stop) produced out-of-fold by shallow LightGBM trees. With a 1.5:1 reward-to-risk ratio, any probability P &gt; 40.0% yields positive mathematical expectancy.
+          </div>
+          <div style="margin-bottom:6px;">
+            <strong>Sizing Scalar:</strong> Continuous meta-labeling position sizing multiplier S_i,t &isin; [0.50, 1.50] (L&oacute;pez de Prado framework). Maps predicted win probability into historical out-of-fold percentile rank: S_i,t = 0.50 + Rank_OOF(p). Conviction scales position sizes dynamically between 0.50x and 1.50x without expanding total risk caps.
+          </div>
+          <div>
+            <strong>Top Model Drivers (SHAP):</strong> Single-feature marginal contributions detailing which factors boosted (+) or penalized (-) trade conviction:
+            <code>sector_rs</code> (20d relative strength vs SMH),
+            <code>vix_ts</code> (volatility term structure VIX/VIX3M; &lt;1.0 indicates contango stability),
+            <code>skew_idx</code> (CBOE SKEW tail-risk hedging demand),
+            <code>resid_mom_60</code> (60d idiosyncratic residual momentum),
+            <code>vol_compress</code> (realized volatility squeeze ratio RV_10d / RV_60d), and
+            <code>slope_r2_20d</code> (trend smoothness R^2).
+          </div>
+        </div>
+        
 <table class="dataframe">
   <thead>
     <tr style="text-align: right;">
-      <th>ticker</th>
-      <th>tier</th>
-      <th>entry_date</th>
-      <th>exit_date</th>
-      <th>days_held</th>
-      <th>entry_price</th>
-      <th>exit_price</th>
-      <th>initial_stop</th>
-      <th>tp1_hit</th>
-      <th>net_pnl</th>
-      <th>return_pct</th>
-      <th>r_multiple</th>
-      <th>exit_reason</th>
-      <th>entry_prob</th>
-      <th>size_scalar</th>
-      <th>shap_summary</th>
+      <th>Ticker</th>
+      <th>Tier</th>
+      <th>Entry Date</th>
+      <th>Exit Date</th>
+      <th>Days Held</th>
+      <th>Entry ($)</th>
+      <th>Exit ($)</th>
+      <th>Initial Stop ($)</th>
+      <th>Return (%)</th>
+      <th>Net P&amp;L ($)</th>
+      <th>R-Multiple</th>
+      <th>Exit Reason</th>
+      <th>Win Prob</th>
+      <th>Sizing Scalar</th>
+      <th>Top Model Drivers</th>
     </tr>
   </thead>
   <tbody>
@@ -1776,16 +1878,15 @@
       <td>2024-09-20</td>
       <td>2025-02-24</td>
       <td>106</td>
-      <td>36.04</td>
-      <td>95.81</td>
-      <td>31.91</td>
-      <td>True</td>
-      <td>6794.32</td>
-      <td>129.64</td>
-      <td>11.33</td>
-      <td>STOP_GAP</td>
-      <td>0.411</td>
-      <td>1.27</td>
+      <td>$36.04</td>
+      <td>$95.81</td>
+      <td>$31.91</td>
+      <td>+129.64%</td>
+      <td>+6,794</td>
+      <td>+11.33R</td>
+      <td>Stop Gap</td>
+      <td>41.1%</td>
+      <td>1.27x</td>
       <td>sector_rs=-0.06 (-0.050) | skew_idx=2.90 (-0.043) | resid_mom_60=0.45 (+0.031) | ema20_slope=1.50 (-0.011) | ema50_slope=2.06 (-0.011)</td>
     </tr>
     <tr>
@@ -1794,16 +1895,15 @@
       <td>2025-02-24</td>
       <td>2025-02-27</td>
       <td>4</td>
-      <td>85.47</td>
-      <td>76.16</td>
-      <td>76.21</td>
-      <td>False</td>
-      <td>-443.06</td>
-      <td>-10.90</td>
-      <td>-1.01</td>
-      <td>STOP</td>
-      <td>0.355</td>
-      <td>0.98</td>
+      <td>$85.47</td>
+      <td>$76.16</td>
+      <td>$76.21</td>
+      <td>-10.90%</td>
+      <td>-443</td>
+      <td>-1.01R</td>
+      <td>Stop</td>
+      <td>35.5%</td>
+      <td>0.98x</td>
       <td>sector_rs=-0.05 (+0.029) | vxn_squeeze_vel=0.92 (-0.025) | vix_ts=0.93 (-0.009) | slope_r2_20d=0.77 (-0.008) | resid_mom_60=0.13 (+0.007)</td>
     </tr>
     <tr>
@@ -1812,16 +1912,15 @@
       <td>2025-01-31</td>
       <td>2025-02-28</td>
       <td>20</td>
-      <td>95.99</td>
-      <td>99.58</td>
-      <td>85.96</td>
-      <td>False</td>
-      <td>213.08</td>
-      <td>3.74</td>
-      <td>0.36</td>
-      <td>REGIME_OFF</td>
-      <td>0.366</td>
-      <td>1.06</td>
+      <td>$95.99</td>
+      <td>$99.58</td>
+      <td>$85.96</td>
+      <td>+3.74%</td>
+      <td>+213</td>
+      <td>+0.36R</td>
+      <td>Regime Off</td>
+      <td>36.6%</td>
+      <td>1.06x</td>
       <td>vol_compress=1.65 (+0.010) | vix_ts=0.88 (+0.009) | sector_rs=-0.03 (-0.009) | skew_idx=-0.52 (-0.006) | vxn_squeeze_vel=0.49 (-0.004)</td>
     </tr>
     <tr>
@@ -1830,16 +1929,15 @@
       <td>2025-01-31</td>
       <td>2025-02-28</td>
       <td>20</td>
-      <td>687.54</td>
-      <td>663.92</td>
-      <td>627.77</td>
-      <td>False</td>
-      <td>-145.39</td>
-      <td>-3.43</td>
-      <td>-0.40</td>
-      <td>REGIME_OFF</td>
-      <td>0.346</td>
-      <td>0.91</td>
+      <td>$687.54</td>
+      <td>$663.92</td>
+      <td>$627.77</td>
+      <td>-3.43%</td>
+      <td>-145</td>
+      <td>-0.40R</td>
+      <td>Regime Off</td>
+      <td>34.6%</td>
+      <td>0.91x</td>
       <td>sector_rs=-0.03 (-0.009) | vix_ts=0.88 (+0.008) | slope_r2_20d=0.71 (-0.007) | skew_idx=-0.52 (-0.006) | resid_mom_60=0.19 (-0.006)</td>
     </tr>
     <tr>
@@ -1848,16 +1946,15 @@
       <td>2025-02-24</td>
       <td>2025-02-28</td>
       <td>5</td>
-      <td>24.57</td>
-      <td>23.71</td>
-      <td>20.88</td>
-      <td>False</td>
-      <td>-221.99</td>
-      <td>-3.48</td>
-      <td>-0.23</td>
-      <td>REGIME_OFF</td>
-      <td>0.382</td>
-      <td>1.17</td>
+      <td>$24.57</td>
+      <td>$23.71</td>
+      <td>$20.88</td>
+      <td>-3.48%</td>
+      <td>-222</td>
+      <td>-0.23R</td>
+      <td>Regime Off</td>
+      <td>38.2%</td>
+      <td>1.17x</td>
       <td>sector_rs=-0.05 (+0.030) | vxn_squeeze_vel=0.92 (-0.030) | rs_rank=0.96 (+0.010) | vol_compress=1.77 (+0.009) | vix_ts=0.93 (-0.008)</td>
     </tr>
     <tr>
@@ -1866,16 +1963,15 @@
       <td>2025-05-13</td>
       <td>2025-09-02</td>
       <td>77</td>
-      <td>278.39</td>
-      <td>298.61</td>
-      <td>237.89</td>
-      <td>True</td>
-      <td>257.64</td>
-      <td>12.09</td>
-      <td>0.83</td>
-      <td>STOP_GAP</td>
-      <td>0.354</td>
-      <td>1.00</td>
+      <td>$278.39</td>
+      <td>$298.61</td>
+      <td>$237.89</td>
+      <td>+12.09%</td>
+      <td>+258</td>
+      <td>+0.83R</td>
+      <td>Stop Gap</td>
+      <td>35.4%</td>
+      <td>1.00x</td>
       <td>vix_ts=0.91 (+0.028) | sector_rs=0.09 (-0.011) | skew_idx=-0.25 (-0.010) | slope_r2_20d=0.89 (-0.006) | rs_rank=0.86 (+0.005)</td>
     </tr>
     <tr>
@@ -1884,16 +1980,15 @@
       <td>2025-05-13</td>
       <td>2025-10-10</td>
       <td>105</td>
-      <td>100.52</td>
-      <td>212.97</td>
-      <td>89.16</td>
-      <td>True</td>
-      <td>3523.71</td>
-      <td>89.06</td>
-      <td>7.88</td>
-      <td>TRAIL_STOP_EOD</td>
-      <td>0.375</td>
-      <td>1.16</td>
+      <td>$100.52</td>
+      <td>$212.97</td>
+      <td>$89.16</td>
+      <td>+89.06%</td>
+      <td>+3,524</td>
+      <td>+7.88R</td>
+      <td>Trail Stop Eod</td>
+      <td>37.5%</td>
+      <td>1.16x</td>
       <td>vix_ts=0.91 (+0.029) | sector_rs=0.09 (-0.011) | skew_idx=-0.25 (-0.011) | slope_r2_20d=0.95 (+0.010) | rs_rank=0.98 (+0.010)</td>
     </tr>
     <tr>
@@ -1902,16 +1997,15 @@
       <td>2025-10-13</td>
       <td>2025-11-18</td>
       <td>27</td>
-      <td>220.35</td>
-      <td>230.13</td>
-      <td>187.30</td>
-      <td>False</td>
-      <td>234.44</td>
-      <td>4.44</td>
-      <td>0.30</td>
-      <td>TIME_STOP_25D</td>
-      <td>0.328</td>
-      <td>0.75</td>
+      <td>$220.35</td>
+      <td>$230.13</td>
+      <td>$187.30</td>
+      <td>+4.44%</td>
+      <td>+234</td>
+      <td>+0.30R</td>
+      <td>Time Stop 25D</td>
+      <td>32.8%</td>
+      <td>0.75x</td>
       <td>skew_idx=-2.34 (-0.130) | sector_rs=0.07 (+0.078) | slope_accel=0.75 (+0.037) | vix_ts=0.95 (+0.028) | slope_t_norm_40d=1.22 (+0.019)</td>
     </tr>
     <tr>
@@ -1920,16 +2014,15 @@
       <td>2025-05-13</td>
       <td>2025-12-17</td>
       <td>152</td>
-      <td>100.97</td>
-      <td>149.62</td>
-      <td>85.82</td>
-      <td>True</td>
-      <td>888.87</td>
-      <td>43.88</td>
-      <td>2.93</td>
-      <td>TRAIL_STOP_EOD</td>
-      <td>0.351</td>
-      <td>0.98</td>
+      <td>$100.97</td>
+      <td>$149.62</td>
+      <td>$85.82</td>
+      <td>+43.88%</td>
+      <td>+889</td>
+      <td>+2.93R</td>
+      <td>Trail Stop Eod</td>
+      <td>35.1%</td>
+      <td>0.98x</td>
       <td>vix_ts=0.91 (+0.028) | skew_idx=-0.25 (-0.010) | sector_rs=0.09 (-0.008) | slope_r2_20d=0.88 (-0.006) | vxn_squeeze_vel=-1.22 (-0.004)</td>
     </tr>
     <tr>
@@ -1938,16 +2031,15 @@
       <td>2025-11-25</td>
       <td>2025-12-31</td>
       <td>25</td>
-      <td>325.59</td>
-      <td>312.17</td>
-      <td>292.61</td>
-      <td>False</td>
-      <td>-699.86</td>
-      <td>-4.12</td>
-      <td>-0.41</td>
-      <td>TIME_STOP_25D</td>
-      <td>0.424</td>
-      <td>1.35</td>
+      <td>$325.59</td>
+      <td>$312.17</td>
+      <td>$292.61</td>
+      <td>-4.12%</td>
+      <td>-700</td>
+      <td>-0.41R</td>
+      <td>Time Stop 25D</td>
+      <td>42.4%</td>
+      <td>1.35x</td>
       <td>resid_mom_60=0.33 (+0.059) | sector_rs=-0.03 (+0.034) | resid_mom_20=0.19 (+0.011) | vix_ts=0.94 (-0.007) | slope_r2_20d=0.50 (-0.007)</td>
     </tr>
     <tr>
@@ -1956,16 +2048,15 @@
       <td>2025-12-24</td>
       <td>2026-01-02</td>
       <td>6</td>
-      <td>728.36</td>
-      <td>628.82</td>
-      <td>629.26</td>
-      <td>False</td>
-      <td>-352.89</td>
-      <td>-13.67</td>
-      <td>-1.00</td>
-      <td>STOP</td>
-      <td>0.397</td>
-      <td>1.24</td>
+      <td>$728.36</td>
+      <td>$628.82</td>
+      <td>$629.26</td>
+      <td>-13.67%</td>
+      <td>-353</td>
+      <td>-1.00R</td>
+      <td>Stop</td>
+      <td>39.7%</td>
+      <td>1.24x</td>
       <td>vix_ts=0.78 (-0.064) | skew_idx=2.44 (+0.031) | rs_rank=1.00 (+0.026) | resid_mom_20=0.21 (+0.009) | slope_r2_20d=0.60 (-0.008)</td>
     </tr>
     <tr>
@@ -1974,16 +2065,15 @@
       <td>2026-01-05</td>
       <td>2026-03-06</td>
       <td>43</td>
-      <td>189.69</td>
-      <td>198.84</td>
-      <td>170.24</td>
-      <td>True</td>
-      <td>205.97</td>
-      <td>8.58</td>
-      <td>0.84</td>
-      <td>TRAIL_STOP_EOD</td>
-      <td>0.244</td>
-      <td>0.53</td>
+      <td>$189.69</td>
+      <td>$198.84</td>
+      <td>$170.24</td>
+      <td>+8.58%</td>
+      <td>+206</td>
+      <td>+0.84R</td>
+      <td>Trail Stop Eod</td>
+      <td>24.4%</td>
+      <td>0.53x</td>
       <td>skew_idx=-0.98 (-0.065) | vix_ts=0.81 (-0.041) | vxn_squeeze_vel=0.75 (-0.034) | slope_r2_20d=0.62 (-0.005) | resid_mom_20=0.11 (+0.003)</td>
     </tr>
     <tr>
@@ -1992,16 +2082,15 @@
       <td>2026-01-02</td>
       <td>2026-03-30</td>
       <td>60</td>
-      <td>295.12</td>
-      <td>321.47</td>
-      <td>254.16</td>
-      <td>True</td>
-      <td>2181.83</td>
-      <td>13.04</td>
-      <td>0.94</td>
-      <td>TRAIL_STOP_EOD</td>
-      <td>0.469</td>
-      <td>1.45</td>
+      <td>$295.12</td>
+      <td>$321.47</td>
+      <td>$254.16</td>
+      <td>+13.04%</td>
+      <td>+2,182</td>
+      <td>+0.94R</td>
+      <td>Trail Stop Eod</td>
+      <td>46.9%</td>
+      <td>1.45x</td>
       <td>rs_rank=0.98 (+0.033) | vxn_squeeze_vel=0.62 (+0.032) | resid_mom_60=0.33 (+0.027) | sector_rs=0.00 (+0.014) | slope_r2_20d=0.64 (-0.011)</td>
     </tr>
     <tr>
@@ -2010,16 +2099,15 @@
       <td>2025-05-13</td>
       <td>2026-07-07</td>
       <td>288</td>
-      <td>46.85</td>
-      <td>531.86</td>
-      <td>41.29</td>
-      <td>True</td>
-      <td>20651.92</td>
-      <td>781.78</td>
-      <td>65.85</td>
-      <td>STOP_GAP</td>
-      <td>0.355</td>
-      <td>1.01</td>
+      <td>$46.85</td>
+      <td>$531.86</td>
+      <td>$41.29</td>
+      <td>+781.78%</td>
+      <td>+20,652</td>
+      <td>+65.85R</td>
+      <td>Stop Gap</td>
+      <td>35.5%</td>
+      <td>1.01x</td>
       <td>vix_ts=0.91 (+0.028) | sector_rs=0.09 (-0.012) | skew_idx=-0.25 (-0.010) | rs_rank=0.96 (+0.010) | slope_r2_20d=0.91 (-0.006)</td>
     </tr>
     <tr>
@@ -2028,16 +2116,15 @@
       <td>2025-09-03</td>
       <td>2026-07-07</td>
       <td>211</td>
-      <td>132.43</td>
-      <td>698.93</td>
-      <td>115.52</td>
-      <td>True</td>
-      <td>38147.20</td>
-      <td>326.65</td>
-      <td>25.58</td>
-      <td>STOP_GAP</td>
-      <td>0.427</td>
-      <td>1.37</td>
+      <td>$132.43</td>
+      <td>$698.93</td>
+      <td>$115.52</td>
+      <td>+326.65%</td>
+      <td>+38,147</td>
+      <td>+25.58R</td>
+      <td>Stop Gap</td>
+      <td>42.7%</td>
+      <td>1.37x</td>
       <td>resid_mom_60=0.29 (+0.077) | ema50_slope=1.93 (-0.009) | vxn_squeeze_vel=0.58 (+0.008) | slope_r2_20d=0.79 (-0.008) | sector_rs=-0.03 (+0.008)</td>
     </tr>
     <tr>
@@ -2046,16 +2133,15 @@
       <td>2026-04-01</td>
       <td>2026-07-14</td>
       <td>71</td>
-      <td>154.50</td>
-      <td>280.97</td>
-      <td>131.32</td>
-      <td>True</td>
-      <td>12027.55</td>
-      <td>69.41</td>
-      <td>4.63</td>
-      <td>TRAIL_STOP_EOD</td>
-      <td>0.436</td>
-      <td>1.38</td>
+      <td>$154.50</td>
+      <td>$280.97</td>
+      <td>$131.32</td>
+      <td>+69.41%</td>
+      <td>+12,028</td>
+      <td>+4.63R</td>
+      <td>Trail Stop Eod</td>
+      <td>43.6%</td>
+      <td>1.38x</td>
       <td>vix_ts=0.99 (+0.031) | rs_rank=0.98 (+0.027) | slope_r2_20d=0.73 (-0.011) | skew_idx=0.04 (-0.008) | slope_t_norm_10d=4.87 (+0.007)</td>
     </tr>
     <tr>
@@ -2064,16 +2150,15 @@
       <td>2026-07-14</td>
       <td>2026-07-27</td>
       <td>10</td>
-      <td>651.94</td>
-      <td>592.99</td>
-      <td>573.96</td>
-      <td>False</td>
-      <td>-3610.89</td>
-      <td>-9.04</td>
-      <td>-0.76</td>
-      <td>EARNINGS_EXIT</td>
-      <td>0.416</td>
-      <td>1.33</td>
+      <td>$651.94</td>
+      <td>$592.99</td>
+      <td>$573.96</td>
+      <td>-9.04%</td>
+      <td>-3,611</td>
+      <td>-0.76R</td>
+      <td>Earnings Exit</td>
+      <td>41.6%</td>
+      <td>1.33x</td>
       <td>rs_rank=0.96 (+0.018) | sector_rs=-0.06 (+0.012) | vxn_squeeze_vel=0.12 (+0.006) | vol_compress=1.43 (-0.004) | slope_t_norm_10d=11.76 (-0.002)</td>
     </tr>
     <tr>
@@ -2082,16 +2167,15 @@
       <td>2026-07-15</td>
       <td>2026-08-03</td>
       <td>14</td>
-      <td>184.13</td>
-      <td>184.76</td>
-      <td>156.51</td>
-      <td>False</td>
-      <td>80.36</td>
-      <td>0.34</td>
-      <td>0.02</td>
-      <td>EARNINGS_EXIT</td>
-      <td>0.379</td>
-      <td>1.09</td>
+      <td>$184.13</td>
+      <td>$184.76</td>
+      <td>$156.51</td>
+      <td>+0.34%</td>
+      <td>+80</td>
+      <td>+0.02R</td>
+      <td>Earnings Exit</td>
+      <td>37.9%</td>
+      <td>1.09x</td>
       <td>sector_rs=-0.05 (+0.015) | vix_ts=0.85 (-0.006) | vxn_squeeze_vel=-0.62 (-0.006) | skew_idx=0.75 (-0.005) | rs_rank=0.94 (+0.004)</td>
     </tr>
     <tr>
@@ -2100,16 +2184,15 @@
       <td>2026-07-10</td>
       <td>2026-08-13</td>
       <td>25</td>
-      <td>314.67</td>
-      <td>305.05</td>
-      <td>289.65</td>
-      <td>False</td>
-      <td>-1182.97</td>
-      <td>-3.06</td>
-      <td>-0.38</td>
-      <td>TIME_STOP_25D</td>
-      <td>0.357</td>
-      <td>0.93</td>
+      <td>$314.67</td>
+      <td>$305.05</td>
+      <td>$289.65</td>
+      <td>-3.06%</td>
+      <td>-1,183</td>
+      <td>-0.38R</td>
+      <td>Time Stop 25D</td>
+      <td>35.7%</td>
+      <td>0.93x</td>
       <td>vix_ts=0.83 (-0.015) | rs_rank=0.82 (+0.006) | vxn_squeeze_vel=-0.33 (-0.004) | slope_t_norm_10d=16.30 (-0.004) | skew_idx=0.70 (-0.003)</td>
     </tr>
     <tr>
@@ -2118,16 +2201,15 @@
       <td>2026-08-05</td>
       <td>2026-08-20</td>
       <td>12</td>
-      <td>281.79</td>
-      <td>259.93</td>
-      <td>252.32</td>
-      <td>False</td>
-      <td>-2656.82</td>
-      <td>-7.76</td>
-      <td>-0.74</td>
-      <td>TIME_STOP_12D</td>
-      <td>0.368</td>
-      <td>1.00</td>
+      <td>$281.79</td>
+      <td>$259.93</td>
+      <td>$252.32</td>
+      <td>-7.76%</td>
+      <td>-2,657</td>
+      <td>-0.74R</td>
+      <td>Time Stop 12D</td>
+      <td>36.8%</td>
+      <td>1.00x</td>
       <td>vxn_squeeze_vel=-1.14 (+0.061) | sector_rs=-0.04 (+0.048) | slope_t_norm_40d=0.85 (+0.024) | slope_accel=0.48 (+0.015) | skew_idx=-3.40 (-0.012)</td>
     </tr>
     <tr>
@@ -2136,16 +2218,15 @@
       <td>2026-08-21</td>
       <td>2026-08-25</td>
       <td>3</td>
-      <td>252.51</td>
-      <td>240.16</td>
-      <td>214.63</td>
-      <td>False</td>
-      <td>-2197.59</td>
-      <td>-4.89</td>
-      <td>-0.33</td>
-      <td>EARNINGS_EXIT</td>
-      <td>0.470</td>
-      <td>1.46</td>
+      <td>$252.51</td>
+      <td>$240.16</td>
+      <td>$214.63</td>
+      <td>-4.89%</td>
+      <td>-2,198</td>
+      <td>-0.33R</td>
+      <td>Earnings Exit</td>
+      <td>47.0%</td>
+      <td>1.46x</td>
       <td>resid_mom_60=0.29 (+0.043) | vxn_squeeze_vel=0.67 (+0.036) | slope_t_norm_40d=-1.45 (-0.029) | sector_rs=-0.06 (+0.023) | skew_idx=0.06 (-0.009)</td>
     </tr>
     <tr>
@@ -2154,16 +2235,15 @@
       <td>2026-08-06</td>
       <td>2026-09-10</td>
       <td>25</td>
-      <td>155.98</td>
-      <td>165.74</td>
-      <td>132.58</td>
-      <td>False</td>
-      <td>1452.13</td>
-      <td>6.26</td>
-      <td>0.42</td>
-      <td>TIME_STOP_25D</td>
-      <td>0.365</td>
-      <td>0.98</td>
+      <td>$155.98</td>
+      <td>$165.74</td>
+      <td>$132.58</td>
+      <td>+6.26%</td>
+      <td>+1,452</td>
+      <td>+0.42R</td>
+      <td>Time Stop 25D</td>
+      <td>36.5%</td>
+      <td>0.98x</td>
       <td>skew_idx=-1.91 (-0.053) | vxn_squeeze_vel=-2.33 (+0.052) | sector_rs=-0.07 (+0.041) | slope_t_norm_40d=0.83 (+0.025) | slope_accel=0.34 (+0.017)</td>
     </tr>
     <tr>
@@ -2172,16 +2252,15 @@
       <td>2026-08-14</td>
       <td>2026-09-10</td>
       <td>19</td>
-      <td>155.37</td>
-      <td>152.27</td>
-      <td>132.74</td>
-      <td>False</td>
-      <td>-366.40</td>
-      <td>-2.00</td>
-      <td>-0.14</td>
-      <td>EARNINGS_EXIT</td>
-      <td>0.330</td>
-      <td>0.73</td>
+      <td>$155.37</td>
+      <td>$152.27</td>
+      <td>$132.74</td>
+      <td>-2.00%</td>
+      <td>-366</td>
+      <td>-0.14R</td>
+      <td>Earnings Exit</td>
+      <td>33.0%</td>
+      <td>0.73x</td>
       <td>vix_ts=0.79 (-0.023) | sector_rs=-0.00 (+0.018) | skew_idx=-1.48 (-0.016) | slope_t_norm_40d=-1.24 (+0.014) | vxn_squeeze_vel=-0.96 (+0.008)</td>
     </tr>
     <tr>
@@ -2190,16 +2269,15 @@
       <td>2026-08-26</td>
       <td>2026-10-12</td>
       <td>33</td>
-      <td>1456.59</td>
-      <td>1486.29</td>
-      <td>1238.10</td>
-      <td>False</td>
-      <td>476.77</td>
-      <td>2.04</td>
-      <td>0.14</td>
-      <td>TIME_STOP_25D</td>
-      <td>0.372</td>
-      <td>1.03</td>
+      <td>$1456.59</td>
+      <td>$1486.29</td>
+      <td>$1238.10</td>
+      <td>+2.04%</td>
+      <td>+477</td>
+      <td>+0.14R</td>
+      <td>Time Stop 25D</td>
+      <td>37.2%</td>
+      <td>1.03x</td>
       <td>skew_idx=0.04 (-0.011) | vix_ts=0.85 (-0.005) | ema20_slope=0.20 (+0.004) | vxn_squeeze_vel=-0.28 (+0.004) | rs_rank=0.90 (+0.002)</td>
     </tr>
     <tr>
@@ -2208,16 +2286,15 @@
       <td>2026-09-11</td>
       <td>2026-10-15</td>
       <td>25</td>
-      <td>993.74</td>
-      <td>930.59</td>
-      <td>844.68</td>
-      <td>False</td>
-      <td>-2567.83</td>
-      <td>-6.35</td>
-      <td>-0.42</td>
-      <td>TIME_STOP_25D</td>
-      <td>0.400</td>
-      <td>1.24</td>
+      <td>$993.74</td>
+      <td>$930.59</td>
+      <td>$844.68</td>
+      <td>-6.35%</td>
+      <td>-2,568</td>
+      <td>-0.42R</td>
+      <td>Time Stop 25D</td>
+      <td>40.0%</td>
+      <td>1.24x</td>
       <td>rs_rank=0.98 (+0.020) | skew_idx=0.54 (-0.013) | vix_ts=0.90 (-0.008) | sector_rs=-0.02 (-0.005) | vxn_squeeze_vel=1.06 (+0.005)</td>
     </tr>
   </tbody>

@@ -457,13 +457,26 @@ def generate_benchmark_charts(
     return chart_paths
 
 
-def _info_badge(tip_text: str) -> str:
-    """Render a clean circular info icon '(i)' with mouse-over tooltip for backtest reports."""
+WHITELIST_METRIC_TIPS = {
+    "CAGR (%)": "Compound Annual Growth Rate: annualized geometric rate of return.",
+    "Ann. Vol (%)": "Annualized standard deviation of daily percentage portfolio returns: std(r) * sqrt(252).",
+    "Sharpe": "Annualized Sharpe ratio measuring excess return over 3M US Treasury bills per unit annual volatility: (CAGR - Rf) / Vol.",
+    "Sortino": "Downside risk-adjusted ratio measuring excess return divided by downside semi-deviation (penalizes negative volatility only).",
+    "Profit Factor": "Gross payoff asymmetry: ratio of gross dollar profits to gross dollar losses (Target > 1.5).",
+    "Avg R": "Average profit per trade expressed in units of initial dollar risk (1.0R). Target > 1.5R.",
+}
+
+
+def _render_metric_tooltip(label: str, tip_text: str | None = None, align: str = "center") -> str:
+    """Render metric text with a tiny superscript 'i' icon where mouse-over on the text triggers the tooltip."""
+    if not tip_text:
+        return label
     clean_tip = tip_text.replace('"', '&quot;').replace("'", "&#39;")
+    align_cls = f" tip-{align}" if align in ("left", "right") else ""
     return (
-        f'<span class="tooltip-wrap">'
-        f'<span class="info-icon" title="{clean_tip}">i</span>'
-        f'<span class="tip-box">{tip_text}</span>'
+        f'<span class="metric-tip{align_cls}" title="{clean_tip}">'
+        f'{label}<sup class="metric-tip-sup">ⓘ</sup>'
+        f'<span class="metric-tip-popup" role="tooltip">{clean_tip}</span>'
         f'</span>'
     )
 
@@ -625,16 +638,16 @@ def _build_interactive_dashboard_html(results: Dict[str, BacktestResult]) -> str
           <table id="live_metrics_table" style="margin-bottom:0;">
             <thead>
               <tr>
-                <th>Strategy / Benchmark {_info_badge("Model portfolio, strategy variant, or broad benchmark index.")}</th>
-                <th>Start $ {_info_badge("Initial capital balance at start of date window (rebased).")}</th>
-                <th>Ending $ {_info_badge("Mark-to-market liquidation equity at end of date window.")}</th>
-                <th>Total Return (%) {_info_badge("Cumulative percentage growth over the window: (End $ / Start $ - 1) * 100%.")}</th>
-                <th>CAGR (%) {_info_badge("Compound Annual Growth Rate: annualized geometric return over the window.")}</th>
-                <th>Ann. Vol (%) {_info_badge("Annualized standard deviation of daily percentage portfolio returns: std(daily_ret) * sqrt(252).")}</th>
-                <th>Sharpe {_info_badge("Annualized Sharpe ratio relative to 3M T-bill rate: (CAGR - RiskFree) / Ann. Volatility.")}</th>
-                <th>Sortino {_info_badge("Sortino ratio: excess return divided by downside semi-deviation (penalizes negative volatility only).")}</th>
-                <th>Max Drawdown (%) {_info_badge("Maximum observed peak-to-trough decline in portfolio equity across the window.")}</th>
-                <th>100% Cash Days (%) {_info_badge("Percentage of trading days the strategy held zero market exposure and earned risk-free cash interest.")}</th>
+                <th>Strategy / Benchmark</th>
+                <th>Start $</th>
+                <th>Ending $</th>
+                <th>Total Return (%)</th>
+                <th>{_render_metric_tooltip("CAGR (%)", WHITELIST_METRIC_TIPS["CAGR (%)"])}</th>
+                <th>{_render_metric_tooltip("Ann. Vol (%)", WHITELIST_METRIC_TIPS["Ann. Vol (%)"])}</th>
+                <th>{_render_metric_tooltip("Sharpe", WHITELIST_METRIC_TIPS["Sharpe"])}</th>
+                <th>{_render_metric_tooltip("Sortino", WHITELIST_METRIC_TIPS["Sortino"])}</th>
+                <th>Max Drawdown (%)</th>
+                <th>100% Cash Days (%)</th>
               </tr>
             </thead>
             <tbody id="live_metrics_tbody"></tbody>
@@ -1463,28 +1476,67 @@ def generate_reports(
     }
     manifest_path.write_text(json.dumps(manifest_data, indent=2), encoding="utf-8")
 
+    def _format_yearly_table_df(df: pd.DataFrame) -> pd.DataFrame:
+        """Format yearly breakdown table with professional Title Case headers and clean financial formats."""
+        if df.empty:
+            return df
+        records = []
+        for _, r in df.iterrows():
+            yr = int(r["year"])
+            tot_ret = float(r.get("total_return_pct", 0.0))
+            cagr = float(r.get("cagr_pct", tot_ret))
+            max_dd = float(r.get("max_dd_pct", 0.0))
+            vol = float(r.get("vol_pct", r.get("vol", 0.0)))
+            records.append({
+                "Year": str(yr),
+                "Total Return (%)": f"{tot_ret:+.2f}%",
+                "CAGR (%)": f"{cagr:+.2f}%",
+                "Ann. Vol (%)": f"{vol:.1f}%" if vol > 0 else "N/A",
+                "Sharpe": f"{float(r.get('sharpe', 0.0)):.2f}",
+                "Sortino": f"{float(r.get('sortino', 0.0)):.2f}",
+                "Max Drawdown (%)": f"-{abs(max_dd):.2f}%",
+                "100% Cash Days (%)": f"{float(r.get('cash_days_pct', 0.0)):.1f}%",
+                "Trades": int(r.get("trades", 0)),
+                "Win Rate (%)": f"{float(r.get('win_rate_pct', 0.0)):.1f}%",
+                "Profit Factor": f"{float(r.get('profit_factor', 0.0)):.2f}",
+                "Avg R": f"{float(r.get('avg_r', 0.0)):+.2f}R",
+            })
+        return pd.DataFrame(records)
+
+    def _format_trade_blotter_df(df: pd.DataFrame) -> pd.DataFrame:
+        """Format closed trades log into an institutional trade blotter with zero internal database field leaks."""
+        if df.empty:
+            return df
+        records = []
+        for _, r in df.iterrows():
+            ret_pct = float(r.get("return_pct", 0.0))
+            net_pnl = float(r.get("net_pnl", 0.0))
+            r_mult = float(r.get("r_multiple", 0.0))
+            raw_reason = str(r.get("exit_reason", "")).replace("_", " ").title()
+            records.append({
+                "Ticker": str(r.get("ticker", "")),
+                "Tier": str(r.get("tier", "MEDIUM")),
+                "Entry Date": pd.to_datetime(r.get("entry_date")).strftime("%Y-%m-%d"),
+                "Exit Date": pd.to_datetime(r.get("exit_date")).strftime("%Y-%m-%d"),
+                "Days Held": int(r.get("days_held", 0)),
+                "Entry ($)": f"${float(r.get('entry_price', 0.0)):.2f}",
+                "Exit ($)": f"${float(r.get('exit_price', 0.0)):.2f}",
+                "Initial Stop ($)": f"${float(r.get('initial_stop', 0.0)):.2f}",
+                "Return (%)": f"{ret_pct:+.2f}%",
+                "Net P&L ($)": f"{net_pnl:+,.0f}",
+                "R-Multiple": f"{r_mult:+.2f}R",
+                "Exit Reason": raw_reason,
+                "Win Prob": f"{float(r.get('entry_prob', 0.0)) * 100:.1f}%",
+                "Sizing Scalar": f"{float(r.get('size_scalar', 1.0)):.2f}x",
+                "Top Model Drivers": str(r.get("shap_summary", "N/A")),
+            })
+        return pd.DataFrame(records)
+
     def _decorate_html_table(html_str: str) -> str:
-        """Add mouse-over tooltips with circular info icons to pandas generated HTML table headers."""
-        column_tips = {
-            "Gate": "Institutional quantitative risk and performance hurdles required for production sign-off.",
-            "Value": "Empirical backtest realization over the evaluated out-of-sample period.",
-            "Status": "PASS / FAIL verdict against predefined institutional hurdles.",
-            "Strategy": "Strategy model variant or passive benchmark fund.",
-            "total_return_pct": "Cumulative percentage return across the designated evaluation window.",
-            "cagr_pct": "Compound Annual Growth Rate: annualized geometric rate of return.",
-            "sharpe": "Annualized Sharpe ratio measuring excess return over 3-Month US Treasury bills per unit volatility.",
-            "deflated_sharpe_prob": "Deflated Sharpe Ratio (DSR) probability adjusting for selection bias and multi-trial testing.",
-            "sortino": "Downside risk-adjusted ratio measuring excess return per unit downside deviation.",
-            "max_dd_pct": "Maximum observed peak-to-trough decline in portfolio equity.",
-            "profit_factor": "Payoff asymmetry: ratio of gross dollar profits to gross dollar losses.",
-            "win_rate_pct": "Percentage of closed trades with positive realized net profit.",
-            "avg_r": "Average profit per trade expressed in units of initial dollar risk (1.0R). Target > 1.5R.",
-            "cash_days_pct": "Percentage of trading days with 100% capital in risk-free cash / T-bills.",
-            "year": "Calendar year.",
-        }
-        for col, tip in column_tips.items():
+        """Add mouse-over tooltips to whitelisted metrics in table headers where mouse-over is on the text."""
+        for col, tip in WHITELIST_METRIC_TIPS.items():
             pattern = re.compile(rf"<th>\s*{re.escape(col)}\s*</th>", re.IGNORECASE)
-            html_str = pattern.sub(f"<th>{col} {_info_badge(tip)}</th>", html_str)
+            html_str = pattern.sub(f"<th>{_render_metric_tooltip(col, tip)}</th>", html_str)
         return html_str
 
     def _df_to_md(df: pd.DataFrame) -> str:
@@ -1565,33 +1617,75 @@ def generate_reports(
         "",
     ]
 
+    def _render_trade_legend_html() -> str:
+        return """
+        <div style="background:#ffffff; border:1px solid #cbd5e1; border-left:5px solid #2563eb; border-radius:8px; padding:16px 20px; margin-bottom:20px; font-size:13px; line-height:1.55; color:#334155;">
+          <div style="font-weight:700; color:#0f172a; margin-bottom:8px; font-size:14px;">Section 8 Trade Blotter Legend &amp; Quantitative Diagnostics</div>
+          <div style="margin-bottom:6px;">
+            <strong>Tier:</strong>
+            <span style="display:inline-block; padding:1px 6px; background:#dcfce7; color:#166534; border-radius:4px; font-size:11px; font-weight:700;">CONSENSUS</span> Dual-engine alignment (both Baseline OLS trend significance t_norm &ge; 1.8 and ML classifier agree; 1.0% risk). &nbsp;
+            <span style="display:inline-block; padding:1px 6px; background:#e0f2fe; color:#0369a1; border-radius:4px; font-size:11px; font-weight:700;">HIGH</span> Standalone ML qualification with top-quintile residual momentum (1.0% risk). &nbsp;
+            <span style="display:inline-block; padding:1px 6px; background:#f1f5f9; color:#475569; border-radius:4px; font-size:11px; font-weight:700;">MEDIUM</span> Baseline trend qualification or secondary ML score (0.75% conservative risk).
+          </div>
+          <div style="margin-bottom:6px;">
+            <strong>Win Prob:</strong> Platt-calibrated posterior probability P(Hits +1.5R target before Hard Stop) produced out-of-fold by shallow LightGBM trees. With a 1.5:1 reward-to-risk ratio, any probability P &gt; 40.0% yields positive mathematical expectancy.
+          </div>
+          <div style="margin-bottom:6px;">
+            <strong>Sizing Scalar:</strong> Continuous meta-labeling position sizing multiplier S_i,t &isin; [0.50, 1.50] (L&oacute;pez de Prado framework). Maps predicted win probability into historical out-of-fold percentile rank: S_i,t = 0.50 + Rank_OOF(p). Conviction scales position sizes dynamically between 0.50x and 1.50x without expanding total risk caps.
+          </div>
+          <div>
+            <strong>Top Model Drivers (SHAP):</strong> Single-feature marginal contributions detailing which factors boosted (+) or penalized (-) trade conviction:
+            <code>sector_rs</code> (20d relative strength vs SMH),
+            <code>vix_ts</code> (volatility term structure VIX/VIX3M; &lt;1.0 indicates contango stability),
+            <code>skew_idx</code> (CBOE SKEW tail-risk hedging demand),
+            <code>resid_mom_60</code> (60d idiosyncratic residual momentum),
+            <code>vol_compress</code> (realized volatility squeeze ratio RV_10d / RV_60d), and
+            <code>slope_r2_20d</code> (trend smoothness R^2).
+          </div>
+        </div>
+        """
+
+    def _render_trade_legend_md() -> str:
+        return (
+            "> **Section 8 Trade Blotter Legend & Quantitative Diagnostics**\n"
+            "> - **Tier:** `CONSENSUS` (dual-engine alignment, 1.0% risk), `HIGH` (standalone ML top-quintile RS, 1.0% risk), `MEDIUM` (conservative 0.75% risk).\n"
+            "> - **Win Prob:** Platt-calibrated out-of-fold probability $P(\\text{TP1 before Stop})$. Break-even threshold is $> 40.0\\%$ with a 1.5:1 payoff ratio.\n"
+            "> - **Sizing Scalar:** Meta-labeling sizing multiplier $S_{i,t} = 0.50 + \\text{Rank}_{\\text{OOF}}(\\hat{p}) \\in [0.50, 1.50]$ scaling allocation by model confidence.\n"
+            "> - **Top Model Drivers (SHAP):** Single-feature marginal attributions detailing `sector_rs` (20d RS vs SMH), `vix_ts` (VIX/VIX3M contango), `skew_idx` (tail-risk hedging), `resid_mom_60` (beta-neutral momentum), `vol_compress` (volatility squeeze), and `slope_r2_20d` (trend smoothness)."
+        )
+
     if base_res is not None and not base_res.yearly_table.empty:
+        formatted_base_yr = _format_yearly_table_df(base_res.yearly_table)
         md_lines.extend(
             [
                 "## 6. Yearly Breakdown — Baseline (Adaptive `L_t`, Cash + T-Bill Interest)",
                 "",
-                _df_to_md(base_res.yearly_table),
+                _df_to_md(formatted_base_yr),
                 "",
             ]
         )
 
     if ml_res is not None and not ml_res.yearly_table.empty:
+        formatted_ml_yr = _format_yearly_table_df(ml_res.yearly_table)
         md_lines.extend(
             [
                 "## 7. Yearly Breakdown — ML (LightGBM + Platt, Cash + T-Bill Interest)",
                 "",
-                _df_to_md(ml_res.yearly_table),
+                _df_to_md(formatted_ml_yr),
                 "",
             ]
         )
 
     if best_sys is not None and not best_sys.trades.empty:
         recent_tr = best_sys.trades.tail(25)
+        formatted_tr = _format_trade_blotter_df(recent_tr)
         md_lines.extend(
             [
                 f"## 8. Recent 25 OOS Trades ({best_name})",
                 "",
-                _df_to_md(recent_tr),
+                _render_trade_legend_md(),
+                "",
+                _df_to_md(formatted_tr),
                 "",
             ]
         )
@@ -1640,12 +1734,89 @@ def generate_reports(
     th { background: #1e293b; color: #ffffff; text-align: left; padding: 10px 12px; font-weight: 600; }
     td { padding: 9px 12px; border-bottom: 1px solid #e5e7eb; }
     tr:nth-child(even) { background: #f8fafc; }
-    .tooltip-wrap { position: relative; display: inline-flex; align-items: center; cursor: help; vertical-align: middle; }
-    .info-icon { display: inline-flex; align-items: center; justify-content: center; width: 14px; height: 14px; border-radius: 50%; background: #2563eb; color: #ffffff; font-size: 10px; font-weight: 700; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; line-height: 1; margin-left: 5px; border: 1px solid #60a5fa; box-shadow: 0 1px 2px rgba(0,0,0,0.15); transition: all 0.15s; }
-    .tooltip-wrap:hover .info-icon { background: #1d4ed8; transform: scale(1.15); }
-    .tooltip-wrap .tip-box { visibility: hidden; opacity: 0; width: 250px; background: #0f172a; color: #f8fafc; text-align: left; border-radius: 7px; padding: 8px 12px; position: absolute; z-index: 1000; bottom: 130%; left: 50%; transform: translateX(-50%); font-size: 11.5px; font-weight: 400; line-height: 1.45; box-shadow: 0 4px 14px rgba(0,0,0,0.3); transition: opacity 0.2s, visibility 0.2s; pointer-events: none; white-space: normal; text-transform: none; letter-spacing: normal; }
-    .tooltip-wrap .tip-box::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: #0f172a transparent transparent transparent; }
-    .tooltip-wrap:hover .tip-box { visibility: visible; opacity: 1; }
+    
+    /* Text-Based Hover Tooltip Component */
+    .metric-tip {
+      position: relative;
+      display: inline-flex;
+      align-items: baseline;
+      white-space: nowrap;
+      cursor: help;
+      border-bottom: 1px dotted rgba(100, 116, 139, 0.6);
+      transition: color 0.15s ease, border-bottom-color 0.15s ease;
+    }
+    .metric-tip:hover {
+      color: #0284c7;
+      border-bottom-color: #0284c7;
+    }
+    .metric-tip-sup {
+      font-size: 0.68em;
+      line-height: 0;
+      vertical-align: super;
+      margin-left: 2.5px;
+      color: #64748b;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-style: normal;
+      font-weight: 700;
+      opacity: 0.85;
+      user-select: none;
+      transition: color 0.15s ease, transform 0.15s ease;
+    }
+    .metric-tip:hover .metric-tip-sup {
+      color: #0284c7;
+      opacity: 1;
+      transform: translateY(-1px);
+    }
+    .metric-tip-popup {
+      visibility: hidden;
+      opacity: 0;
+      position: absolute;
+      bottom: calc(100% + 7px);
+      left: 50%;
+      transform: translateX(-50%) translateY(4px);
+      width: max-content;
+      max-width: 270px;
+      min-width: 150px;
+      padding: 8px 12px;
+      background-color: #0f172a;
+      color: #f8fafc;
+      font-size: 11.5px;
+      font-weight: 400;
+      line-height: 1.45;
+      text-align: left;
+      text-transform: none;
+      letter-spacing: normal;
+      white-space: normal;
+      border-radius: 6px;
+      border: 1px solid #334155;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+      z-index: 10000;
+      pointer-events: none;
+      transition: opacity 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+                  transform 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+                  visibility 0.18s;
+    }
+    .metric-tip-popup::after {
+      content: "";
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border-width: 5px 5px 0 5px;
+      border-style: solid;
+      border-color: #0f172a transparent transparent transparent;
+    }
+    .metric-tip:hover .metric-tip-popup {
+      visibility: visible;
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+    .metric-tip.tip-left .metric-tip-popup { left: 0; transform: translateX(0) translateY(4px); }
+    .metric-tip.tip-left:hover .metric-tip-popup { transform: translateX(0) translateY(0); }
+    .metric-tip.tip-left .metric-tip-popup::after { left: 14px; transform: none; }
+    .metric-tip.tip-right .metric-tip-popup { left: auto; right: 0; transform: translateX(0) translateY(4px); }
+    .metric-tip.tip-right:hover .metric-tip-popup { transform: translateX(0) translateY(0); }
+    .metric-tip.tip-right .metric-tip-popup::after { left: auto; right: 14px; transform: none; }
     """
 
     interactive_html = _build_interactive_dashboard_html(results)
@@ -1673,15 +1844,20 @@ def generate_reports(
 
     if base_res is not None and not base_res.yearly_table.empty:
         html_parts.append("<h2>6. Yearly Breakdown — Baseline (Adaptive L_t)</h2>")
-        html_parts.append(base_res.yearly_table.to_html(index=False, border=0))
+        formatted_base_yr = _format_yearly_table_df(base_res.yearly_table)
+        html_parts.append(_decorate_html_table(formatted_base_yr.to_html(index=False, border=0)))
 
     if ml_res is not None and not ml_res.yearly_table.empty:
         html_parts.append("<h2>7. Yearly Breakdown — ML (LightGBM + Platt Calibration)</h2>")
-        html_parts.append(ml_res.yearly_table.to_html(index=False, border=0))
+        formatted_ml_yr = _format_yearly_table_df(ml_res.yearly_table)
+        html_parts.append(_decorate_html_table(formatted_ml_yr.to_html(index=False, border=0)))
 
     if best_sys is not None and not best_sys.trades.empty:
+        recent_tr = best_sys.trades.tail(25)
+        formatted_tr = _format_trade_blotter_df(recent_tr)
         html_parts.append(f"<h2>8. Recent 25 OOS Trades ({best_name})</h2>")
-        html_parts.append(best_sys.trades.tail(25).to_html(index=False, border=0))
+        html_parts.append(_render_trade_legend_html())
+        html_parts.append(_decorate_html_table(formatted_tr.to_html(index=False, border=0)))
 
     html_parts.append("</body></html>")
     html_path.write_text("\n".join(html_parts), encoding="utf-8")
