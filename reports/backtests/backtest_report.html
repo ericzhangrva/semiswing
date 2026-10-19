@@ -39,6 +39,12 @@
     th { background: #1e293b; color: #ffffff; text-align: left; padding: 10px 12px; font-weight: 600; }
     td { padding: 9px 12px; border-bottom: 1px solid #e5e7eb; }
     tr:nth-child(even) { background: #f8fafc; }
+    .tooltip-wrap { position: relative; display: inline-flex; align-items: center; cursor: help; vertical-align: middle; }
+    .info-icon { display: inline-flex; align-items: center; justify-content: center; width: 14px; height: 14px; border-radius: 50%; background: #2563eb; color: #ffffff; font-size: 10px; font-weight: 700; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; line-height: 1; margin-left: 5px; border: 1px solid #60a5fa; box-shadow: 0 1px 2px rgba(0,0,0,0.15); transition: all 0.15s; }
+    .tooltip-wrap:hover .info-icon { background: #1d4ed8; transform: scale(1.15); }
+    .tooltip-wrap .tip-box { visibility: hidden; opacity: 0; width: 250px; background: #0f172a; color: #f8fafc; text-align: left; border-radius: 7px; padding: 8px 12px; position: absolute; z-index: 1000; bottom: 130%; left: 50%; transform: translateX(-50%); font-size: 11.5px; font-weight: 400; line-height: 1.45; box-shadow: 0 4px 14px rgba(0,0,0,0.3); transition: opacity 0.2s, visibility 0.2s; pointer-events: none; white-space: normal; text-transform: none; letter-spacing: normal; }
+    .tooltip-wrap .tip-box::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: #0f172a transparent transparent transparent; }
+    .tooltip-wrap:hover .tip-box { visibility: visible; opacity: 1; }
     </style></head><body>
 <h1>SemiSwing Walk-Forward Backtest &amp; Interactive Benchmark Report (2022–2026)</h1>
 <div class='meta'><b>Data Health Score:</b> 100.0/100 &nbsp;|&nbsp; <b>Initial Training Warmup:</b> 2018–2021 &nbsp;|&nbsp; <b>Platt OOF Brier:</b> 0.2404 &rarr; 0.2404 &nbsp;|&nbsp; <b>Brier Skill Score:</b> 0.0384</div>
@@ -130,16 +136,16 @@
           <table id="live_metrics_table" style="margin-bottom:0;">
             <thead>
               <tr>
-                <th>Strategy / Benchmark</th>
-                <th>Start $</th>
-                <th>Ending $</th>
-                <th>Total Return (%)</th>
-                <th>CAGR (%)</th>
-                <th>Ann. Vol (%)</th>
-                <th>Sharpe</th>
-                <th>Sortino</th>
-                <th>Max Drawdown (%)</th>
-                <th>100% Cash Days (%)</th>
+                <th>Strategy / Benchmark <span class="tooltip-wrap"><span class="info-icon" title="Model portfolio, strategy variant, or broad benchmark index.">i</span><span class="tip-box">Model portfolio, strategy variant, or broad benchmark index.</span></span></th>
+                <th>Start $ <span class="tooltip-wrap"><span class="info-icon" title="Initial capital balance at start of date window (rebased).">i</span><span class="tip-box">Initial capital balance at start of date window (rebased).</span></span></th>
+                <th>Ending $ <span class="tooltip-wrap"><span class="info-icon" title="Mark-to-market liquidation equity at end of date window.">i</span><span class="tip-box">Mark-to-market liquidation equity at end of date window.</span></span></th>
+                <th>Total Return (%) <span class="tooltip-wrap"><span class="info-icon" title="Cumulative percentage growth over the window: (End $ / Start $ - 1) * 100%.">i</span><span class="tip-box">Cumulative percentage growth over the window: (End $ / Start $ - 1) * 100%.</span></span></th>
+                <th>CAGR (%) <span class="tooltip-wrap"><span class="info-icon" title="Compound Annual Growth Rate: annualized geometric return over the window.">i</span><span class="tip-box">Compound Annual Growth Rate: annualized geometric return over the window.</span></span></th>
+                <th>Ann. Vol (%) <span class="tooltip-wrap"><span class="info-icon" title="Annualized standard deviation of daily percentage portfolio returns: std(daily_ret) * sqrt(252).">i</span><span class="tip-box">Annualized standard deviation of daily percentage portfolio returns: std(daily_ret) * sqrt(252).</span></span></th>
+                <th>Sharpe <span class="tooltip-wrap"><span class="info-icon" title="Annualized Sharpe ratio relative to 3M T-bill rate: (CAGR - RiskFree) / Ann. Volatility.">i</span><span class="tip-box">Annualized Sharpe ratio relative to 3M T-bill rate: (CAGR - RiskFree) / Ann. Volatility.</span></span></th>
+                <th>Sortino <span class="tooltip-wrap"><span class="info-icon" title="Sortino ratio: excess return divided by downside semi-deviation (penalizes negative volatility only).">i</span><span class="tip-box">Sortino ratio: excess return divided by downside semi-deviation (penalizes negative volatility only).</span></span></th>
+                <th>Max Drawdown (%) <span class="tooltip-wrap"><span class="info-icon" title="Maximum observed peak-to-trough decline in portfolio equity across the window.">i</span><span class="tip-box">Maximum observed peak-to-trough decline in portfolio equity across the window.</span></span></th>
+                <th>100% Cash Days (%) <span class="tooltip-wrap"><span class="info-icon" title="Percentage of trading days the strategy held zero market exposure and earned risk-free cash interest.">i</span><span class="tip-box">Percentage of trading days the strategy held zero market exposure and earned risk-free cash interest.</span></span></th>
               </tr>
             </thead>
             <tbody id="live_metrics_tbody"></tbody>
@@ -766,9 +772,9 @@
 <table class="dataframe">
   <thead>
     <tr style="text-align: right;">
-      <th>Gate</th>
-      <th>Value</th>
-      <th>Status</th>
+      <th>Gate <span class="tooltip-wrap"><span class="info-icon" title="Institutional quantitative risk and performance hurdles required for production sign-off.">i</span><span class="tip-box">Institutional quantitative risk and performance hurdles required for production sign-off.</span></span></th>
+      <th>Value <span class="tooltip-wrap"><span class="info-icon" title="Empirical backtest realization over the evaluated out-of-sample period.">i</span><span class="tip-box">Empirical backtest realization over the evaluated out-of-sample period.</span></span></th>
+      <th>Status <span class="tooltip-wrap"><span class="info-icon" title="PASS / FAIL verdict against predefined institutional hurdles.">i</span><span class="tip-box">PASS / FAIL verdict against predefined institutional hurdles.</span></span></th>
     </tr>
   </thead>
   <tbody>
@@ -818,9 +824,9 @@
 <table class="dataframe">
   <thead>
     <tr style="text-align: right;">
-      <th>Gate</th>
-      <th>Value</th>
-      <th>Status</th>
+      <th>Gate <span class="tooltip-wrap"><span class="info-icon" title="Institutional quantitative risk and performance hurdles required for production sign-off.">i</span><span class="tip-box">Institutional quantitative risk and performance hurdles required for production sign-off.</span></span></th>
+      <th>Value <span class="tooltip-wrap"><span class="info-icon" title="Empirical backtest realization over the evaluated out-of-sample period.">i</span><span class="tip-box">Empirical backtest realization over the evaluated out-of-sample period.</span></span></th>
+      <th>Status <span class="tooltip-wrap"><span class="info-icon" title="PASS / FAIL verdict against predefined institutional hurdles.">i</span><span class="tip-box">PASS / FAIL verdict against predefined institutional hurdles.</span></span></th>
     </tr>
   </thead>
   <tbody>
@@ -873,9 +879,9 @@
       <th>Strategy / Benchmark</th>
       <th>Total Return (%)</th>
       <th>CAGR (%)</th>
-      <th>Sharpe</th>
+      <th>sharpe <span class="tooltip-wrap"><span class="info-icon" title="Annualized Sharpe ratio measuring excess return over 3-Month US Treasury bills per unit volatility.">i</span><span class="tip-box">Annualized Sharpe ratio measuring excess return over 3-Month US Treasury bills per unit volatility.</span></span></th>
       <th>Deflated SR Prob</th>
-      <th>Sortino</th>
+      <th>sortino <span class="tooltip-wrap"><span class="info-icon" title="Downside risk-adjusted ratio measuring excess return per unit downside deviation.">i</span><span class="tip-box">Downside risk-adjusted ratio measuring excess return per unit downside deviation.</span></span></th>
       <th>Max DD (%)</th>
       <th>100% Cash Days (%)</th>
       <th>Trades</th>
@@ -1104,9 +1110,9 @@
       <th>Strategy / Benchmark</th>
       <th>Total Return (%)</th>
       <th>CAGR (%)</th>
-      <th>Sharpe</th>
+      <th>sharpe <span class="tooltip-wrap"><span class="info-icon" title="Annualized Sharpe ratio measuring excess return over 3-Month US Treasury bills per unit volatility.">i</span><span class="tip-box">Annualized Sharpe ratio measuring excess return over 3-Month US Treasury bills per unit volatility.</span></span></th>
       <th>Deflated SR Prob</th>
-      <th>Sortino</th>
+      <th>sortino <span class="tooltip-wrap"><span class="info-icon" title="Downside risk-adjusted ratio measuring excess return per unit downside deviation.">i</span><span class="tip-box">Downside risk-adjusted ratio measuring excess return per unit downside deviation.</span></span></th>
       <th>Max DD (%)</th>
       <th>100% Cash Days (%)</th>
       <th>Trades</th>
@@ -1335,9 +1341,9 @@
       <th>Strategy / Benchmark</th>
       <th>Total Return (%)</th>
       <th>CAGR (%)</th>
-      <th>Sharpe</th>
+      <th>sharpe <span class="tooltip-wrap"><span class="info-icon" title="Annualized Sharpe ratio measuring excess return over 3-Month US Treasury bills per unit volatility.">i</span><span class="tip-box">Annualized Sharpe ratio measuring excess return over 3-Month US Treasury bills per unit volatility.</span></span></th>
       <th>Deflated SR Prob</th>
-      <th>Sortino</th>
+      <th>sortino <span class="tooltip-wrap"><span class="info-icon" title="Downside risk-adjusted ratio measuring excess return per unit downside deviation.">i</span><span class="tip-box">Downside risk-adjusted ratio measuring excess return per unit downside deviation.</span></span></th>
       <th>Max DD (%)</th>
       <th>100% Cash Days (%)</th>
       <th>Trades</th>

@@ -5,6 +5,7 @@ from __future__ import annotations
 import base64
 import hashlib
 import json
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Tuple
@@ -456,6 +457,17 @@ def generate_benchmark_charts(
     return chart_paths
 
 
+def _info_badge(tip_text: str) -> str:
+    """Render a clean circular info icon '(i)' with mouse-over tooltip for backtest reports."""
+    clean_tip = tip_text.replace('"', '&quot;').replace("'", "&#39;")
+    return (
+        f'<span class="tooltip-wrap">'
+        f'<span class="info-icon" title="{clean_tip}">i</span>'
+        f'<span class="tip-box">{tip_text}</span>'
+        f'</span>'
+    )
+
+
 def _build_interactive_dashboard_html(results: Dict[str, BacktestResult]) -> str:
     """
     Build a rich, interactive JavaScript dashboard allowing the user to:
@@ -613,16 +625,16 @@ def _build_interactive_dashboard_html(results: Dict[str, BacktestResult]) -> str
           <table id="live_metrics_table" style="margin-bottom:0;">
             <thead>
               <tr>
-                <th>Strategy / Benchmark</th>
-                <th>Start $</th>
-                <th>Ending $</th>
-                <th>Total Return (%)</th>
-                <th>CAGR (%)</th>
-                <th>Ann. Vol (%)</th>
-                <th>Sharpe</th>
-                <th>Sortino</th>
-                <th>Max Drawdown (%)</th>
-                <th>100% Cash Days (%)</th>
+                <th>Strategy / Benchmark {_info_badge("Model portfolio, strategy variant, or broad benchmark index.")}</th>
+                <th>Start $ {_info_badge("Initial capital balance at start of date window (rebased).")}</th>
+                <th>Ending $ {_info_badge("Mark-to-market liquidation equity at end of date window.")}</th>
+                <th>Total Return (%) {_info_badge("Cumulative percentage growth over the window: (End $ / Start $ - 1) * 100%.")}</th>
+                <th>CAGR (%) {_info_badge("Compound Annual Growth Rate: annualized geometric return over the window.")}</th>
+                <th>Ann. Vol (%) {_info_badge("Annualized standard deviation of daily percentage portfolio returns: std(daily_ret) * sqrt(252).")}</th>
+                <th>Sharpe {_info_badge("Annualized Sharpe ratio relative to 3M T-bill rate: (CAGR - RiskFree) / Ann. Volatility.")}</th>
+                <th>Sortino {_info_badge("Sortino ratio: excess return divided by downside semi-deviation (penalizes negative volatility only).")}</th>
+                <th>Max Drawdown (%) {_info_badge("Maximum observed peak-to-trough decline in portfolio equity across the window.")}</th>
+                <th>100% Cash Days (%) {_info_badge("Percentage of trading days the strategy held zero market exposure and earned risk-free cash interest.")}</th>
               </tr>
             </thead>
             <tbody id="live_metrics_tbody"></tbody>
@@ -1451,16 +1463,60 @@ def generate_reports(
     }
     manifest_path.write_text(json.dumps(manifest_data, indent=2), encoding="utf-8")
 
+    def _decorate_html_table(html_str: str) -> str:
+        """Add mouse-over tooltips with circular info icons to pandas generated HTML table headers."""
+        column_tips = {
+            "Gate": "Institutional quantitative risk and performance hurdles required for production sign-off.",
+            "Value": "Empirical backtest realization over the evaluated out-of-sample period.",
+            "Status": "PASS / FAIL verdict against predefined institutional hurdles.",
+            "Strategy": "Strategy model variant or passive benchmark fund.",
+            "total_return_pct": "Cumulative percentage return across the designated evaluation window.",
+            "cagr_pct": "Compound Annual Growth Rate: annualized geometric rate of return.",
+            "sharpe": "Annualized Sharpe ratio measuring excess return over 3-Month US Treasury bills per unit volatility.",
+            "deflated_sharpe_prob": "Deflated Sharpe Ratio (DSR) probability adjusting for selection bias and multi-trial testing.",
+            "sortino": "Downside risk-adjusted ratio measuring excess return per unit downside deviation.",
+            "max_dd_pct": "Maximum observed peak-to-trough decline in portfolio equity.",
+            "profit_factor": "Payoff asymmetry: ratio of gross dollar profits to gross dollar losses.",
+            "win_rate_pct": "Percentage of closed trades with positive realized net profit.",
+            "avg_r": "Average profit per trade expressed in units of initial dollar risk (1.0R). Target > 1.5R.",
+            "cash_days_pct": "Percentage of trading days with 100% capital in risk-free cash / T-bills.",
+            "year": "Calendar year.",
+        }
+        for col, tip in column_tips.items():
+            pattern = re.compile(rf"<th>\s*{re.escape(col)}\s*</th>", re.IGNORECASE)
+            html_str = pattern.sub(f"<th>{col} {_info_badge(tip)}</th>", html_str)
+        return html_str
+
     def _df_to_md(df: pd.DataFrame) -> str:
         if df.empty:
             return "_No data_"
-        cols = [str(c) for c in df.columns]
+        col_name_map = {
+            "total_return_pct": "Total Return (%)",
+            "cagr_pct": "CAGR (%)",
+            "sharpe": "Sharpe",
+            "deflated_sharpe_prob": "Deflated Sharpe (Prob)",
+            "sortino": "Sortino",
+            "max_dd_pct": "Max Drawdown (%)",
+            "profit_factor": "Profit Factor",
+            "win_rate_pct": "Win Rate (%)",
+            "avg_r": "Avg R",
+            "cash_days_pct": "100% Cash Days (%)",
+            "Gate": "Institutional Gate",
+            "Value": "Realized Metric",
+            "Status": "Gate Status",
+        }
+        cols = [col_name_map.get(str(c), str(c).replace("_", " ")) for c in df.columns]
         header = "| " + " | ".join(cols) + " |"
         sep = "| " + " | ".join(["---"] * len(cols)) + " |"
         body = []
         for _, r in df.iterrows():
-            vals = [str(r[c]).replace("|", ";") for c in df.columns]
-            body.append("| " + " | ".join(vals) + " |")
+            row_vals = []
+            for c in df.columns:
+                val_str = str(r[c]).replace("|", ";").replace("Adaptive L_t", "Adaptive `L_t`")
+                if ("_" in val_str or "=" in val_str) and not val_str.startswith("`"):
+                    val_str = f"`{val_str}`"
+                row_vals.append(val_str)
+            body.append("| " + " | ".join(row_vals) + " |")
         return "\n".join([header, sep] + body)
 
     md_lines = [
@@ -1499,8 +1555,6 @@ def generate_reports(
         "",
         _df_to_md(df_overall),
         "",
-        _df_to_md(df_overall),
-        "",
         "## 4. View A — 2022 Bear Market Stress Test (`2022`)",
         "",
         _df_to_md(df_2022),
@@ -1514,7 +1568,7 @@ def generate_reports(
     if base_res is not None and not base_res.yearly_table.empty:
         md_lines.extend(
             [
-                "## 6. Yearly Breakdown — Baseline (Adaptive L_t, Cash + T-Bill Interest)",
+                "## 6. Yearly Breakdown — Baseline (Adaptive `L_t`, Cash + T-Bill Interest)",
                 "",
                 _df_to_md(base_res.yearly_table),
                 "",
@@ -1586,6 +1640,12 @@ def generate_reports(
     th { background: #1e293b; color: #ffffff; text-align: left; padding: 10px 12px; font-weight: 600; }
     td { padding: 9px 12px; border-bottom: 1px solid #e5e7eb; }
     tr:nth-child(even) { background: #f8fafc; }
+    .tooltip-wrap { position: relative; display: inline-flex; align-items: center; cursor: help; vertical-align: middle; }
+    .info-icon { display: inline-flex; align-items: center; justify-content: center; width: 14px; height: 14px; border-radius: 50%; background: #2563eb; color: #ffffff; font-size: 10px; font-weight: 700; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; line-height: 1; margin-left: 5px; border: 1px solid #60a5fa; box-shadow: 0 1px 2px rgba(0,0,0,0.15); transition: all 0.15s; }
+    .tooltip-wrap:hover .info-icon { background: #1d4ed8; transform: scale(1.15); }
+    .tooltip-wrap .tip-box { visibility: hidden; opacity: 0; width: 250px; background: #0f172a; color: #f8fafc; text-align: left; border-radius: 7px; padding: 8px 12px; position: absolute; z-index: 1000; bottom: 130%; left: 50%; transform: translateX(-50%); font-size: 11.5px; font-weight: 400; line-height: 1.45; box-shadow: 0 4px 14px rgba(0,0,0,0.3); transition: opacity 0.2s, visibility 0.2s; pointer-events: none; white-space: normal; text-transform: none; letter-spacing: normal; }
+    .tooltip-wrap .tip-box::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: #0f172a transparent transparent transparent; }
+    .tooltip-wrap:hover .tip-box { visibility: visible; opacity: 1; }
     """
 
     interactive_html = _build_interactive_dashboard_html(results)
@@ -1600,15 +1660,15 @@ def generate_reports(
         interactive_html,
         "<h2>2. Institutional Validation Gates (§9)</h2>",
         "<h3>2.1 SMH Bull Core + Swing Mode (Active Secular Bull Core Sweep)</h3>",
-        gates_core_df.to_html(index=False, border=0),
+        _decorate_html_table(gates_core_df.to_html(index=False, border=0)),
         "<h3>2.2 Cash Swing Mode (100% Cash / T-Bill Secondary Default)</h3>",
-        gates_cash_df.to_html(index=False, border=0),
+        _decorate_html_table(gates_cash_df.to_html(index=False, border=0)),
         "<h2>3. Full Out-of-Sample Walk-Forward Table (2022–2026)</h2>",
-        df_overall.to_html(index=False, border=0),
+        _decorate_html_table(df_overall.to_html(index=False, border=0)),
         "<h2>4. View A — 2022 Bear Market Stress Test (2022)</h2>",
-        df_2022.to_html(index=False, border=0),
+        _decorate_html_table(df_2022.to_html(index=False, border=0)),
         "<h2>5. View B — Modern AI Cycle (2023–2026)</h2>",
-        df_ai.to_html(index=False, border=0),
+        _decorate_html_table(df_ai.to_html(index=False, border=0)),
     ]
 
     if base_res is not None and not base_res.yearly_table.empty:

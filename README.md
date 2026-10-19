@@ -5,9 +5,9 @@ SemiSwing is a systematic momentum swing trading, walk-forward backtesting, and 
 Unallocated portfolio cash earns daily risk-free interest indexed to the 3-Month US Treasury Bill rate (`FRED DTB3`), with an **SMH Bull Core + Swing** sleeve that holds `SMH` during confirmed secular semiconductor bull markets.
 
 - **Live Cloud Dashboard:** [https://semiswing.pages.dev/](https://semiswing.pages.dev/)
-- **Live Daily Trade Tickets (Passcode-Protected):** [https://semiswing.pages.dev/daily/latest_recommendations.html](https://semiswing.pages.dev/daily/latest_recommendations.html)
-- **Live Interactive Backtest Report:** [https://semiswing.pages.dev/backtests/backtest_report.html](https://semiswing.pages.dev/backtests/backtest_report.html)
-- **Static Markdown Backtest Report:** [reports/backtests/backtest_report.md](reports/backtests/backtest_report.md)
+- **Live Daily Trade Tickets (Passcode-Protected):** [`https://semiswing.pages.dev/daily/latest_recommendations.html`](https://semiswing.pages.dev/daily/latest_recommendations.html)
+- **Live Interactive Backtest Report:** [`https://semiswing.pages.dev/backtests/backtest_report.html`](https://semiswing.pages.dev/backtests/backtest_report.html)
+- **Static Markdown Backtest Report:** [`reports/backtests/backtest_report.md`](reports/backtests/backtest_report.md)
 - **AI Implementation Specification:** [docs/instruction.md](docs/instruction.md)
 
 ---
@@ -27,12 +27,12 @@ To eliminate look-ahead selection bias and survivorship bias, the tradeable univ
 1. **Stage 1 (Institutional Liquidity Floor at $t_k - 1$):**
    - Active US-listed semiconductor & tech equities in `universe.all_panel_stocks`.
    - Listing history $\ge 60$ trading days since listing/IPO (eliminates unseasoned listings).
-   - $\text{Close}_{t_k - 1} \ge \$15.00$ (eliminates penny stocks).
+   - $\text{Close}_{t_k - 1} \ge 15.00$ ($\$15.00$, eliminates penny stocks).
    - Trailing 60-day median daily dollar volume:
-     $$\text{MedDollarVol}_{60d} = \text{median}_{t \in [t_k - 60, t_k - 1]}\!\left(\text{Close}_t \times \text{Volume}_t\right) \ge \$150{,}000{,}000.0$$
-   - Volatility condition: 20-day $\text{ATR\%}_{20d, t_k - 1} > 0$.
+     $$\text{MedDollarVol}_{60d} = \text{median}_{t \in [t_k - 60, t_k - 1]}\!\left(\text{Close}_t \times \text{Volume}_t\right) \ge 150{,}000{,}000.0$$
+   - Volatility condition: 20-day $\text{ATR}_{\text{pct}, 20d, t_k - 1} > 0$.
 2. **Stage 2 (Swing Tradability Ranking at $t_k - 1$):**
-   $$\text{SwingRankScore}_{i, t_k - 1} = \log_{10}\!\left(\text{MedDollarVol}_{60d}\right) \times \text{ATR\%}_{20d, t_k - 1}$$
+   $$\text{SwingRankScore}_{i, t_k - 1} = \log_{10}\!\left(\text{MedDollarVol}_{60d}\right) \times \text{ATR}_{\text{pct}, 20d, t_k - 1}$$
    - The $\log_{10}$ compression scales volume variation down to a $1.28\times$ factor between mid-caps and mega-caps, allowing 20-day $\text{ATR\%}$ to prioritize high-velocity momentum leaders over sluggish value traps.
    - **Uncapped Selection (`pit_top_n = None`):** All qualifying tickers passing the Stage 1 liquidity floor receive `is_tradeable_universe = 1` for quarter $k$, naturally expanding from ~28 stocks in 2022 to ~50 in 2026 as the AI infrastructure ecosystem expanded (with Stage 2 tradability scores governing relative ranking and execution priority).
 3. **Position Grace Rule:** Open positions held across quarterly boundaries are **never forcibly liquidated**; they remain managed under their stops and profit targets until natural exit, while new entries for dropped tickers are blocked.
@@ -40,13 +40,13 @@ To eliminate look-ahead selection bias and survivorship bias, the tradeable univ
 ### 1.3 Causal Macro Data & Volatility Hygiene
 - **FRED Publication Lag:** All Federal Reserve economic series (`DTB3`, `DGS10`, `DTWEXBGS`, `VIXCLS`, `VXVCLS`, `BAMLH0A0HYM2`) are lagged by 1 business day (`shift(1)`) to account for publication schedules.
 - **Fail-Closed Volatility Fallback:**
-  $$\text{vix\_ts} = \left(\frac{\text{VIX}}{\text{VIX3M}}\right).\text{fillna}(1.05)$$
+  $$\text{vix}_{\text{ts}} = \left(\frac{\text{VIX}}{\text{VIX3M}}\right).\text{fillna}(1.05)$$
   Missing volatility term structure data defaults to backwardation ($1.05$), immediately locking down long exposure.
 
 ### 1.4 Purged & Embargoed Machine Learning Validation
 - **Expanding Walk-Forward Blocks:** The ML model retrains in 63-trading-day (~quarterly) blocks from 2022 to 2026.
 - **López de Prado Purged K-Fold CV:** Inside each training block, cross-validation splits by unique dates ($K=5$) with a **20-day embargo** following each test fold, purging any observation whose triple-barrier span overlaps validation boundaries.
-- **Causal Label Cutoff:** For any test block $[t_{\text{start}}, t_{\text{end}}]$, the training set is strictly restricted to observations where $\text{tb\_end\_date} < t_{\text{start}}$, guaranteeing that every training trade outcome was completely settled prior to the test window.
+- **Causal Label Cutoff:** For any test block $[t_{\text{start}}, t_{\text{end}}]$, the training set is strictly restricted to observations where trade exit date satisfies $t_{\text{exit}} < t_{\text{start}}$ (`tb_end_date < t_start`), guaranteeing that every training trade outcome was completely settled prior to the test window.
 
 ### 1.5 The Control Benchmark (Pure Pre-2022 Semi)
 To prove that outperformance is driven by signal extraction and macro regime gating rather than post-2022 IPO additions (`ARM`, `ALAB`, `GEV`, `NBIS`, `SNDK`), the backtest runs an ablation restricted strictly to **25 established pre-2022 `SMH`/`SOXX` constituents** (`NVDA, AVGO, AMD, TSM, ASML, MU, KLAC, LRCX, AMAT, MRVL, QCOM, TXN, ON, MCHP, INTC, SNPS, CDNS, MPWR, ADI, NXPI, TER, WDC, STX, ANET, COHR`).
@@ -72,7 +72,7 @@ To prevent whipsaw churn near moving averages while avoiding recovery lag, regim
 
 The continuous macro multiplier $M_t$ scales capital allocation:
 $$M_t = \begin{cases} 
-0.0 & \text{if Regime} = 0 \;\lor\; \text{vix\_ts} \ge 1.0 \;\lor\; \text{VIX} \ge 30.0 \quad \text{(Deep Bear / Crisis)} \\
+0.0 & \text{if Regime} = 0 \;\lor\; \text{vix}_{\text{ts}} \ge 1.0 \;\lor\; \text{VIX} \ge 30.0 \quad \text{(Deep Bear / Crisis)} \\
 0.5 & \text{if Regime} = 1 \;\land\; (\text{EMA50} < \text{EMA200} \;\lor\; \text{VIX} \ge 22.0) \quad \text{(Recovery / Transition)} \\
 1.0 & \text{if Regime} = 1 \;\land\; \text{EMA50} \ge \text{EMA200} \;\land\; \text{VIX} < 22.0 \quad \text{(Confirmed Bull)}
 \end{cases}$$

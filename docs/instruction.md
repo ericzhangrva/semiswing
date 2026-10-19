@@ -14,8 +14,8 @@ SemiSwing is a systematic momentum swing trading, walk-forward validation, and d
 
 ### Dual Capital Allocation Modes
 1. **Cash Swing Mode (100% Cash Default):**
-   - Unallocated capital sits in cash and earns daily risk-free interest indexed to the 3-Month US Treasury Bill secondary market rate (`FRED DTB3`):
-     $$\text{Daily Cash Yield} = \frac{\text{cash\_rate\_apy}}{252}$$
+     $$\text{Daily Cash Yield} = \frac{r_{\text{cash}}}{252}$$
+     where $r_{\text{cash}}$ is the annualized 3-Month T-Bill yield (`FRED DTB3`).
 2. **SMH Bull Core + Swing Mode:**
    - During confirmed secular semiconductor bull markets (`smh_secular_bull == 1`), uninvested portfolio cash is swept into `SMH` core equity.
    - When the secular bull trend breaks (`smh_secular_bull == 0`), the core `SMH` holding is liquidated at market open and swept back into 100% T-Bill cash.
@@ -39,15 +39,15 @@ flowchart TD
 Evaluated over the trailing 60 trading days $[t_k - 60, t_k - 1]$:
 1. **Industry Universe:** Active US-listed equities in Semiconductors, Semiconductor Equipment, Computer Hardware/Storage, Communications Equipment, and Electronic Components (`universe.all_panel_stocks`).
 2. **Seasoning / IPO Guard:** Total historical daily bars $\ge 60$ trading days since listing.
-3. **Price Floor:** $\text{Close}_{t_k - 1} \ge \$15.00$.
+3. **Price Floor:** $\text{Close}_{t_k - 1} \ge 15.00$ ($\$15.00$).
 4. **Institutional Dollar Volume Floor:**
-   $$\text{MedDollarVol}_{60d} = \text{median}_{t \in [t_k - 60, t_k - 1]}\!\left(\text{Close}_t \times \text{Volume}_t\right) \ge \$150{,}000{,}000.0$$
-5. **Valid Volatility:** $\text{ATR\%}_{20d, t_k - 1} > 0$.
+   $$\text{MedDollarVol}_{60d} = \text{median}_{t \in [t_k - 60, t_k - 1]}\!\left(\text{Close}_t \times \text{Volume}_t\right) \ge 150{,}000{,}000.0$$
+5. **Valid Volatility:** $\text{ATR}_{\text{pct}, 20d, t_k - 1} > 0$.
 
 ### Stage 2: Swing Tradability Ranking (at $t_k - 1$)
 For all qualifying stocks passing Stage 1:
-$$\text{SwingRankScore}_{i, t_k - 1} = \log_{10}\!\left(\text{MedDollarVol}_{60d}\right) \times \text{ATR\%}_{20d, t_k - 1}$$
-where $\text{ATR\%}_{20d} = \frac{\text{ATR}_{20d}}{\text{Close}}$.
+$$\text{SwingRankScore}_{i, t_k - 1} = \log_{10}\!\left(\text{MedDollarVol}_{60d}\right) \times \text{ATR}_{\text{pct}, 20d, t_k - 1}$$
+where $\text{ATR}_{\text{pct}, 20d} = \frac{\text{ATR}_{20d}}{\text{Close}}$.
 - The $\log_{10}$ compression scales volume variation down to a $1.28\times$ factor across mega-caps vs mid-caps, allowing 20-day $\text{ATR\%}$ to prioritize high-velocity momentum leaders over sluggish value traps.
 - **Uncapped Configuration (`pit_top_n = None`):** All qualifying stocks passing the Stage 1 institutional liquidity floor are admitted to the tradeable universe, naturally expanding from ~28 stocks in 2022 to ~50 stocks by 2026 as the AI infrastructure ecosystem expanded. If a finite integer $N$ is configured, it truncates to the Top $N$ highest-ranked tickers.
 
@@ -69,7 +69,7 @@ Data is ingested into DuckDB (`data/semiswing.duckdb`) across four tables:
 ### Causal Data Hygiene Rules
 1. **FRED Macro Series Publication Lag:** All FRED series (`DTB3`, `DGS10`, `DTWEXBGS`, `VIXCLS`, `VXVCLS`, `BAMLH0A0HYM2`) are strictly lagged by 1 business day (`fred_piv = fred_piv.shift(1)`), preventing economic report look-ahead leakage.
 2. **Fail-Closed Volatility Fallback:**
-   $$\text{vix\_ts} = \left(\frac{\text{VIX}}{\text{VIX3M}}\right).\text{fillna}(1.05)$$
+   $$\text{vix}_{\text{ts}} = \frac{\text{VIX}}{\text{VIX3M}} \quad (\text{with fail-closed default } 1.05)$$
    Missing volatility term structure data defaults to backwardation ($1.05$), automatically locking down long exposure.
 3. **EOD Cross-Source Majority Reconciliation:** Daily closing prices from `yfinance` are cross-checked against `Stooq` with an acceptance tolerance of $0.5\%$.
 4. **Premarket Gap-Down Circuit Breaker (09:15–09:30 ET):** If the sector benchmark (`SMH`) opens or premarket gaps down $< -1.5\%$, all pending candidate buy orders are aborted.
@@ -128,7 +128,7 @@ stateDiagram-v2
 
 ### Continuous Macro Multiplier ($M_t$)
 1. **$M_t = 0.0$ (Deep Bear / Macro Breakdown / Crisis):**
-   - Condition: Schmitt trigger state $= 0$, OR $\text{vix\_ts} \ge 1.0$ (Backwardation), OR $\text{VIX} \ge 30.0$.
+   - Condition: Schmitt trigger state $= 0$, OR $\text{vix}_{\text{ts}} \ge 1.0$ (Backwardation), OR $\text{VIX} \ge 30.0$.
    - **Action:** 0% new long risk. Unallocated capital sweeps to 100% 3-Month T-Bills.
 2. **$M_t = 0.5$ (Recovery / Early Transition):**
    - Condition: Schmitt trigger state $= 1$, BUT ($\text{EMA50} < \text{EMA200}$ OR $\text{VIX} \ge 22.0$).

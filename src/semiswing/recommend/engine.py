@@ -735,7 +735,7 @@ def render_recommendation_email_text(plan: DailyRecommendationPlan) -> str:
                 f"  - Stop-Loss: ${b.stop_price:.2f} (-{b.stop_dist_pct:.1f}%) | Profit Target (TP1): ${b.tp1_price:.2f} (+{b.tp1_gain_pct:.1f}%)"
             )
             lines.append(
-                f"  - Model Score: {b.ml_prob:.3f} (RS {b.rs_rank * 100:.0f}th pct) | Drivers: {b.shap_summary}"
+                f"  - Model Score: {b.ml_prob:.3f} (RS {b.rs_rank * 100:.0f}th pct) | Drivers: `{b.shap_summary}`"
             )
     else:
         lines.append(
@@ -758,10 +758,27 @@ def render_recommendation_email_text(plan: DailyRecommendationPlan) -> str:
             lines.append(
                 f"  - Stop-Loss: ${w.stop_price:.2f} (-{w.stop_dist_pct:.1f}%) | Profit Target (TP1): ${w.tp1_price:.2f} (+{w.tp1_gain_pct:.1f}%)"
             )
-            lines.append(f"  - Entry Gate: {w.gate_notes} | Drivers: {w.shap_summary}")
+            lines.append(f"  - Entry Gate: {w.gate_notes} | Drivers: `{w.shap_summary}`")
             lines.append("")
 
     return "\n".join(lines)
+
+
+def _info_badge(tip_text: str) -> str:
+    """Render a clean circular info icon '(i)' with mouse-over tooltip."""
+    clean_tip = tip_text.replace('"', '&quot;').replace("'", "&#39;")
+    return (
+        f'<span class="tooltip-wrap" style="position:relative; display:inline-flex; align-items:center; cursor:help; vertical-align:middle;">'
+        f'<span class="info-icon" title="{clean_tip}" style="display:inline-flex; align-items:center; justify-content:center; '
+        f'width:13px; height:13px; border-radius:50%; background:#0284c7; color:#ffffff; font-size:10px; font-weight:700; '
+        f'font-family:-apple-system, BlinkMacSystemFont, sans-serif; line-height:1; margin-left:4px; border:1px solid #38bdf8; '
+        f'vertical-align:middle; text-decoration:none; box-shadow:0 1px 2px rgba(0,0,0,0.15);">i</span>'
+        f'<span class="tip-box" style="visibility:hidden; opacity:0; width:240px; background:#0f172a; color:#f8fafc; '
+        f'text-align:left; border-radius:7px; padding:8px 11px; position:absolute; z-index:9999; bottom:130%; left:50%; '
+        f'transform:translateX(-50%); font-size:11.5px; font-weight:normal; line-height:1.4; box-shadow:0 4px 14px rgba(0,0,0,0.3); '
+        f'transition:opacity 0.2s, visibility 0.2s; pointer-events:none; white-space:normal; text-transform:none; letter-spacing:normal;">{tip_text}</span>'
+        f'</span>'
+    )
 
 
 def _render_single_plan_body(plan: DailyRecommendationPlan) -> str:
@@ -804,9 +821,9 @@ def _render_single_plan_body(plan: DailyRecommendationPlan) -> str:
             )
             risk_banner = f"""
             <div style="margin-top:8px; padding:7px 10px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; font-size:12px; color:#334155;">
-              <strong>Protect Stop:</strong> ${h.recommended_stop:.2f} &nbsp;|&nbsp;
-              <strong>Next Target (TP):</strong> ${h.tp1_target:.2f} &nbsp;|&nbsp;
-              <strong>RS Rank:</strong> {h.rs_rank * 100:.0f}th pct{earn_note}
+              <strong>Protect Stop {_info_badge("Protective exit price ratcheted via Chandelier stop (Close - 2.5x ATR); locks in profits and never lowers.")}:</strong> ${h.recommended_stop:.2f} &nbsp;|&nbsp;
+              <strong>Next Target (TP) {_info_badge("First profit target at +3.0x ATR (+1.5R). Sell 25%-50% shares and move stop to breakeven when touched.")}:</strong> ${h.tp1_target:.2f} &nbsp;|&nbsp;
+              <strong>RS Rank {_info_badge("Decoupled 20-day idiosyncratic residual momentum percentile vs SMH (96th pct = outperforms 96% of peers beta-neutrally).")}:</strong> {h.rs_rank * 100:.0f}th pct{earn_note}
             </div>
             """
 
@@ -873,7 +890,7 @@ def _render_single_plan_body(plan: DailyRecommendationPlan) -> str:
             <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f0f9ff; border:1px solid #bae6fd; border-radius:8px; margin-bottom:12px;">
               <tr>
                 <td width="50%" valign="top" style="padding:10px 14px; border-right:1px solid #bae6fd;">
-                  <div style="font-size:11px; color:#0369a1; font-weight:700; text-transform:uppercase;">Order (Using Settled Cash: ${plan.current_cash:,.0f})</div>
+                  <div style="font-size:11px; color:#0369a1; font-weight:700; text-transform:uppercase;">Order (Using Settled Cash: ${plan.current_cash:,.0f}) {_info_badge("Share and dollar order sized strictly from settled idle cash, capped at min(33% equity, cash / 2).")}</div>
                   <div style="font-size:18px; font-weight:800; color:#0c4a6e; margin-top:2px;">
                     BUY ${c.buy_dollars_cash_only:,.2f}
                   </div>
@@ -882,7 +899,7 @@ def _render_single_plan_body(plan: DailyRecommendationPlan) -> str:
                   </div>
                 </td>
                 <td width="50%" valign="top" style="padding:10px 14px;">
-                  <div style="font-size:11px; color:#0369a1; font-weight:700; text-transform:uppercase;">Order (With ETF Rotation: ${plan.deployable_cash_with_rotate:,.0f})</div>
+                  <div style="font-size:11px; color:#0369a1; font-weight:700; text-transform:uppercase;">Order (With ETF Rotation: ${plan.deployable_cash_with_rotate:,.0f}) {_info_badge("Expanded order allocation assuming scheduled sales of non-core or leveraged ETFs (e.g. SOXL, TQQQ) are executed.")}</div>
                   <div style="font-size:18px; font-weight:800; color:#0c4a6e; margin-top:2px;">
                     BUY ${c.buy_dollars_with_rotate:,.2f}
                   </div>
@@ -898,7 +915,7 @@ def _render_single_plan_body(plan: DailyRecommendationPlan) -> str:
               <tr>
                 <td width="33%" valign="top" style="padding-right:6px;">
                   <div style="background:#fef2f2; border:1px solid #fecaca; border-radius:6px; padding:8px 10px;">
-                    <div style="font-size:10px; color:#991b1b; font-weight:700; text-transform:uppercase;">Hard Stop-Loss</div>
+                    <div style="font-size:10px; color:#991b1b; font-weight:700; text-transform:uppercase;">Hard Stop-Loss {_info_badge("Non-negotiable downside exit price placed at order fill: Entry - min(2.0x ATR, 8.0% backstop). Never widened or cancelled.")}</div>
                     <div style="font-size:14px; font-weight:700; color:#dc2626; margin-top:2px;">
                       ${c.stop_price:,.2f} <span style="font-size:11px; font-weight:600;">(-{c.stop_dist_pct:.1f}%)</span>
                     </div>
@@ -906,7 +923,7 @@ def _render_single_plan_body(plan: DailyRecommendationPlan) -> str:
                 </td>
                 <td width="34%" valign="top" style="padding:0 3px;">
                   <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:6px; padding:8px 10px;">
-                    <div style="font-size:10px; color:#166534; font-weight:700; text-transform:uppercase;">Profit Target (TP1)</div>
+                    <div style="font-size:10px; color:#166534; font-weight:700; text-transform:uppercase;">Profit Target (TP1) {_info_badge("First profit target at +3.0x ATR (+1.5R). Rules recommend taking 25%-50% profits and moving stop to breakeven when touched.")}</div>
                     <div style="font-size:14px; font-weight:700; color:#15803d; margin-top:2px;">
                       ${c.tp1_price:,.2f} <span style="font-size:11px; font-weight:600;">(+{c.tp1_gain_pct:.1f}%)</span>
                     </div>
@@ -914,7 +931,7 @@ def _render_single_plan_body(plan: DailyRecommendationPlan) -> str:
                 </td>
                 <td width="33%" valign="top" style="padding-left:6px;">
                   <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:8px 10px;">
-                    <div style="font-size:10px; color:#475569; font-weight:700; text-transform:uppercase;">ML Score &amp; RS</div>
+                    <div style="font-size:10px; color:#475569; font-weight:700; text-transform:uppercase;">ML Score &amp; RS {_info_badge("Composite conviction score combining trend significance (t-stat) with LightGBM continuous sizing scalar and 20d RS percentile.")}</div>
                     <div style="font-size:14px; font-weight:700; color:#0f172a; margin-top:2px;">
                       {c.ml_prob * 100:.1f}% <span style="font-size:11px; color:#64748b;">(RS {c.rs_rank * 100:.0f}th)</span>
                     </div>
@@ -925,8 +942,8 @@ def _render_single_plan_body(plan: DailyRecommendationPlan) -> str:
 
             <!-- Trigger Condition & Top SHAP Drivers -->
             <div style="font-size:12px; color:#334155; background:#f8fafc; border-radius:6px; padding:8px 12px; line-height:1.45;">
-              <div><strong>Entry Condition:</strong> {c.gate_notes} &nbsp;|&nbsp; <strong>Max Hold:</strong> 25 trading days &nbsp;|&nbsp; <strong>Earnings:</strong> {earn_str}</div>
-              <div style="margin-top:4px; color:#475569;"><strong>Top Model Drivers (SHAP):</strong> <code>{c.shap_summary or 'N/A'}</code></div>
+              <div><strong>Entry Condition {_info_badge("Pre-trade diagnostic gates required for signal execution (Regime ON, slope_t >= 1.2, positive EMA20 slope, no nearby earnings).")}:</strong> {c.gate_notes} &nbsp;|&nbsp; <strong>Max Hold:</strong> 25 trading days &nbsp;|&nbsp; <strong>Earnings:</strong> {earn_str}</div>
+              <div style="margin-top:4px; color:#475569;"><strong>Top Model Drivers (SHAP) {_info_badge("SHAP single-feature marginal attributions showing which specific market features increased (+) or decreased (-) model win probability.")}:</strong> <code>{c.shap_summary or 'N/A'}</code></div>
             </div>
           </div>
         </div>
@@ -980,6 +997,10 @@ def _render_single_plan_body(plan: DailyRecommendationPlan) -> str:
 
     return f"""
         <div style="max-width:680px; width:100%; text-align:left;">
+          <style>
+            .tooltip-wrap:hover .info-icon {{ background:#0369a1 !important; transform:scale(1.15); }}
+            .tooltip-wrap:hover .tip-box {{ visibility:visible !important; opacity:1 !important; }}
+          </style>
 
           <!-- Top Header Card -->
           <div style="background:#0f172a; color:#ffffff; border-radius:12px; padding:20px 22px; margin-bottom:16px;">
@@ -993,12 +1014,12 @@ def _render_single_plan_body(plan: DailyRecommendationPlan) -> str:
                     Daily Trade Ticket &mdash; {plan.as_of_date}
                   </div>
                   <div style="font-size:12px; color:#94a3b8; margin-top:4px;">
-                    {plan.account_name} &bull; Snapshot Synced: {plan.snapshot_date} &bull; VIX {plan.vix_lvl:.1f}
+                    {plan.account_name} &bull; Snapshot Synced: {plan.snapshot_date} &bull; VIX {plan.vix_lvl:.1f} {_info_badge("Front-month CBOE Volatility Index. Values < 22 confirm benign regime; > 30 triggers macro lockdown.")} &bull; APY {plan.cash_rate_apy_pct:.2f}% {_info_badge("Daily interest yield earned on uninvested cash indexed to FRED 3-Month T-Bill rate (DTB3).")}
                   </div>
                 </td>
                 <td align="right" valign="top">
                   <span style="display:inline-block; padding:5px 12px; background:{regime_bg}; color:{regime_fg}; border-radius:999px; font-size:11px; font-weight:800;">
-                    {regime_label}
+                    {regime_label} {_info_badge("Sector macro regime governed by Schmitt Trigger on SMH (EMA200 +/- 1.5% band with EMA50 confirmation).")}
                   </span>
                 </td>
               </tr>
@@ -1008,15 +1029,21 @@ def _render_single_plan_body(plan: DailyRecommendationPlan) -> str:
             <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:16px; background:#1e293b; border-radius:8px;">
               <tr>
                 <td width="33%" style="padding:10px 14px; border-right:1px solid #334155;">
-                  <div style="font-size:11px; color:#94a3b8; text-transform:uppercase;">Total Portfolio</div>
+                  <div style="font-size:11px; color:#94a3b8; text-transform:uppercase;">
+                    Total Portfolio {_info_badge("Mark-to-market liquidation equity across all cash and long stock/ETF holdings.")}
+                  </div>
                   <div style="font-size:18px; font-weight:800; color:#f8fafc; margin-top:2px;">${plan.total_equity:,.2f}</div>
                 </td>
                 <td width="33%" style="padding:10px 14px; border-right:1px solid #334155;">
-                  <div style="font-size:11px; color:#94a3b8; text-transform:uppercase;">Settled Cash Now</div>
+                  <div style="font-size:11px; color:#94a3b8; text-transform:uppercase;">
+                    Settled Cash Now {_info_badge("Immediately available idle cash ready to fund new buy tickets today without selling existing holdings.")}
+                  </div>
                   <div style="font-size:18px; font-weight:800; color:#38bdf8; margin-top:2px;">${plan.current_cash:,.2f}</div>
                 </td>
                 <td width="34%" style="padding:10px 14px;">
-                  <div style="font-size:11px; color:#94a3b8; text-transform:uppercase;">Cash + Rotation</div>
+                  <div style="font-size:11px; color:#94a3b8; text-transform:uppercase;">
+                    Cash + Rotation {_info_badge("Settled cash plus capital unlocked if you execute recommended sales of non-core/leveraged ETFs.")}
+                  </div>
                   <div style="font-size:18px; font-weight:800; color:#4ade80; margin-top:2px;">${plan.deployable_cash_with_rotate:,.2f}</div>
                 </td>
               </tr>
