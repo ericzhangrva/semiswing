@@ -1276,8 +1276,10 @@ def render_recommendation_email_html(plan: DailyRecommendationPlan) -> str:
 """
 
 
-def render_multi_portfolio_inner_html(plans: Dict[str, DailyRecommendationPlan]) -> str:
+def render_multi_portfolio_inner_html(plans: Dict[str, DailyRecommendationPlan], created_ts: str | None = None) -> str:
     """Render a tabbed multi-portfolio HTML container for all snapshots (`main`, `minor-roth-ira`, etc.)."""
+    if created_ts is None:
+        created_ts = pd.Timestamp.now(tz="America/New_York").strftime("%Y-%m-%d %H:%M:%S %Z")
     first_key = next(iter(plans.keys()))
     tabs_html = ""
     panels_html = ""
@@ -1326,6 +1328,9 @@ def render_multi_portfolio_inner_html(plans: Dict[str, DailyRecommendationPlan])
             </div>
           </div>
           {panels_html}
+          <div style="max-width:680px; width:100%; text-align:center; padding:20px 0 28px 0; font-size:12px; color:#64748b; border-top:1px solid #1e293b; margin-top:20px;">
+            SemiSwing Portfolio Desk &bull; Report Created: <strong>{created_ts}</strong>
+          </div>
         </td>
       </tr>
     </table>
@@ -1337,6 +1342,7 @@ def encrypt_html_with_passcode(
     passcode: str,
     as_of_date: str,
     portfolio_names: list[str] | None = None,
+    created_ts: str | None = None,
 ) -> str:
     """
     Encrypt `inner_html` using PBKDF2-HMAC-SHA256 (150,000 iterations) + SHA256 Counter Mode + Encrypt-then-HMAC-SHA256.
@@ -1346,6 +1352,9 @@ def encrypt_html_with_passcode(
     import hashlib
     import hmac
     import secrets
+
+    if created_ts is None:
+        created_ts = pd.Timestamp.now(tz="America/New_York").strftime("%Y-%m-%d %H:%M:%S %Z")
 
     salt = secrets.token_bytes(16)
     nonce = secrets.token_bytes(16)
@@ -1414,6 +1423,9 @@ def encrypt_html_with_passcode(
       <a href="../backtests/backtest_report.html" style="color:#38bdf8; text-decoration:none; font-weight:600;">
         View Public Walk-Forward Backtest Report ($10K) &rarr;
       </a>
+      <div style="margin-top:12px; font-size:11px; color:#64748b;">
+        Report Created: <strong>{created_ts}</strong>
+      </div>
     </div>
   </div>
 
@@ -1587,10 +1599,12 @@ def write_recommendation_reports(
         md_sections.append(f"### PORTFOLIO: {slug}\n" + render_recommendation_email_text(p))
     md_path.write_text("\n\n" + ("\n\n" + "=" * 72 + "\n\n").join(md_sections), encoding="utf-8")
 
+    now_ts = pd.Timestamp.now(tz="America/New_York").strftime("%Y-%m-%d %H:%M:%S %Z")
+
     # Build multi-portfolio inner HTML and encrypt with passcode
-    inner_multi_html = render_multi_portfolio_inner_html(plans_dict)
+    inner_multi_html = render_multi_portfolio_inner_html(plans_dict, created_ts=now_ts)
     encrypted_html = encrypt_html_with_passcode(
-        inner_multi_html, effective_passcode, plan.as_of_date, portfolio_names=list(plans_dict.keys())
+        inner_multi_html, effective_passcode, plan.as_of_date, portfolio_names=list(plans_dict.keys()), created_ts=now_ts
     )
 
     html_path.write_text(encrypted_html, encoding="utf-8")

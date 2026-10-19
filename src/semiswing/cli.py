@@ -250,6 +250,11 @@ def scan() -> None:
 def recommend(
     refresh: bool = typer.Option(False, "--refresh/--no-refresh", help="Refresh market data from yfinance/FRED before running"),
     capital: float = typer.Option(0.0, help="Optional stateless capital override (0 uses portfolio configs)"),
+    passcode: Optional[str] = typer.Option(
+        None,
+        envvar="PORTFOLIO_PASSCODE",
+        help="Passcode to encrypt Daily Trade Tickets (or set PORTFOLIO_PASSCODE env var)",
+    ),
     email: bool = typer.Option(False, "--email/--no-email", help="Send the HTML Trade Ticket email via SMTP (.env credentials)"),
     to: str = typer.Option("", "--to", help="Optional recipient email override (defaults to ALERT_EMAIL or SMTP_USER in .env)"),
 ) -> None:
@@ -283,15 +288,18 @@ def recommend(
         )
 
     primary_plan = next(iter(all_plans.values()))
-    html_out, md_out = write_recommendation_reports(primary_plan, all_plans=all_plans)
+    try:
+        html_out, md_out = write_recommendation_reports(primary_plan, all_plans=all_plans, passcode=passcode)
+        console.print(f"\n[bold green]Encrypted Multi-Portfolio HTML Trade Ticket written to:[/bold green] {html_out}")
+        console.print(f"[bold green]Local Plain-Text / Markdown Ticket written to:[/bold green] {md_out}")
+    except ValueError as e:
+        console.print(f"\n[bold yellow]Skipped Encrypted Daily Trade Tickets: {e}[/bold yellow]")
     idx_out = _write_cloudflare_pages_index(primary_plan.as_of_date, primary_plan.regime_on, len(all_plans))
 
     for slug, plan in all_plans.items():
         console.print(f"\n[bold cyan]=== PORTFOLIO: {slug} ===[/bold cyan]")
         console.print(render_recommendation_email_text(plan))
 
-    console.print(f"\n[bold green]Encrypted Multi-Portfolio HTML Trade Ticket written to:[/bold green] {html_out}")
-    console.print(f"[bold green]Local Plain-Text / Markdown Ticket written to:[/bold green] {md_out}")
     console.print(f"[bold green]Cloudflare Pages Dashboard Index updated:[/bold green] {idx_out}")
 
     if email:
@@ -379,6 +387,7 @@ def _write_cloudflare_pages_index(as_of_date: str, regime_on: bool, num_portfoli
     idx_path.parent.mkdir(parents=True, exist_ok=True)
     regime_badge = "RISK-ON (Swing Entries Enabled)" if regime_on else "DEFENSIVE (Hold Core / Cash)"
     regime_color = "#22c55e" if regime_on else "#eab308"
+    now_ts = pd.Timestamp.now(tz="America/New_York").strftime("%Y-%m-%d %H:%M:%S %Z")
 
     html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -420,6 +429,10 @@ def _write_cloudflare_pages_index(as_of_date: str, regime_on: bool, num_portfoli
         </div>
       </a>
     </div>
+
+    <div style="margin-top:36px; padding-top:16px; border-top:1px solid #334155; text-align:center; font-size:12px; color:#64748b;">
+      SemiSwing Automated Cloud Desk &bull; Report Created: <strong>{now_ts}</strong>
+    </div>
   </div>
 </body>
 </html>
@@ -431,6 +444,11 @@ def _write_cloudflare_pages_index(as_of_date: str, regime_on: bool, num_portfoli
 @app.command("daily-run")
 def daily_run(
     force: bool = typer.Option(False, "--force", help="Run even if today is a weekend or US market holiday"),
+    passcode: Optional[str] = typer.Option(
+        None,
+        envvar="PORTFOLIO_PASSCODE",
+        help="Passcode to encrypt Daily Trade Tickets (or set PORTFOLIO_PASSCODE env var)",
+    ),
     email: bool = typer.Option(False, "--email/--no-email", help="Send the HTML Trade Ticket email"),
     to: str = typer.Option("", "--to", help="Optional recipient email override"),
 ) -> None:
@@ -503,11 +521,14 @@ def daily_run(
         )
 
     primary_plan = next(iter(all_plans.values()))
-    rec_html, rec_md = write_recommendation_reports(primary_plan, all_plans=all_plans)
+    try:
+        rec_html, rec_md = write_recommendation_reports(primary_plan, all_plans=all_plans, passcode=passcode)
+        console.print(f"[bold green]Updated Encrypted Daily Trade Tickets:[/bold green] {rec_html}")
+    except ValueError as e:
+        console.print(f"[bold yellow]Skipped Encrypted Daily Trade Tickets: {e}[/bold yellow]")
     idx_html = _write_cloudflare_pages_index(primary_plan.as_of_date, primary_plan.regime_on, len(all_plans))
 
     console.print(f"[bold green]Updated Public Backtest Report:[/bold green] {bt_html}")
-    console.print(f"[bold green]Updated Encrypted Daily Trade Tickets:[/bold green] {rec_html}")
     console.print(f"[bold green]Updated Dashboard Index:[/bold green] {idx_html}")
 
     if email:

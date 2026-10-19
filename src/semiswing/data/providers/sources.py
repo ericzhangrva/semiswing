@@ -12,14 +12,18 @@ import numpy as np
 import pandas as pd
 import yfinance as yf
 
+from semiswing.config import resolve_ticker
+
 
 def fetch_yfinance_daily(tickers: List[str], start_date: str = "2017-01-01") -> pd.DataFrame:
     """Download adjusted and unadjusted daily OHLCV from yfinance in batch."""
     if not tickers:
         return pd.DataFrame()
 
+    resolved_tickers = [resolve_ticker(t) for t in tickers]
+
     raw = yf.download(
-        tickers=tickers,
+        tickers=resolved_tickers,
         start=start_date,
         auto_adjust=True,
         progress=False,
@@ -30,15 +34,15 @@ def fetch_yfinance_daily(tickers: List[str], start_date: str = "2017-01-01") -> 
         return pd.DataFrame()
 
     rows = []
-    if len(tickers) == 1:
-        t = tickers[0]
+    if len(resolved_tickers) == 1:
+        t = resolved_tickers[0]
         df_t = raw.copy()
         df_t = df_t.dropna(how="all")
         df_t["ticker"] = t
         df_t["date"] = pd.to_datetime(df_t.index).tz_localize(None)
         rows.append(df_t)
     else:
-        for t in tickers:
+        for t in resolved_tickers:
             if t not in raw.columns.get_level_values(0):
                 continue
             df_t = raw[t].copy().dropna(how="all")
@@ -72,6 +76,7 @@ def fetch_yfinance_daily(tickers: List[str], start_date: str = "2017-01-01") -> 
 
 def fetch_stooq_daily(ticker: str, start_date: str = "2017-01-01") -> pd.DataFrame:
     """Fetch daily EOD bars from Stooq CSV endpoint for cross-source reconciliation."""
+    ticker = resolve_ticker(ticker)
     if ticker.startswith("^"):
         return pd.DataFrame()
     stooq_sym = f"{ticker.lower()}.us"

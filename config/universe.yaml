@@ -12,7 +12,7 @@ tradeable_stocks:
   - WDC
   - SNDK
   - STX
-  - PSTG
+  - P  # Everpure, Inc. (formerly Pure Storage, transitioned from PSTG on 2026-04-17)
   # AI Networking, Optics, Interconnects & Data Center Cooling
   - ANET
   - VRT

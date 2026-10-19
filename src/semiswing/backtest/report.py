@@ -1936,6 +1936,12 @@ def generate_reports(
         html_parts.append(_render_trade_legend_html())
         html_parts.append(_decorate_html_table(formatted_tr.to_html(index=False, border=0)))
 
+    now_ts = pd.Timestamp.now(tz="America/New_York").strftime("%Y-%m-%d %H:%M:%S %Z")
+    html_parts.append(
+        f"<footer style='margin-top:50px; padding:24px 0 32px 0; border-top:1px solid #cbd5e1; text-align:center; font-size:12px; color:#64748b; font-family:-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,sans-serif;'>"
+        f"SemiSwing Systematic Trading Engine &bull; Report Created: <strong>{now_ts}</strong>"
+        f"</footer>"
+    )
     html_parts.append("</body></html>")
     html_path.write_text("\n".join(html_parts), encoding="utf-8")
 

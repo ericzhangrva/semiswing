@@ -10,6 +10,15 @@ from pydantic import BaseModel, Field
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
+TICKER_ALIASES: Dict[str, str] = {
+    "PSTG": "P",  # Pure Storage, Inc. -> Everpure, Inc. (transitioned from PSTG to P on 2026-04-17)
+}
+
+
+def resolve_ticker(ticker: str) -> str:
+    """Resolve historical or re-branded ticker symbols to their active tradeable symbol."""
+    return TICKER_ALIASES.get(ticker.upper(), ticker.upper())
+
 
 class BacktestConfig(BaseModel):
     start_date: str = "2018-01-01"
@@ -151,18 +160,19 @@ class UniverseSettings(BaseModel):
 
     @property
     def all_tradeable(self) -> List[str]:
-        return self.tradeable_stocks + self.tradeable_etfs
+        return [resolve_ticker(t) for t in self.tradeable_stocks + self.tradeable_etfs]
 
     @property
     def all_panel_stocks(self) -> List[str]:
-        return self.tradeable_stocks + self.training_only_stocks
+        return [resolve_ticker(t) for t in self.tradeable_stocks + self.training_only_stocks]
 
     @property
     def all_equity_and_context(self) -> List[str]:
         seen = []
         for t in self.tradeable_stocks + self.tradeable_etfs + self.training_only_stocks + self.context_tickers:
-            if t not in seen:
-                seen.append(t)
+            resolved = resolve_ticker(t)
+            if resolved not in seen:
+                seen.append(resolved)
         return seen
 
 
