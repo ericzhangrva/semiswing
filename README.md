@@ -28,16 +28,16 @@ To eliminate look-ahead selection bias and survivorship bias, the tradeable univ
    - $\text{Close}_{t_k - 1} \ge 15.00\text{ USD}$ (eliminates penny stocks below 15 USD).
    - Trailing 60-day median daily dollar volume:
 
-     $$
-     \text{MedDollarVol}_{60\text{d}} = \text{median}_{t \in [t_k - 60, t_k - 1]} \left(\text{Close}_t \times \text{Volume}_t\right) \ge 150{,}000{,}000\text{ USD}
-     $$
+$$
+\text{MedDollarVol}_{60\text{d}} = \text{median}_{t \in [t_k - 60, t_k - 1]} \left(\text{Close}_t \times \text{Volume}_t\right) \ge 150{,}000{,}000\text{ USD}
+$$
 
    - Volatility condition: 20-day $\text{ATR}_{\text{pct}, 20\text{d}, t_k - 1} > 0$.
 2. **Stage 2 (Swing Tradability Ranking at $t_k - 1$):**
 
-   $$
-   \text{SwingRankScore}_{i, t_k - 1} = \log_{10}\left(\text{MedDollarVol}_{60\text{d}}\right) \times \text{ATR}_{\text{pct}, 20\text{d}, t_k - 1}
-   $$
+$$
+\text{SwingRankScore}_{i, t_k - 1} = \log_{10}\left(\text{MedDollarVol}_{60\text{d}}\right) \times \text{ATR}_{\text{pct}, 20\text{d}, t_k - 1}
+$$
 
    - The $\log_{10}$ compression scales volume variation down to a $1.28\times$ factor between mid-caps and mega-caps, allowing 20-day $\text{ATR\%}$ to prioritize high-velocity momentum leaders over sluggish value traps.
    - **Uncapped Selection (`pit_top_n = None`):** All qualifying tickers passing the Stage 1 liquidity floor receive `is_tradeable_universe = 1` for quarter $k$, naturally expanding from ~28 stocks in 2022 to ~50 in 2026 as the AI infrastructure ecosystem expanded (with Stage 2 tradability scores governing relative ranking and execution priority).
@@ -47,9 +47,9 @@ To eliminate look-ahead selection bias and survivorship bias, the tradeable univ
 - **FRED Publication Lag:** All Federal Reserve economic series (`DTB3`, `DGS10`, `DTWEXBGS`, `VIXCLS`, `VXVCLS`, `BAMLH0A0HYM2`) are lagged by 1 business day (`shift(1)`) to account for publication schedules.
 - **Fail-Closed Volatility Fallback:**
 
-  $$
-  \text{vix}_{\text{ts}} = \left(\frac{\text{VIX}}{\text{VIX3M}}\right).\text{fillna}(1.05)
-  $$
+$$
+\text{vix}_{\text{ts}} = \left(\frac{\text{VIX}}{\text{VIX3M}}\right).\text{fillna}(1.05)
+$$
 
   Missing volatility term structure data defaults to backwardation ($1.05$), immediately locking down long exposure.
 

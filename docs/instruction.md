@@ -14,8 +14,12 @@ SemiSwing is a systematic momentum swing trading, walk-forward validation, and d
 
 ### Dual Capital Allocation Modes
 1. **Cash Swing Mode (100% Cash Default):**
-     $$\text{Daily Cash Yield} = \frac{r_{\text{cash}}}{252}$$
-     where $r_{\text{cash}}$ is the annualized 3-Month T-Bill yield (`FRED DTB3`).
+
+$$
+\text{Daily Cash Yield} = \frac{r_{\text{cash}}}{252}
+$$
+
+   where $r_{\text{cash}}$ is the annualized 3-Month T-Bill yield (`FRED DTB3`).
 2. **SMH Bull Core + Swing Mode:**
    - During confirmed secular semiconductor bull markets (`smh_secular_bull == 1`), uninvested portfolio cash is swept into `SMH` core equity.
    - When the secular bull trend breaks (`smh_secular_bull == 0`), the core `SMH` holding is liquidated at market open and swept back into 100% T-Bill cash.
@@ -41,14 +45,22 @@ Evaluated over the trailing 60 trading days $[t_k - 60, t_k - 1]$:
 2. **Seasoning / IPO Guard:** Total historical daily bars $\ge 60$ trading days since listing.
 3. **Price Floor:** $\text{Close}_{t_k - 1} \ge 15.00$ ($\$15.00$).
 4. **Institutional Dollar Volume Floor:**
-   $$\text{MedDollarVol}_{60d} = \text{median}_{t \in [t_k - 60, t_k - 1]}\!\left(\text{Close}_t \times \text{Volume}_t\right) \ge 150{,}000{,}000.0$$
+
+$$
+\text{MedDollarVol}_{60d} = \text{median}_{t \in [t_k - 60, t_k - 1]} \left(\text{Close}_t \times \text{Volume}_t\right) \ge 150{,}000{,}000\text{ USD}
+$$
+
 5. **Valid Volatility:** $\text{ATR}_{\text{pct}, 20d, t_k - 1} > 0$.
 
 ### Stage 2: Swing Tradability Ranking (at $t_k - 1$)
 For all qualifying stocks passing Stage 1:
-$$\text{SwingRankScore}_{i, t_k - 1} = \log_{10}\!\left(\text{MedDollarVol}_{60d}\right) \times \text{ATR}_{\text{pct}, 20d, t_k - 1}$$
+
+$$
+\text{SwingRankScore}_{i, t_k - 1} = \log_{10}\left(\text{MedDollarVol}_{60d}\right) \times \text{ATR}_{\text{pct}, 20d, t_k - 1}
+$$
+
 where $\text{ATR}_{\text{pct}, 20d} = \frac{\text{ATR}_{20d}}{\text{Close}}$.
-- The $\log_{10}$ compression scales volume variation down to a $1.28\times$ factor across mega-caps vs mid-caps, allowing 20-day $\text{ATR\%}$ to prioritize high-velocity momentum leaders over sluggish value traps.
+- The $\log_{10}$ compression scales volume variation down to a $1.28\times$ factor across mega-caps vs mid-caps, allowing 20-day $\text{ATR}_{\text{pct}}$ to prioritize high-velocity momentum leaders over sluggish value traps.
 - **Uncapped Configuration (`pit_top_n = None`):** All qualifying stocks passing the Stage 1 institutional liquidity floor are admitted to the tradeable universe, naturally expanding from ~28 stocks in 2022 to ~50 stocks by 2026 as the AI infrastructure ecosystem expanded. If a finite integer $N$ is configured, it truncates to the Top $N$ highest-ranked tickers.
 
 ### Quarterly Invariance & Position Grace Rule
@@ -69,9 +81,13 @@ Data is ingested into DuckDB (`data/semiswing.duckdb`) across four tables:
 ### Causal Data Hygiene Rules
 1. **FRED Macro Series Publication Lag:** All FRED series (`DTB3`, `DGS10`, `DTWEXBGS`, `VIXCLS`, `VXVCLS`, `BAMLH0A0HYM2`) are strictly lagged by 1 business day (`fred_piv = fred_piv.shift(1)`), preventing economic report look-ahead leakage.
 2. **Fail-Closed Volatility Fallback:**
-   $$\text{vix}_{\text{ts}} = \frac{\text{VIX}}{\text{VIX3M}} \quad (\text{with fail-closed default } 1.05)$$
+
+$$
+\text{vix}_{\text{ts}} = \frac{\text{VIX}}{\text{VIX3M}} \quad (\text{with fail-closed default } 1.05)
+$$
+
    Missing volatility term structure data defaults to backwardation ($1.05$), automatically locking down long exposure.
-3. **EOD Cross-Source Majority Reconciliation:** Daily closing prices from `yfinance` are cross-checked against `Stooq` with an acceptance tolerance of $0.5\%$.
+3. **EOD Cross-Source Majority Reconciliation:** Daily closing prices from `yfinance` are cross-checked against `Stooq` with an acceptance tolerance of 0.5%.
 4. **Premarket Gap-Down Circuit Breaker (09:15–09:30 ET):** If the sector benchmark (`SMH`) opens or premarket gaps down $< -1.5\%$, all pending candidate buy orders are aborted.
 
 ---
@@ -81,7 +97,11 @@ Data is ingested into DuckDB (`data/semiswing.duckdb`) across four tables:
 All indicators are computed strictly on closed daily bars ($t$).
 
 ### 4.1 Volatility-Scaled Adaptive Lookback Window ($L_t$)
-$$L_t = \text{clip}\left(\text{round}\left(20 \times \frac{\sigma_{250}}{\sigma_{20}}\right), 10, 60\right)$$
+
+$$
+L_t = \text{clip}\left(\text{round}\left(20 \times \frac{\sigma_{250}}{\sigma_{20}}\right), 10, 60\right)
+$$
+
 where $\sigma_n$ is the $n$-day sample standard deviation of log returns $\ln(C_t / C_{t-1})$. High recent volatility compresses the window; persistent calm expands it.
 
 ### 4.2 Scale-Free Feature Definitions
@@ -97,15 +117,15 @@ Every feature is dimensionless or sample-size normalized:
 | `slope_t_norm_20d` | $t(\beta_{20d}) \times \sqrt{20 / 20}$ | Medium-term 20-day normalized trend conviction |
 | `slope_t_norm_40d` | $t(\beta_{40d}) \times \sqrt{20 / 40}$ | Intermediate 40-day normalized trend conviction |
 | `slope_r2_20d` | $R^2$ of 20-day log price regression | 20-day trend linearity |
-| `ema20_slope` | $\frac{\text{EMA20}_t / \text{EMA20}_{t-5} - 1}{\text{ATR\%}_{14}}$ | 5-day slope of 20-day EMA in ATR units |
-| `ema50_slope` | $\frac{\text{EMA50}_t / \text{EMA50}_{t-10} - 1}{\text{ATR\%}_{14}}$ | 10-day slope of 50-day EMA in ATR units |
+| `ema20_slope` | $\frac{(\text{EMA20}_t / \text{EMA20}_{t-5}) - 1}{\text{ATR}_{\text{pct}, 14}}$ | 5-day slope of 20-day EMA in ATR units |
+| `ema50_slope` | $\frac{(\text{EMA50}_t / \text{EMA50}_{t-10}) - 1}{\text{ATR}_{\text{pct}, 14}}$ | 10-day slope of 50-day EMA in ATR units |
 | `ext_atr` | $\frac{C_t - \text{EMA20}_t}{\text{ATR}_{14}}$ | Overextension above 20d EMA in ATR units |
 | `resid_mom_20` | Cumulative residual return vs `SMH` over 20d | Beta-decoupled single-stock idiosyncratic momentum |
 | `resid_mom_60` | Cumulative residual return vs `SMH` over 60d | Intermediate beta-decoupled relative strength |
 | `rs_rank` | Percentile rank of `resid_mom_20` across panel | Cross-sectional leadership (decile rank $[0.0, 1.0]$) |
 | `sector_rs` | $R_{20d}(\text{SMH}) - R_{20d}(\text{SPY})$ | Semiconductor sector excess momentum vs broad market |
-| `vol_compress` | $\text{RV}_{10} / \text{RV}_{60}$ | Realized volatility ratio ($<0.7$ signals squeeze) |
-| `vix_ts` | $\text{VIX} / \text{VIX3M}$ | Volatility term structure ($>1.0$ indicates backwardation) |
+| `vol_compress` | $\frac{\text{RV}_{10}}{\text{RV}_{60}}$ | Realized volatility ratio ($\text{ratio} < 0.7$ signals squeeze) |
+| `vix_ts` | $\frac{\text{VIX}}{\text{VIX3M}}$ | Volatility term structure ($>1.0$ indicates backwardation) |
 | `vxn_squeeze_vel` | $z\text{-score of } \Delta_{5d}\text{VXN}$ vs 252d distribution | Implied volatility expansion/compression velocity |
 | `skew_idx` | $z\text{-score of CBOE SKEW vs 20d}$ | Tail-risk hedge demand |
 
@@ -165,8 +185,14 @@ A candidate triggers an entry signal if all hold on closed bar $t$:
 - **Monotone Constraints:** Strict positive monotonicity (`+1`) on `slope_t_norm`, `slope_t_norm_20d`, `resid_mom_20`, and `rs_rank`.
 - **Expanding Walk-Forward Retraining:** Model retrains in 63-day blocks, training exclusively on preceding historical observations where `tb_end_date < t_block_start`.
 - **Continuous Percentile Rank Mapping:**
-  $$q_{i,t} = \frac{1}{|OOF|} \sum_{j \in OOF} \mathbf{1}\{p_j \le p_{i,t}\}$$
-  $$S_{i,t} = 0.50 + 1.00 \times q_{i,t} \in [0.50, 1.50]$$
+
+$$
+q_{i,t} = \frac{1}{|OOF|} \sum_{j \in OOF} \mathbf{1}\{p_j \le p_{i,t}\}
+$$
+
+$$
+S_{i,t} = 0.50 + 1.00 \times q_{i,t} \in [0.50, 1.50]
+$$
 
 ---
 
@@ -176,9 +202,18 @@ A candidate triggers an entry signal if all hold on closed bar $t$:
 - **Next-Day Market Open Fill (09:30 ET):** Signals generated at close $t$ execute at open $t+1$.
 - **Friction Model:** $5.0\text{ bps slippage} + 2.0\text{ bps commission} = 7.0\text{ bps}$ total friction.
 - **Hierarchical Two-Tier Sizing Formulation:**
-  $$\text{Trade Risk Budget} = \text{Portfolio Equity} \times \text{Base Risk (1.0\%)} \times M_t \times S_{i,t}$$
-  $$\text{Position Dollar Cap} = \min\left(\text{Portfolio Equity} \times 35\% \times M_t \times S_{i,t},\;\text{Cash} \times 0.99\right)$$
-  $$\text{Shares} = \min\left(\left\lfloor \frac{\text{Trade Risk Budget}}{\text{Open Price} - \text{Initial Stop}} \right\rfloor,\; \left\lfloor \frac{\text{Position Dollar Cap}}{\text{Open Price}} \right\rfloor\right)$$
+
+$$
+\text{RiskBudget} = \text{PortfolioEquity} \times 0.010 \times M_t \times S_{i,t}
+$$
+
+$$
+\text{PositionCap} = \min\left(\text{PortfolioEquity} \times 0.35 \times M_t \times S_{i,t},\; \text{Cash} \times 0.99\right)
+$$
+
+$$
+\text{Shares} = \min\left(\left\lfloor \frac{\text{RiskBudget}}{\text{OpenPrice} - \text{InitialStop}} \right\rfloor,\; \left\lfloor \frac{\text{PositionCap}}{\text{OpenPrice}} \right\rfloor\right)
+$$
 
 ### Exit & Position Management Rules
 1. **Initial Stop Loss:** $2.0 \times \text{ATR}_{14}$ below signal close (`STOP`).
@@ -205,11 +240,11 @@ SemiSwing enforces a **Two-Tier Validation Framework** to eliminate both post-ho
 | **Gate 1: Modern AI Era Sharpe** | $\text{Sharpe} \ge 1.60$ | **1.86** | **PASS** | Excess return over cash ($\text{DTB3}$) in secular bull. |
 | **Gate 2: Deflated Sharpe Ratio** | $\text{DSR Prob} \ge 0.95$ | **0.974** | **PASS** | Bailey & López de Prado (2014) significance ($K=14, p < 0.026$). |
 | **Gate 3: Profit Factor** | $\text{PF} \ge 2.00$ | **AI: 5.23 / OOS: 4.67** | **PASS** | Ratio of gross profits to gross losses. |
-| **Gate 4a: Modern AI Era Max DD** | $\text{Max DD} \le 35.0\%$ | **33.70%** | **PASS** | Outperforms passive `SMH` AI era drawdown ($35.74\%$). |
-| **Gate 4b: Full OOS Max DD** | $\text{Max DD} \le 40.0\%$ | **37.97%** | **PASS** | $>500\text{ bps}$ below passive `SMH` crash ($45.14\%$) and `SOXX` ($45.52\%$). |
+| **Gate 4a: Modern AI Era Max DD** | $\text{Max DD} \le 35.0$% | **33.70%** | **PASS** | Outperforms passive `SMH` AI era drawdown (35.74%). |
+| **Gate 4b: Full OOS Max DD** | $\text{Max DD} \le 40.0$% | **37.97%** | **PASS** | $>500\text{ bps}$ below passive `SMH` crash (45.14%) and `SOXX` (45.52%). |
 | **Gate 5: Full OOS Sharpe Ratio** | $\text{Sharpe} \ge 1.20$ | **1.36** | **PASS** | Full cycle viability across both 2022 bear and 2023–2026 bull. |
-| **Gate 6: 2022 Bear Stress Test** | $\text{Ret} \ge -40\%, \text{DD} \le 40\%, \text{Cash} \ge 80\%$ | **Ret: -37.9%, DD: 38.0%, Cash: 89.6%** | **PASS** | Capital preserved by Schmitt trigger sweeping to 100% cash. |
-| **Gate 7: ML Alpha Dominance** | $\text{BSS} > 0.02 \;\land\; (\Delta\text{SR} \ge 0.05 \lor \Delta\text{DD} \ge 1.5\%)$ | **BSS: 0.0384, SR: +0.06, DD Red: +2.0%** | **PASS** | Proves probabilistic resolution & outperformance vs baseline. |
+| **Gate 6: 2022 Bear Stress Test** | $\text{Ret} \ge -40$%, $\text{DD} \le 40$%, $\text{Cash} \ge 80$% | **Ret: -37.9%, DD: 38.0%, Cash: 89.6%** | **PASS** | Capital preserved by Schmitt trigger sweeping to 100% cash. |
+| **Gate 7: ML Alpha Dominance** | $\text{BSS} > 0.02 \;\land\; (\Delta\text{SR} \ge 0.05 \;\lor\; \Delta\text{DD} \ge 1.5\text{ pct})$ | **BSS: 0.0384, SR: +0.06, DD Red: +2.0%** | **PASS** | Proves probabilistic resolution & outperformance vs baseline. |
 
 ### 8.2 Cash Swing Mode (100% Cash / T-Bill Secondary Default)
 
@@ -218,11 +253,11 @@ SemiSwing enforces a **Two-Tier Validation Framework** to eliminate both post-ho
 | **Gate 1: Modern AI Era Sharpe** | $\text{Sharpe} \ge 1.50$ | **1.73** | **PASS** | Excess return over cash in secular bull. |
 | **Gate 2: Deflated Sharpe Ratio** | $\text{DSR Prob} \ge 0.95$ | **0.954** | **PASS** | Statistical significance penalizing $K=14$ strategy iterations. |
 | **Gate 3: Profit Factor** | $\text{PF} \ge 1.50$ | **AI: 5.45 / OOS: 4.79** | **PASS** | Ratio of gross profits to gross losses. |
-| **Gate 4a: Modern AI Era Max DD** | $\text{Max DD} \le 36.0\%$ | **35.52%** | **PASS** | Below passive `SMH` ($35.74\%$) and `SOXX` ($41.36\%$). |
-| **Gate 4b: Full OOS Max DD** | $\text{Max DD} \le 40.0\%$ | **35.52%** | **PASS** | $>900\text{ bps}$ below passive `SMH` crash ($45.14\%$). |
+| **Gate 4a: Modern AI Era Max DD** | $\text{Max DD} \le 36.0$% | **35.52%** | **PASS** | Below passive `SMH` (35.74%) and `SOXX` (41.36%). |
+| **Gate 4b: Full OOS Max DD** | $\text{Max DD} \le 40.0$% | **35.52%** | **PASS** | $>900\text{ bps}$ below passive `SMH` crash (45.14%). |
 | **Gate 5: Full OOS Sharpe Ratio** | $\text{Sharpe} \ge 1.00$ | **1.36** | **PASS** | Full cycle viability across entire 4.77-year OOS period. |
-| **Gate 6: 2022 Bear Stress Test** | $\text{Ret} \ge -25\%, \text{DD} \le 25\%, \text{Cash} \ge 80\%$ | **Ret: -22.5%, DD: 22.7%, Cash: 89.6%** | **PASS** | Outperforms `SMH` crash ($-34.97\%$) by $>12$ percentage points. |
-| **Gate 7: ML Alpha Dominance** | $\text{BSS} > 0.02 \;\land\; (\Delta\text{SR} \ge 0.05 \lor \Delta\text{DD} \ge 1.5\%)$ | **BSS: 0.0384, SR: +0.11, DD Red: +1.5%** | **PASS** | Proves probabilistic skill & outperformance vs baseline. |
+| **Gate 6: 2022 Bear Stress Test** | $\text{Ret} \ge -25$%, $\text{DD} \le 25$%, $\text{Cash} \ge 80$% | **Ret: -22.5%, DD: 22.7%, Cash: 89.6%** | **PASS** | Outperforms `SMH` crash (-34.97%) by $>12$ percentage points. |
+| **Gate 7: ML Alpha Dominance** | $\text{BSS} > 0.02 \;\land\; (\Delta\text{SR} \ge 0.05 \;\lor\; \Delta\text{DD} \ge 1.5\text{ pct})$ | **BSS: 0.0384, SR: +0.11, DD Red: +1.5%** | **PASS** | Proves probabilistic skill & outperformance vs baseline. |
 
 ---
 
