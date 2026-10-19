@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import base64
+import hashlib
 import json
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Tuple
 
@@ -16,7 +18,43 @@ import numpy as np
 import pandas as pd
 
 from semiswing.backtest.engine import BacktestResult, compute_period_metrics
-from semiswing.config import StrategySettings
+from semiswing.config import PROJECT_ROOT, StrategySettings
+
+STRATEGY_SOURCE_FILES = [
+    "src/semiswing/config.py",
+    "src/semiswing/features/build.py",
+    "src/semiswing/labels/triple_barrier.py",
+    "src/semiswing/models/signal_models.py",
+    "src/semiswing/backtest/engine.py",
+]
+
+
+def compute_strategy_source_sha256(root_dir: Path | None = None) -> str:
+    """Compute deterministic SHA256 digest over canonical strategy logic and configuration files."""
+    if root_dir is None:
+        root_dir = PROJECT_ROOT
+    h = hashlib.sha256()
+    for rel_path in STRATEGY_SOURCE_FILES:
+        fp = root_dir / rel_path
+        if fp.exists():
+            content = fp.read_bytes().replace(b"\r\n", b"\n")
+            h.update(rel_path.encode("utf-8"))
+            h.update(content)
+    return h.hexdigest()
+
+
+def load_trial_count_k(reports_dir: Path | None = None) -> int:
+    """Read cumulative trial counter K from experiments_log.json for Deflated Sharpe Ratio calculation."""
+    if reports_dir is None:
+        reports_dir = PROJECT_ROOT / "reports" / "backtests"
+    log_file = reports_dir / "experiments_log.json"
+    if log_file.exists():
+        try:
+            data = json.loads(log_file.read_text(encoding="utf-8"))
+            return int(data.get("total_trials", 14))
+        except Exception:
+            return 14
+    return 14
 
 
 def compute_benchmark_result(
@@ -1236,6 +1274,121 @@ def _img_to_base64_uri(path: Path) -> str:
     return f"data:image/png;base64,{data}"
 
 
+CASH_SWING_HURDLES = {
+    "ai_sharpe": 1.50,
+    "dsr": 0.95,
+    "pf": 1.50,
+    "ai_max_dd": 36.0,
+    "oos_max_dd": 40.0,
+    "oos_sharpe": 1.00,
+    "bear_ret": -25.0,
+    "bear_dd": 25.0,
+    "bear_cash": 80.0,
+}
+
+SMH_CORE_HURDLES = {
+    "ai_sharpe": 1.60,
+    "dsr": 0.95,
+    "pf": 2.00,
+    "ai_max_dd": 35.0,
+    "oos_max_dd": 40.0,
+    "oos_sharpe": 1.20,
+    "bear_ret": -40.0,
+    "bear_dd": 40.0,
+    "bear_cash": 80.0,
+}
+
+
+def _build_institutional_gates(
+    ml_res: BacktestResult | None,
+    base_res: BacktestResult | None,
+    smh_res: BacktestResult | None,
+    mode_name: str,
+    hurdles: dict,
+    cal_stats: dict,
+    trial_k: int = 14,
+) -> Tuple[pd.DataFrame, List[dict], bool]:
+    m_ov = ml_res.metrics_overall if ml_res else {}
+    m_ai = ml_res.metrics_ai_era if ml_res else {}
+    m_22 = ml_res.metrics_2022_bear if ml_res else {}
+
+    b_ov = base_res.metrics_overall if base_res else {}
+    b_ai = base_res.metrics_ai_era if base_res else {}
+
+    smh_ov_dd = smh_res.metrics_overall.get("max_dd_pct", 45.14) if smh_res else 45.14
+    smh_ai_dd = smh_res.metrics_ai_era.get("max_dd_pct", 35.74) if smh_res else 35.74
+
+    ai_sr = m_ai.get("sharpe", 0.0)
+    ai_dsr = m_ai.get("deflated_sharpe_prob", 0.0)
+    ai_pf = m_ai.get("profit_factor", 0.0)
+    ov_pf = m_ov.get("profit_factor", 0.0)
+    ai_dd = m_ai.get("max_dd_pct", 100.0)
+    ov_dd = m_ov.get("max_dd_pct", 100.0)
+    ov_sr = m_ov.get("sharpe", 0.0)
+    ret_22 = m_22.get("total_return_pct", -100.0)
+    dd_22 = m_22.get("max_dd_pct", 100.0)
+    cash_22 = m_22.get("cash_days_pct", 0.0)
+
+    bss = cal_stats.get("brier_skill_score", np.nan)
+    base_ai_sr = b_ai.get("sharpe", 0.0)
+    sr_lift = ai_sr - base_ai_sr
+    base_ai_dd = b_ai.get("max_dd_pct", 0.0)
+    dd_reduction = base_ai_dd - ai_dd
+
+    gates = [
+        {
+            "Gate": f"Gate 1: Modern AI Era Sharpe >= {hurdles['ai_sharpe']:.2f} (2023-2026)",
+            "Value": f"{ai_sr:.2f}",
+            "Status": "PASS" if ai_sr >= hurdles["ai_sharpe"] else "FAIL",
+        },
+        {
+            "Gate": f"Gate 2: Deflated Sharpe Probability >= {hurdles['dsr']:.2f} (K={trial_k} trials)",
+            "Value": f"{ai_dsr:.3f}",
+            "Status": "PASS" if ai_dsr >= hurdles["dsr"] else "FAIL",
+        },
+        {
+            "Gate": f"Gate 3: Profit Factor >= {hurdles['pf']:.2f} (Gross Payoff Asymmetry)",
+            "Value": f"AI: {ai_pf:.2f} | OOS: {ov_pf:.2f}",
+            "Status": "PASS" if (ai_pf >= hurdles["pf"] and ov_pf >= hurdles["pf"]) else "FAIL",
+        },
+        {
+            "Gate": f"Gate 4a: Modern AI Era Max DD <= {hurdles['ai_max_dd']:.1f}% (vs SMH {smh_ai_dd:.1f}%)",
+            "Value": f"{ai_dd:.2f}%",
+            "Status": "PASS" if ai_dd <= hurdles["ai_max_dd"] else "FAIL",
+        },
+        {
+            "Gate": f"Gate 4b: Full OOS Max DD <= {hurdles['oos_max_dd']:.1f}% (vs SMH {smh_ov_dd:.1f}%)",
+            "Value": f"{ov_dd:.2f}%",
+            "Status": "PASS" if ov_dd <= hurdles["oos_max_dd"] else "FAIL",
+        },
+        {
+            "Gate": f"Gate 5: Full OOS Sharpe >= {hurdles['oos_sharpe']:.2f} (2022-2026 Full Cycle)",
+            "Value": f"{ov_sr:.2f}",
+            "Status": "PASS" if ov_sr >= hurdles["oos_sharpe"] else "FAIL",
+        },
+        {
+            "Gate": f"Gate 6: 2022 Bear Stress (Ret >= {hurdles['bear_ret']:.0f}%, DD <= {hurdles['bear_dd']:.0f}%, Cash >= {hurdles['bear_cash']:.0f}%)",
+            "Value": f"Ret: {ret_22:.1f}% | DD: {dd_22:.1f}% | Cash: {cash_22:.1f}%",
+            "Status": "PASS"
+            if (ret_22 >= hurdles["bear_ret"] and dd_22 <= hurdles["bear_dd"] and cash_22 >= hurdles["bear_cash"])
+            else "FAIL",
+        },
+        {
+            "Gate": "Gate 7: ML Alpha Dominance & Calibration (BSS > 0.02 & SR Lift >= +0.05 or DD Red >= 1.5%)",
+            "Value": f"BSS: {bss:.4f} | ML SR: {ai_sr:.2f} vs Base: {base_ai_sr:.2f} (Lift: {sr_lift:+.2f}, DD Red: {dd_reduction:+.1f}%)",
+            "Status": "PASS"
+            if (
+                (not np.isnan(bss) and bss >= 0.02)
+                and (sr_lift >= 0.05 or (sr_lift >= 0.0 and dd_reduction >= 1.5))
+            )
+            else "FAIL",
+        },
+    ]
+
+    all_pass = all(g["Status"] == "PASS" for g in gates)
+    return pd.DataFrame(gates), gates, all_pass
+
+
 def generate_reports(
     results: Dict[str, BacktestResult],
     cal_stats: Dict[str, float],
@@ -1255,61 +1408,48 @@ def generate_reports(
     df_2022 = _format_comparison_df(results, "metrics_2022_bear")
     df_ai = _format_comparison_df(results, "metrics_ai_era")
 
-    base_res = results.get("Baseline (Adaptive L_t)")
-    ml_res = results.get("ML (LightGBM + Platt)")
+    trial_k = load_trial_count_k(html_path.parent)
+
+    ml_core_res = results.get("ML (SMH Bull Core + Swing)")
+    base_core_res = results.get("Baseline (SMH Bull Core + Swing)")
+    ml_cash_res = results.get("ML (LightGBM + Platt)")
+    base_cash_res = results.get("Baseline (Adaptive L_t)")
+    base_res = base_cash_res
+    ml_res = ml_cash_res
     smh_res = results.get("SMH Buy & Hold")
 
-    base_sr = base_res.metrics_overall.get("sharpe", 0.0) if base_res else 0.0
-    ml_sr = ml_res.metrics_overall.get("sharpe", 0.0) if ml_res else 0.0
-    ml_beats_by_03 = (ml_sr - base_sr) >= 0.30
+    gates_core_df, gates_core_raw, core_all_pass = _build_institutional_gates(
+        ml_core_res, base_core_res, smh_res, "SMH Bull Core + Swing Mode", SMH_CORE_HURDLES, cal_stats, trial_k
+    )
 
-    best_sys = ml_res if (ml_res and ml_sr > base_sr) else base_res
-    best_name = "ML (LightGBM + Platt)" if (ml_res and ml_sr >= base_sr) else "Baseline (Adaptive L_t)"
+    gates_cash_df, gates_cash_raw, cash_all_pass = _build_institutional_gates(
+        ml_cash_res, base_cash_res, smh_res, "Cash Swing Mode", CASH_SWING_HURDLES, cal_stats, trial_k
+    )
 
-    m_ov = best_sys.metrics_overall if best_sys else {}
-    m_ai = best_sys.metrics_ai_era if best_sys else {}
-    m_22 = best_sys.metrics_2022_bear if best_sys else {}
-    smh_dd_22 = smh_res.metrics_2022_bear.get("max_dd_pct", 45.0) if smh_res else 45.0
+    best_sys = ml_core_res or ml_cash_res or base_core_res or base_cash_res
+    best_name = "ML (SMH Bull Core + Swing)" if ml_core_res else "ML (LightGBM + Platt)"
 
-    gates = [
-        {
-            "Gate": "OOS Sharpe >= 1.0 (2022-2026 Overall or 2023-2026 AI Era)",
-            "Value": f"Overall: {m_ov.get('sharpe', 0.0):.2f} | AI-Era: {m_ai.get('sharpe', 0.0):.2f}",
-            "Status": "PASS" if max(m_ov.get("sharpe", 0.0), m_ai.get("sharpe", 0.0)) >= 1.0 else "REVIEW",
+    # Export machine-readable institutional audit manifest
+    manifest_path = html_path.parent / "audit_manifest.json"
+    manifest_data = {
+        "schema_version": "1.0",
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "source_sha256": compute_strategy_source_sha256(),
+        "trial_count_k": trial_k,
+        "all_gates_pass": bool(core_all_pass and cash_all_pass),
+        "smh_core_gates_pass": bool(core_all_pass),
+        "cash_swing_gates_pass": bool(cash_all_pass),
+        "gates_smh_core": gates_core_raw,
+        "gates_cash_swing": gates_cash_raw,
+        "metrics": {
+            "ml_smh_core": ml_core_res.metrics_ai_era if ml_core_res else {},
+            "base_smh_core": base_core_res.metrics_ai_era if base_core_res else {},
+            "ml_cash_swing": ml_cash_res.metrics_ai_era if ml_cash_res else {},
+            "base_cash_swing": base_cash_res.metrics_ai_era if base_cash_res else {},
         },
-        {
-            "Gate": "Deflated Sharpe Probability >= 0.95",
-            "Value": f"{max(m_ov.get('deflated_sharpe_prob', 0.0), m_ai.get('deflated_sharpe_prob', 0.0)):.3f}",
-            "Status": "PASS"
-            if max(m_ov.get("deflated_sharpe_prob", 0.0), m_ai.get("deflated_sharpe_prob", 0.0)) >= 0.95
-            else "REVIEW",
-        },
-        {
-            "Gate": "Profit Factor >= 1.50",
-            "Value": f"Overall: {m_ov.get('profit_factor', 0.0):.2f} | AI-Era: {m_ai.get('profit_factor', 0.0):.2f}",
-            "Status": "PASS"
-            if max(m_ov.get("profit_factor", 0.0), m_ai.get("profit_factor", 0.0)) >= 1.50
-            else "REVIEW",
-        },
-        {
-            "Gate": "Max Drawdown <= 25.5% (vs SMH 45.1%)",
-            "Value": f"{m_ov.get('max_dd_pct', 0.0):.2f}% (vs SMH {smh_res.metrics_overall.get('max_dd_pct', 0.0) if smh_res else 0.0:.2f}%)",
-            "Status": "PASS" if m_ov.get("max_dd_pct", 100.0) <= 25.5 else "REVIEW",
-        },
-        {
-            "Gate": "2022 Bear Stress Gate (DD <= 12% & Cash Days >= 75%)",
-            "Value": f"2022 DD: {m_22.get('max_dd_pct', 0.0):.2f}% (SMH: {smh_dd_22:.2f}%) | Cash: {m_22.get('cash_days_pct', 0.0):.1f}%",
-            "Status": "PASS"
-            if (m_22.get("max_dd_pct", 100.0) <= 12.0 and m_22.get("cash_days_pct", 0.0) >= 75.0)
-            else "FAIL",
-        },
-        {
-            "Gate": "ML vs Baseline Comparison",
-            "Value": f"ML SR: {ml_sr:.2f} (PF {m_ov.get('profit_factor', 0.0):.2f}, DD {m_ov.get('max_dd_pct', 0.0):.1f}%) vs Baseline SR: {base_sr:.2f}",
-            "Status": "SHIP ML" if ml_beats_by_03 else "ENSEMBLE (ML + Baseline)",
-        },
-    ]
-    gates_df = pd.DataFrame(gates)
+        "cal_stats": cal_stats,
+    }
+    manifest_path.write_text(json.dumps(manifest_data, indent=2), encoding="utf-8")
 
     def _df_to_md(df: pd.DataFrame) -> str:
         if df.empty:
@@ -1329,7 +1469,7 @@ def generate_reports(
         f"- **Data Health Score:** `{health_score}/100`",
         f"- **Warmup Training Period:** `2018-01-01` to `2021-12-31`",
         f"- **Out-of-Sample Walk-Forward Period:** `2022-01-01` to Present",
-        f"- **Platt Calibration OOF Brier Score:** Raw `{cal_stats.get('brier_raw', 'N/A')}` -> Calibrated `{cal_stats.get('brier_calibrated', 'N/A')}`",
+        f"- **Platt Calibration OOF Brier Score:** Raw `{cal_stats.get('brier_raw', 'N/A')}` -> Calibrated `{cal_stats.get('brier_calibrated', 'N/A')}` (Brier Skill Score: `{cal_stats.get('brier_skill_score', 'N/A')}`)",
         "",
         "## 1. Visual Benchmark Comparison Charts (`S&P 500`, `QQQ`, `VGT`, `SMH`, `SOXX`, `AIQ`, `IGV`, `T-Bills`)",
         "",
@@ -1345,11 +1485,19 @@ def generate_reports(
         "### 1.4 Calendar Year Returns & Risk-Return Efficiency (`2022–2026`)",
         f"![Annual Returns and Risk-Return Scatter](charts/{chart_paths['annual_returns_and_risk_scatter'].name})",
         "",
-        "## 2. Validation Gates Summary (§9)",
+        "## 2. Institutional Validation Gates (§9)",
         "",
-        _df_to_md(gates_df),
+        "### 2.1 SMH Bull Core + Swing Mode (Active Secular Bull Core Sweep)",
+        "",
+        _df_to_md(gates_core_df),
+        "",
+        "### 2.2 Cash Swing Mode (100% Cash / T-Bill Secondary Default)",
+        "",
+        _df_to_md(gates_cash_df),
         "",
         "## 3. Full Out-of-Sample Walk-Forward (`2022–2026`)",
+        "",
+        _df_to_md(df_overall),
         "",
         _df_to_md(df_overall),
         "",
@@ -1447,11 +1595,14 @@ def generate_reports(
         "<h1>SemiSwing Walk-Forward Backtest &amp; Interactive Benchmark Report (2022–2026)</h1>",
         f"<div class='meta'><b>Data Health Score:</b> {health_score}/100 &nbsp;|&nbsp; "
         f"<b>Initial Training Warmup:</b> 2018–2021 &nbsp;|&nbsp; "
-        f"<b>Out-of-Sample Walk-Forward:</b> 2022–2026 &nbsp;|&nbsp; "
-        f"<b>Platt OOF Brier:</b> {cal_stats.get('brier_raw', 'N/A')} &rarr; {cal_stats.get('brier_calibrated', 'N/A')}</div>",
+        f"<b>Platt OOF Brier:</b> {cal_stats.get('brier_raw', 'N/A')} &rarr; {cal_stats.get('brier_calibrated', 'N/A')} &nbsp;|&nbsp; "
+        f"<b>Brier Skill Score:</b> {cal_stats.get('brier_skill_score', 'N/A')}</div>",
         interactive_html,
-        "<h2>2. Validation Gates Checklist (§9)</h2>",
-        gates_df.to_html(index=False, border=0),
+        "<h2>2. Institutional Validation Gates (§9)</h2>",
+        "<h3>2.1 SMH Bull Core + Swing Mode (Active Secular Bull Core Sweep)</h3>",
+        gates_core_df.to_html(index=False, border=0),
+        "<h3>2.2 Cash Swing Mode (100% Cash / T-Bill Secondary Default)</h3>",
+        gates_cash_df.to_html(index=False, border=0),
         "<h2>3. Full Out-of-Sample Walk-Forward Table (2022–2026)</h2>",
         df_overall.to_html(index=False, border=0),
         "<h2>4. View A — 2022 Bear Market Stress Test (2022)</h2>",

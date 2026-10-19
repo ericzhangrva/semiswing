@@ -1,0 +1,20 @@
+{
+  "total_trials": 14,
+  "description": "Historical strategy trials tracked for Bailey & López de Prado (2014) Deflated Sharpe Ratio calculation",
+  "trials": [
+    {"trial_id": 1, "phase": "Pre-Hardening", "name": "Fixed 20-day Lookback Baseline", "notes": "Static 20d momentum baseline"},
+    {"trial_id": 2, "phase": "Pre-Hardening", "name": "Adaptive L_t Volatility-Scaled Lookback", "notes": "Dynamic lookback window based on realized volatility"},
+    {"trial_id": 3, "phase": "Pre-Hardening", "name": "Platt Sigmoid LightGBM Binary Veto", "notes": "Raw ML probability thresholding at p >= 0.60"},
+    {"trial_id": 4, "phase": "Phase 1", "name": "Schmitt Trigger Regime Hysteresis (SMH EMA200/EMA50)", "notes": "Stateful hysteresis eliminating 2022 counter-trend whipsaws"},
+    {"trial_id": 5, "phase": "Phase 1", "name": "Fail-Closed Volatility Term Structure (VIX/VIX3M)", "notes": "Fail-closed fallback to backwardation 1.05"},
+    {"trial_id": 6, "phase": "Phase 1", "name": "Lagged FRED Macro Publication Hygiene", "notes": "1 business day shift on all observation-dated economic data"},
+    {"trial_id": 7, "phase": "Phase 1", "name": "Premarket Gap-Down Circuit Breaker", "notes": "Abort buys if SMH gaps down < -1.5%"},
+    {"trial_id": 8, "phase": "Phase 2", "name": "Continuous Meta-Labeling Position Sizing", "notes": "Replaces binary trade veto with empirical CDF percentile rank scalar in [0.5, 1.5]"},
+    {"trial_id": 9, "phase": "Phase 2", "name": "Shallow Regularized Decision Trees", "notes": "max_depth=2, num_leaves=4, min_child_samples=60"},
+    {"trial_id": 10, "phase": "Phase 2", "name": "Monotone Trend Conviction Constraints", "notes": "+1 monotonic constraint on slope and relative strength features"},
+    {"trial_id": 11, "phase": "Phase 3", "name": "Stage 1 PIT Liquidity & IPO Seasoning Gate", "notes": "$150M 60d median daily dollar volume and 60d listing history"},
+    {"trial_id": 12, "phase": "Phase 3", "name": "Stage 2 Swing Tradability Ranking", "notes": "Ranking by log10(dollar_vol) * ATR%"},
+    {"trial_id": 13, "phase": "Phase 3", "name": "Uncapped Stage 1 PIT Universe Selection", "notes": "pit_top_n: None admitting all qualified institutional candidates"},
+    {"trial_id": 14, "phase": "Phase 5", "name": "Institutional Gate Hardening & Source Hash Manifest", "notes": "Two-tier CI regression architecture and decoupled validation gates"}
+  ]
+}

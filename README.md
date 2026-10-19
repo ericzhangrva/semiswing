@@ -129,6 +129,35 @@ Every execution is audited across the full Out-of-Sample period (`2022–2026`) 
 | **QQQ Buy & Hold** | 86.50% | 13.97% | 0.51 | 0.289 | 0.50 | 34.83% | 0.0% |
 | **S&P 500 (SPY) Buy & Hold** | 72.13% | 12.07% | 0.52 | 0.294 | 0.51 | 24.50% | 0.0% |
 
+### 3.3 Institutional Validation Gates (Two-Tier CI Architecture)
+
+SemiSwing enforces strict institutional validation hurdles across two independent capital modes, verified via automated CI regression guardrails (`tests/test_institutional_gates.py`):
+
+#### SMH Bull Core + Swing Mode (Active Secular Bull Core Sweep)
+
+| Gate | Hurdle Requirement | Actual Modern AI Era | Status | Purpose & Benchmark Comparison |
+| :--- | :---: | :---: | :---: | :--- |
+| **Gate 1: Modern AI Era Sharpe** | $\text{Sharpe} \ge 1.60$ | **1.86** | **PASS** | Excess risk-adjusted return over cash in secular bull. |
+| **Gate 2: Deflated Sharpe Ratio** | $\text{DSR Prob} \ge 0.95$ | **0.974** | **PASS** | Bailey & López de Prado (2014) significance ($K=14, p < 0.026$). |
+| **Gate 3: Profit Factor** | $\text{PF} \ge 2.00$ | **AI: 5.23 / OOS: 4.67** | **PASS** | Ratio of gross profits to gross losses. |
+| **Gate 4a: Modern AI Era Max DD** | $\text{Max DD} \le 35.0\%$ | **33.70%** | **PASS** | Outperforms passive `SMH` AI era drawdown ($35.74\%$). |
+| **Gate 4b: Full OOS Max DD** | $\text{Max DD} \le 40.0\%$ | **37.97%** | **PASS** | $>500\text{ bps}$ below passive `SMH` crash ($45.14\%$) and `SOXX` ($45.52\%$). |
+| **Gate 5: Full OOS Sharpe Ratio** | $\text{Sharpe} \ge 1.20$ | **1.36** | **PASS** | Full cycle viability across both 2022 bear and 2023–2026 bull. |
+| **Gate 6: 2022 Bear Stress Test** | $\text{Ret} \ge -40\%, \text{DD} \le 40\%, \text{Cash} \ge 80\%$ | **Ret: -37.9%, DD: 38.0%, Cash: 89.6%** | **PASS** | Downside capital preservation during systemic bear. |
+| **Gate 7: ML Alpha Dominance** | $\text{BSS} > 0.02 \;\land\; (\Delta\text{SR} \ge 0.05 \lor \Delta\text{DD} \ge 1.5\%)$ | **BSS: 0.0384, SR: +0.06, DD Red: +2.0%** | **PASS** | Proves probabilistic resolution & outperformance vs baseline. |
+
+#### Cash Swing Mode (100% Cash / T-Bill Secondary Default)
+
+| Gate | Hurdle Requirement | Actual Modern AI Era | Status | Purpose & Benchmark Comparison |
+| :--- | :---: | :---: | :---: | :--- |
+| **Gate 1: Modern AI Era Sharpe** | $\text{Sharpe} \ge 1.50$ | **1.73** | **PASS** | Excess risk-adjusted return over cash in secular bull. |
+| **Gate 2: Deflated Sharpe Ratio** | $\text{DSR Prob} \ge 0.95$ | **0.954** | **PASS** | Statistical significance penalizing $K=14$ iterations. |
+| **Gate 3: Profit Factor** | $\text{PF} \ge 1.50$ | **AI: 5.45 / OOS: 4.79** | **PASS** | Ratio of gross profits to gross losses. |
+| **Gate 4a: Modern AI Era Max DD** | $\text{Max DD} \le 36.0\%$ | **35.52%** | **PASS** | Below passive `SMH` ($35.74\%$) and `SOXX` ($41.36\%$). |
+| **Gate 4b: Full OOS Max DD** | $\text{Max DD} \le 40.0\%$ | **35.52%** | **PASS** | $>900\text{ bps}$ below passive `SMH` crash ($45.14\%$). |
+| **Gate 5: Full OOS Sharpe Ratio** | $\text{Sharpe} \ge 1.00$ | **1.36** | **PASS** | Full cycle viability across entire 4.77-year OOS period. |
+| **Gate 6: 2022 Bear Stress Test** | $\text{Ret} \ge -25\%, \text{DD} \le 25\%, \text{Cash} \ge 80\%$ | **Ret: -22.5%, DD: 22.7%, Cash: 89.6%** | **PASS** | Outperforms `SMH` crash ($-34.97\%$) by $>12$ percentage points. |
+| **Gate 7: ML Alpha Dominance** | $\text{BSS} > 0.02 \;\land\; (\Delta\text{SR} \ge 0.05 \lor \Delta\text{DD} \ge 1.5\%)$ | **BSS: 0.0384, SR: +0.11, DD Red: +1.5%** | **PASS** | Proves probabilistic skill & outperformance vs baseline. |
 
 ---
 

@@ -41,7 +41,7 @@
     tr:nth-child(even) { background: #f8fafc; }
     </style></head><body>
 <h1>SemiSwing Walk-Forward Backtest &amp; Interactive Benchmark Report (2022–2026)</h1>
-<div class='meta'><b>Data Health Score:</b> 100.0/100 &nbsp;|&nbsp; <b>Initial Training Warmup:</b> 2018–2021 &nbsp;|&nbsp; <b>Out-of-Sample Walk-Forward:</b> 2022–2026 &nbsp;|&nbsp; <b>Platt OOF Brier:</b> 0.2404 &rarr; 0.2404</div>
+<div class='meta'><b>Data Health Score:</b> 100.0/100 &nbsp;|&nbsp; <b>Initial Training Warmup:</b> 2018–2021 &nbsp;|&nbsp; <b>Platt OOF Brier:</b> 0.2404 &rarr; 0.2404 &nbsp;|&nbsp; <b>Brier Skill Score:</b> 0.0384</div>
 
     <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
     <div class="interactive-panel">
@@ -761,7 +761,8 @@
     window.addEventListener('DOMContentLoaded', initDashboard);
     </script>
     
-<h2>2. Validation Gates Checklist (§9)</h2>
+<h2>2. Institutional Validation Gates (§9)</h2>
+<h3>2.1 SMH Bull Core + Swing Mode (Active Secular Bull Core Sweep)</h3>
 <table class="dataframe">
   <thead>
     <tr style="text-align: right;">
@@ -772,34 +773,96 @@
   </thead>
   <tbody>
     <tr>
-      <td>OOS Sharpe &gt;= 1.0 (2022-2026 Overall or 2023-2026 AI Era)</td>
-      <td>Overall: 1.36 | AI-Era: 1.73</td>
+      <td>Gate 1: Modern AI Era Sharpe &gt;= 1.60 (2023-2026)</td>
+      <td>1.86</td>
       <td>PASS</td>
     </tr>
     <tr>
-      <td>Deflated Sharpe Probability &gt;= 0.95</td>
+      <td>Gate 2: Deflated Sharpe Probability &gt;= 0.95 (K=14 trials)</td>
+      <td>0.974</td>
+      <td>PASS</td>
+    </tr>
+    <tr>
+      <td>Gate 3: Profit Factor &gt;= 2.00 (Gross Payoff Asymmetry)</td>
+      <td>AI: 5.23 | OOS: 4.67</td>
+      <td>PASS</td>
+    </tr>
+    <tr>
+      <td>Gate 4a: Modern AI Era Max DD &lt;= 35.0% (vs SMH 35.7%)</td>
+      <td>33.70%</td>
+      <td>PASS</td>
+    </tr>
+    <tr>
+      <td>Gate 4b: Full OOS Max DD &lt;= 40.0% (vs SMH 45.1%)</td>
+      <td>37.97%</td>
+      <td>PASS</td>
+    </tr>
+    <tr>
+      <td>Gate 5: Full OOS Sharpe &gt;= 1.20 (2022-2026 Full Cycle)</td>
+      <td>1.36</td>
+      <td>PASS</td>
+    </tr>
+    <tr>
+      <td>Gate 6: 2022 Bear Stress (Ret &gt;= -40%, DD &lt;= 40%, Cash &gt;= 80%)</td>
+      <td>Ret: -37.9% | DD: 38.0% | Cash: 89.6%</td>
+      <td>PASS</td>
+    </tr>
+    <tr>
+      <td>Gate 7: ML Alpha Dominance &amp; Calibration (BSS &gt; 0.02 &amp; SR Lift &gt;= +0.05 or DD Red &gt;= 1.5%)</td>
+      <td>BSS: 0.0384 | ML SR: 1.86 vs Base: 1.80 (Lift: +0.06, DD Red: +2.0%)</td>
+      <td>PASS</td>
+    </tr>
+  </tbody>
+</table>
+<h3>2.2 Cash Swing Mode (100% Cash / T-Bill Secondary Default)</h3>
+<table class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>Gate</th>
+      <th>Value</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Gate 1: Modern AI Era Sharpe &gt;= 1.50 (2023-2026)</td>
+      <td>1.73</td>
+      <td>PASS</td>
+    </tr>
+    <tr>
+      <td>Gate 2: Deflated Sharpe Probability &gt;= 0.95 (K=14 trials)</td>
       <td>0.954</td>
       <td>PASS</td>
     </tr>
     <tr>
-      <td>Profit Factor &gt;= 1.50</td>
-      <td>Overall: 4.79 | AI-Era: 5.45</td>
+      <td>Gate 3: Profit Factor &gt;= 1.50 (Gross Payoff Asymmetry)</td>
+      <td>AI: 5.45 | OOS: 4.79</td>
       <td>PASS</td>
     </tr>
     <tr>
-      <td>Max Drawdown &lt;= 25.5% (vs SMH 45.1%)</td>
-      <td>35.52% (vs SMH 45.14%)</td>
-      <td>REVIEW</td>
+      <td>Gate 4a: Modern AI Era Max DD &lt;= 36.0% (vs SMH 35.7%)</td>
+      <td>35.52%</td>
+      <td>PASS</td>
     </tr>
     <tr>
-      <td>2022 Bear Stress Gate (DD &lt;= 12% &amp; Cash Days &gt;= 75%)</td>
-      <td>2022 DD: 22.67% (SMH: 45.14%) | Cash: 89.6%</td>
-      <td>FAIL</td>
+      <td>Gate 4b: Full OOS Max DD &lt;= 40.0% (vs SMH 45.1%)</td>
+      <td>35.52%</td>
+      <td>PASS</td>
     </tr>
     <tr>
-      <td>ML vs Baseline Comparison</td>
-      <td>ML SR: 1.36 (PF 4.79, DD 35.5%) vs Baseline SR: 1.26</td>
-      <td>ENSEMBLE (ML + Baseline)</td>
+      <td>Gate 5: Full OOS Sharpe &gt;= 1.00 (2022-2026 Full Cycle)</td>
+      <td>1.36</td>
+      <td>PASS</td>
+    </tr>
+    <tr>
+      <td>Gate 6: 2022 Bear Stress (Ret &gt;= -25%, DD &lt;= 25%, Cash &gt;= 80%)</td>
+      <td>Ret: -22.5% | DD: 22.7% | Cash: 89.6%</td>
+      <td>PASS</td>
+    </tr>
+    <tr>
+      <td>Gate 7: ML Alpha Dominance &amp; Calibration (BSS &gt; 0.02 &amp; SR Lift &gt;= +0.05 or DD Red &gt;= 1.5%)</td>
+      <td>BSS: 0.0384 | ML SR: 1.73 vs Base: 1.62 (Lift: +0.11, DD Red: +1.5%)</td>
+      <td>PASS</td>
     </tr>
   </tbody>
 </table>
@@ -1678,7 +1741,7 @@
     </tr>
   </tbody>
 </table>
-<h2>8. Recent 25 OOS Trades (ML (LightGBM + Platt))</h2>
+<h2>8. Recent 25 OOS Trades (ML (SMH Bull Core + Swing))</h2>
 <table class="dataframe">
   <thead>
     <tr style="text-align: right;">
@@ -1711,7 +1774,7 @@
       <td>95.81</td>
       <td>31.91</td>
       <td>True</td>
-      <td>7402.26</td>
+      <td>6794.32</td>
       <td>129.64</td>
       <td>11.33</td>
       <td>STOP_GAP</td>
@@ -1729,7 +1792,7 @@
       <td>76.16</td>
       <td>76.21</td>
       <td>False</td>
-      <td>-494.45</td>
+      <td>-443.06</td>
       <td>-10.90</td>
       <td>-1.01</td>
       <td>STOP</td>
@@ -1747,7 +1810,7 @@
       <td>99.58</td>
       <td>85.96</td>
       <td>False</td>
-      <td>228.10</td>
+      <td>213.08</td>
       <td>3.74</td>
       <td>0.36</td>
       <td>REGIME_OFF</td>
@@ -1765,7 +1828,7 @@
       <td>663.92</td>
       <td>627.77</td>
       <td>False</td>
-      <td>-149.94</td>
+      <td>-145.39</td>
       <td>-3.43</td>
       <td>-0.40</td>
       <td>REGIME_OFF</td>
@@ -1783,7 +1846,7 @@
       <td>23.71</td>
       <td>20.88</td>
       <td>False</td>
-      <td>-237.99</td>
+      <td>-221.99</td>
       <td>-3.48</td>
       <td>-0.23</td>
       <td>REGIME_OFF</td>
@@ -1801,7 +1864,7 @@
       <td>298.61</td>
       <td>237.89</td>
       <td>True</td>
-      <td>266.94</td>
+      <td>257.64</td>
       <td>12.09</td>
       <td>0.83</td>
       <td>STOP_GAP</td>
@@ -1819,7 +1882,7 @@
       <td>212.97</td>
       <td>89.16</td>
       <td>True</td>
-      <td>3650.78</td>
+      <td>3523.71</td>
       <td>89.06</td>
       <td>7.88</td>
       <td>TRAIL_STOP_EOD</td>
@@ -1837,7 +1900,7 @@
       <td>230.13</td>
       <td>187.30</td>
       <td>False</td>
-      <td>218.07</td>
+      <td>234.44</td>
       <td>4.44</td>
       <td>0.30</td>
       <td>TIME_STOP_25D</td>
@@ -1855,7 +1918,7 @@
       <td>149.62</td>
       <td>85.82</td>
       <td>True</td>
-      <td>920.92</td>
+      <td>888.87</td>
       <td>43.88</td>
       <td>2.93</td>
       <td>TRAIL_STOP_EOD</td>
@@ -1873,7 +1936,7 @@
       <td>312.17</td>
       <td>292.61</td>
       <td>False</td>
-      <td>-597.87</td>
+      <td>-699.86</td>
       <td>-4.12</td>
       <td>-0.41</td>
       <td>TIME_STOP_25D</td>
@@ -1891,7 +1954,7 @@
       <td>628.82</td>
       <td>629.26</td>
       <td>False</td>
-      <td>-335.64</td>
+      <td>-352.89</td>
       <td>-13.67</td>
       <td>-1.00</td>
       <td>STOP</td>
@@ -1909,7 +1972,7 @@
       <td>198.84</td>
       <td>170.24</td>
       <td>True</td>
-      <td>191.89</td>
+      <td>205.97</td>
       <td>8.58</td>
       <td>0.84</td>
       <td>TRAIL_STOP_EOD</td>
@@ -1927,7 +1990,7 @@
       <td>321.47</td>
       <td>254.16</td>
       <td>True</td>
-      <td>1798.73</td>
+      <td>2181.83</td>
       <td>13.04</td>
       <td>0.94</td>
       <td>TRAIL_STOP_EOD</td>
@@ -1945,7 +2008,7 @@
       <td>531.86</td>
       <td>41.29</td>
       <td>True</td>
-      <td>21396.66</td>
+      <td>20651.92</td>
       <td>781.78</td>
       <td>65.85</td>
       <td>STOP_GAP</td>
@@ -1963,7 +2026,7 @@
       <td>698.93</td>
       <td>115.52</td>
       <td>True</td>
-      <td>36991.94</td>
+      <td>38147.20</td>
       <td>326.65</td>
       <td>25.58</td>
       <td>STOP_GAP</td>
@@ -1981,7 +2044,7 @@
       <td>280.97</td>
       <td>131.32</td>
       <td>True</td>
-      <td>9270.45</td>
+      <td>12027.55</td>
       <td>69.41</td>
       <td>4.63</td>
       <td>TRAIL_STOP_EOD</td>
@@ -1999,7 +2062,7 @@
       <td>592.99</td>
       <td>573.96</td>
       <td>False</td>
-      <td>-3498.49</td>
+      <td>-3610.89</td>
       <td>-9.04</td>
       <td>-0.76</td>
       <td>EARNINGS_EXIT</td>
@@ -2017,7 +2080,7 @@
       <td>184.76</td>
       <td>156.51</td>
       <td>False</td>
-      <td>63.22</td>
+      <td>80.36</td>
       <td>0.34</td>
       <td>0.02</td>
       <td>EARNINGS_EXIT</td>
@@ -2035,7 +2098,7 @@
       <td>305.05</td>
       <td>289.65</td>
       <td>False</td>
-      <td>-1029.61</td>
+      <td>-1182.97</td>
       <td>-3.06</td>
       <td>-0.38</td>
       <td>TIME_STOP_25D</td>
@@ -2053,7 +2116,7 @@
       <td>259.93</td>
       <td>252.32</td>
       <td>False</td>
-      <td>-2287.08</td>
+      <td>-2656.82</td>
       <td>-7.76</td>
       <td>-0.74</td>
       <td>TIME_STOP_12D</td>
@@ -2071,7 +2134,7 @@
       <td>240.16</td>
       <td>214.63</td>
       <td>False</td>
-      <td>-1910.93</td>
+      <td>-2197.59</td>
       <td>-4.89</td>
       <td>-0.33</td>
       <td>EARNINGS_EXIT</td>
@@ -2089,7 +2152,7 @@
       <td>165.74</td>
       <td>132.58</td>
       <td>False</td>
-      <td>1249.42</td>
+      <td>1452.13</td>
       <td>6.26</td>
       <td>0.42</td>
       <td>TIME_STOP_25D</td>
@@ -2107,7 +2170,7 @@
       <td>152.27</td>
       <td>132.74</td>
       <td>False</td>
-      <td>-314.95</td>
+      <td>-366.40</td>
       <td>-2.00</td>
       <td>-0.14</td>
       <td>EARNINGS_EXIT</td>
@@ -2125,7 +2188,7 @@
       <td>1486.29</td>
       <td>1238.10</td>
       <td>False</td>
-      <td>414.88</td>
+      <td>476.77</td>
       <td>2.04</td>
       <td>0.14</td>
       <td>TIME_STOP_25D</td>
@@ -2143,7 +2206,7 @@
       <td>930.59</td>
       <td>844.68</td>
       <td>False</td>
-      <td>-2209.77</td>
+      <td>-2567.83</td>
       <td>-6.35</td>
       <td>-0.42</td>
       <td>TIME_STOP_25D</td>

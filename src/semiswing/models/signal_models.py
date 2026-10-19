@@ -96,6 +96,7 @@ class PlattCalibratedGBM:
         self.platt: LogisticRegression | None = None
         self.oof_brier_raw: float = np.nan
         self.oof_brier_cal: float = np.nan
+        self.oof_brier_skill_score: float = np.nan
         self.oof_preds_pool: np.ndarray | None = None
         self.feature_means: np.ndarray | None = None
         self.feature_stds: np.ndarray | None = None
@@ -179,6 +180,11 @@ class PlattCalibratedGBM:
                     self.oof_brier_cal = float(brier_score_loss(y[valid_oof], cal_p))
                 else:
                     self.oof_brier_cal = self.oof_brier_raw
+
+                # Brier Skill Score vs uninformative uniform coin-flip prior (Brier_ref = 0.2500):
+                # Measures model probabilistic resolution and skill over random guessing
+                brier_ref = 0.2500
+                self.oof_brier_skill_score = float(1.0 - (self.oof_brier_cal / brier_ref))
 
         return self
 
@@ -266,6 +272,7 @@ def run_walkforward_ml_predictions(
     block_models: List[Tuple[pd.Series, PlattCalibratedGBM]] = []
     brier_raw_list = []
     brier_cal_list = []
+    brier_bss_list = []
 
     for start_idx in range(0, len(oos_dates), block_size):
         block_dates = oos_dates[start_idx : start_idx + block_size]
@@ -288,6 +295,8 @@ def run_walkforward_ml_predictions(
         if not np.isnan(model.oof_brier_raw):
             brier_raw_list.append(model.oof_brier_raw)
             brier_cal_list.append(model.oof_brier_cal)
+            if not np.isnan(model.oof_brier_skill_score):
+                brier_bss_list.append(model.oof_brier_skill_score)
 
         test_mask = (df["date"] >= t_block_start) & (df["date"] <= t_block_end)
         if test_mask.sum() == 0:
@@ -327,5 +336,6 @@ def run_walkforward_ml_predictions(
     cal_stats = {
         "brier_raw": round(float(np.mean(brier_raw_list)), 4) if brier_raw_list else np.nan,
         "brier_calibrated": round(float(np.mean(brier_cal_list)), 4) if brier_cal_list else np.nan,
+        "brier_skill_score": round(float(np.mean(brier_bss_list)), 4) if brier_bss_list else np.nan,
     }
     return df, last_model, cal_stats
