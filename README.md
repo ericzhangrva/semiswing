@@ -34,7 +34,7 @@ To eliminate look-ahead selection bias and survivorship bias, the tradeable univ
 2. **Stage 2 (Swing Tradability Ranking at $t_k - 1$):**
    $$\text{SwingRankScore}_{i, t_k - 1} = \log_{10}\!\left(\text{MedDollarVol}_{60d}\right) \times \text{ATR\%}_{20d, t_k - 1}$$
    - The $\log_{10}$ compression scales volume variation down to a $1.28\times$ factor between mid-caps and mega-caps, allowing 20-day $\text{ATR\%}$ to prioritize high-velocity momentum leaders over sluggish value traps.
-   - The **Top $N = 40$** qualifying tickers receive `is_tradeable_universe = 1` for quarter $k$.
+   - **Uncapped Selection (`pit_top_n = None`):** All qualifying tickers passing the Stage 1 liquidity floor receive `is_tradeable_universe = 1` for quarter $k$, naturally expanding from ~28 stocks in 2022 to ~50 in 2026 as the AI infrastructure ecosystem expanded (with Stage 2 tradability scores governing relative ranking and execution priority).
 3. **Position Grace Rule:** Open positions held across quarterly boundaries are **never forcibly liquidated**; they remain managed under their stops and profit targets until natural exit, while new entries for dropped tickers are blocked.
 
 ### 1.3 Causal Macro Data & Volatility Hygiene
