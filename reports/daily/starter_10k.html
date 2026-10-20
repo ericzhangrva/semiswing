@@ -21,9 +21,9 @@
               </div>
             </div>
             <div style="margin-top:4px;">
-              <a href="../index.html" style="font-size:12px; color:#38bdf8; text-decoration:none; font-weight:600; margin-right:12px;">&larr; Dashboard</a>
-              <a href="../backtests/backtest_report.html" style="font-size:12px; color:#4ade80; text-decoration:none; font-weight:600; margin-right:12px;">Backtest ($10K) &rarr;</a>
-              <a href="latest_recommendations.html" style="font-size:12px; color:#cbd5e1; text-decoration:none; font-weight:600;">Multi-Portfolio Vault &#128274;</a>
+              <a href="../backtests/recent_trades_and_open_positions.html" style="font-size:12px; color:#38bdf8; text-decoration:none; font-weight:600; margin-right:12px;">&larr; 2. Open Positions (MTM)</a>
+              <a href="../index.html" style="font-size:12px; color:#cbd5e1; text-decoration:none; font-weight:600; margin-right:12px;">Dashboard Hub</a>
+              <a href="family_recommendations.html" style="font-size:12px; color:#4ade80; text-decoration:none; font-weight:600;">4. Personal Daily Tickets &rarr;</a>
             </div>
           </div>
         </div>
@@ -251,19 +251,19 @@
                 <td width="50%" valign="top" style="padding:10px 14px; border-right:1px solid #bae6fd;">
                   <div style="font-size:11px; color:#0369a1; font-weight:700; text-transform:uppercase;">Order (Using Settled Cash: $10,000)</div>
                   <div style="font-size:18px; font-weight:800; color:#0c4a6e; margin-top:2px;">
-                    BUY $4,309.05
+                    BUY $4,358.32
                   </div>
                   <div style="font-size:12px; color:#0284c7;">
-                    ~8.077 shares @ $533.52 (Max Risk: -$283)
+                    ~8.169 shares @ $533.52 (Max Risk: -$286)
                   </div>
                 </td>
                 <td width="50%" valign="top" style="padding:10px 14px;">
                   <div style="font-size:11px; color:#0369a1; font-weight:700; text-transform:uppercase;">Order (With ETF Rotation: $10,000)</div>
                   <div style="font-size:18px; font-weight:800; color:#0c4a6e; margin-top:2px;">
-                    BUY $4,309.05
+                    BUY $4,358.32
                   </div>
                   <div style="font-size:12px; color:#0284c7;">
-                    ~8.077 shares @ $533.52 (Max Risk: -$283)
+                    ~8.169 shares @ $533.52 (Max Risk: -$286)
                   </div>
                 </td>
               </tr>
@@ -294,7 +294,7 @@
                       <span class="metric-tip tip-right">ML Score &amp; RS<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">Composite conviction score combining Platt-calibrated win probability P(TP1 before Stop) with 20-day beta-neutral residual momentum percentile rank across the active universe.</span></span>
                     </div>
                     <div style="font-size:14px; font-weight:700; color:#0f172a; margin-top:2px;">
-                      40.0% <span style="font-size:11px; color:#64748b;">(RS 88th)</span>
+                      40.4% <span style="font-size:11px; color:#64748b;">(RS 88th)</span>
                     </div>
                   </div>
                 </td>
@@ -312,7 +312,7 @@
             <!-- Trigger Condition & Top SHAP Drivers -->
             <div style="font-size:12px; color:#334155; background:#f8fafc; border-radius:6px; padding:8px 12px; line-height:1.45;">
               <div><strong>Entry Condition:</strong> Waiting: ml_prob=0.40<0.44, slope_accel=-0.06<=0 &nbsp;|&nbsp; <strong>Max Hold:</strong> 25 trading days &nbsp;|&nbsp; <strong>Earnings:</strong> 6d</div>
-              <div style="margin-top:4px; color:#475569;"><strong>Top Model Drivers (SHAP):</strong> <code><span class="metric-tip tip-left">sector_rs<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">20-day relative strength of SMH vs SPY: Delta%20d(SMH) - Delta%20d(SPY). Positive values confirm semiconductor sector leadership.</span></span>=-0.07 (-0.039) | <span class="metric-tip tip-left">vix_ts<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">Volatility term structure ratio (VIX / VIX3M). Values < 1.0 confirm normal contango (calm regime); >= 1.0 indicates backwardation (near-term panic).</span></span>=0.94 (+0.029) | <span class="metric-tip">resid_mom_60<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">60-day idiosyncratic residual momentum relative to SMH after stripping market beta. Confirms stock-specific momentum decoupled from sector drift.</span></span>=0.34 (+0.028) | <span class="metric-tip tip-right">vxn_squeeze_vel<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">5-day rate of change in Nasdaq Volatility Index (VXN). Rapid drops detect post-panic volatility compression and short squeezes.</span></span>=1.63 (-0.025) | <span class="metric-tip tip-right">skew_idx<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">CBOE SKEW Index 60-day z-score. Elevated values (> +1.5) indicate institutional tail-risk hedging and out-of-the-money put demand.</span></span>=2.25 (-0.009)</code></div>
+              <div style="margin-top:4px; color:#475569;"><strong>Top Model Drivers (SHAP):</strong> <code><span class="metric-tip tip-left">sector_rs<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">20-day relative strength of SMH vs SPY: Delta%20d(SMH) - Delta%20d(SPY). Positive values confirm semiconductor sector leadership.</span></span>=-0.07 (-0.034) | <span class="metric-tip tip-left">vix_ts<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">Volatility term structure ratio (VIX / VIX3M). Values < 1.0 confirm normal contango (calm regime); >= 1.0 indicates backwardation (near-term panic).</span></span>=0.94 (+0.028) | <span class="metric-tip">resid_mom_60<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">60-day idiosyncratic residual momentum relative to SMH after stripping market beta. Confirms stock-specific momentum decoupled from sector drift.</span></span>=0.34 (+0.027) | <span class="metric-tip tip-right">vxn_squeeze_vel<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">5-day rate of change in Nasdaq Volatility Index (VXN). Rapid drops detect post-panic volatility compression and short squeezes.</span></span>=1.63 (-0.025) | <span class="metric-tip tip-right">skew_idx<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">CBOE SKEW Index 60-day z-score. Elevated values (> +1.5) indicate institutional tail-risk hedging and out-of-the-money put demand.</span></span>=2.25 (-0.006)</code></div>
             </div>
           </div>
         </div>
@@ -341,19 +341,19 @@
                 <td width="50%" valign="top" style="padding:10px 14px; border-right:1px solid #bae6fd;">
                   <div style="font-size:11px; color:#0369a1; font-weight:700; text-transform:uppercase;">Order (Using Settled Cash: $10,000)</div>
                   <div style="font-size:18px; font-weight:800; color:#0c4a6e; margin-top:2px;">
-                    BUY $4,054.04
+                    BUY $4,087.07
                   </div>
                   <div style="font-size:12px; color:#0284c7;">
-                    ~14.681 shares @ $276.15 (Max Risk: -$383)
+                    ~14.800 shares @ $276.15 (Max Risk: -$387)
                   </div>
                 </td>
                 <td width="50%" valign="top" style="padding:10px 14px;">
                   <div style="font-size:11px; color:#0369a1; font-weight:700; text-transform:uppercase;">Order (With ETF Rotation: $10,000)</div>
                   <div style="font-size:18px; font-weight:800; color:#0c4a6e; margin-top:2px;">
-                    BUY $4,054.04
+                    BUY $4,087.07
                   </div>
                   <div style="font-size:12px; color:#0284c7;">
-                    ~14.681 shares @ $276.15 (Max Risk: -$383)
+                    ~14.800 shares @ $276.15 (Max Risk: -$387)
                   </div>
                 </td>
               </tr>
@@ -384,7 +384,7 @@
                       <span class="metric-tip tip-right">ML Score &amp; RS<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">Composite conviction score combining Platt-calibrated win probability P(TP1 before Stop) with 20-day beta-neutral residual momentum percentile rank across the active universe.</span></span>
                     </div>
                     <div style="font-size:14px; font-weight:700; color:#0f172a; margin-top:2px;">
-                      39.5% <span style="font-size:11px; color:#64748b;">(RS 86th)</span>
+                      39.7% <span style="font-size:11px; color:#64748b;">(RS 86th)</span>
                     </div>
                   </div>
                 </td>
@@ -401,8 +401,8 @@
 
             <!-- Trigger Condition & Top SHAP Drivers -->
             <div style="font-size:12px; color:#334155; background:#f8fafc; border-radius:6px; padding:8px 12px; line-height:1.45;">
-              <div><strong>Entry Condition:</strong> Waiting: ema20_slope=-0.03<=0, ml_prob=0.39<0.44, earnings in 1d &nbsp;|&nbsp; <strong>Max Hold:</strong> 25 trading days &nbsp;|&nbsp; <strong>Earnings:</strong> 1d</div>
-              <div style="margin-top:4px; color:#475569;"><strong>Top Model Drivers (SHAP):</strong> <code><span class="metric-tip tip-left">sector_rs<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">20-day relative strength of SMH vs SPY: Delta%20d(SMH) - Delta%20d(SPY). Positive values confirm semiconductor sector leadership.</span></span>=-0.07 (-0.055) | <span class="metric-tip tip-left">vix_ts<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">Volatility term structure ratio (VIX / VIX3M). Values < 1.0 confirm normal contango (calm regime); >= 1.0 indicates backwardation (near-term panic).</span></span>=0.94 (+0.022) | <span class="metric-tip">skew_idx<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">CBOE SKEW Index 60-day z-score. Elevated values (> +1.5) indicate institutional tail-risk hedging and out-of-the-money put demand.</span></span>=2.25 (+0.017) | <span class="metric-tip tip-right">vxn_squeeze_vel<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">5-day rate of change in Nasdaq Volatility Index (VXN). Rapid drops detect post-panic volatility compression and short squeezes.</span></span>=1.63 (-0.015) | <span class="metric-tip tip-right">slope_accel<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">5-day rate of change in normalized slope (t_norm - t_norm_prev5) capturing trend acceleration.</span></span>=-0.61 (+0.013)</code></div>
+              <div><strong>Entry Condition:</strong> Waiting: ema20_slope=-0.03<=0, ml_prob=0.40<0.44, earnings in 1d &nbsp;|&nbsp; <strong>Max Hold:</strong> 25 trading days &nbsp;|&nbsp; <strong>Earnings:</strong> 1d</div>
+              <div style="margin-top:4px; color:#475569;"><strong>Top Model Drivers (SHAP):</strong> <code><span class="metric-tip tip-left">sector_rs<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">20-day relative strength of SMH vs SPY: Delta%20d(SMH) - Delta%20d(SPY). Positive values confirm semiconductor sector leadership.</span></span>=-0.07 (-0.050) | <span class="metric-tip tip-left">vix_ts<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">Volatility term structure ratio (VIX / VIX3M). Values < 1.0 confirm normal contango (calm regime); >= 1.0 indicates backwardation (near-term panic).</span></span>=0.94 (+0.020) | <span class="metric-tip">skew_idx<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">CBOE SKEW Index 60-day z-score. Elevated values (> +1.5) indicate institutional tail-risk hedging and out-of-the-money put demand.</span></span>=2.25 (+0.018) | <span class="metric-tip tip-right">slope_accel<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">5-day rate of change in normalized slope (t_norm - t_norm_prev5) capturing trend acceleration.</span></span>=-0.61 (+0.013) | <span class="metric-tip tip-right">vxn_squeeze_vel<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">5-day rate of change in Nasdaq Volatility Index (VXN). Rapid drops detect post-panic volatility compression and short squeezes.</span></span>=1.63 (-0.013)</code></div>
             </div>
           </div>
         </div>
@@ -431,19 +431,19 @@
                 <td width="50%" valign="top" style="padding:10px 14px; border-right:1px solid #bae6fd;">
                   <div style="font-size:11px; color:#0369a1; font-weight:700; text-transform:uppercase;">Order (Using Settled Cash: $10,000)</div>
                   <div style="font-size:18px; font-weight:800; color:#0c4a6e; margin-top:2px;">
-                    BUY $2,344.95
+                    BUY $2,407.74
                   </div>
                   <div style="font-size:12px; color:#0284c7;">
-                    ~15.664 shares @ $149.70 (Max Risk: -$352)
+                    ~16.084 shares @ $149.70 (Max Risk: -$361)
                   </div>
                 </td>
                 <td width="50%" valign="top" style="padding:10px 14px;">
                   <div style="font-size:11px; color:#0369a1; font-weight:700; text-transform:uppercase;">Order (With ETF Rotation: $10,000)</div>
                   <div style="font-size:18px; font-weight:800; color:#0c4a6e; margin-top:2px;">
-                    BUY $2,344.95
+                    BUY $2,407.74
                   </div>
                   <div style="font-size:12px; color:#0284c7;">
-                    ~15.664 shares @ $149.70 (Max Risk: -$352)
+                    ~16.084 shares @ $149.70 (Max Risk: -$361)
                   </div>
                 </td>
               </tr>
@@ -474,7 +474,7 @@
                       <span class="metric-tip tip-right">ML Score &amp; RS<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">Composite conviction score combining Platt-calibrated win probability P(TP1 before Stop) with 20-day beta-neutral residual momentum percentile rank across the active universe.</span></span>
                     </div>
                     <div style="font-size:14px; font-weight:700; color:#0f172a; margin-top:2px;">
-                      37.9% <span style="font-size:11px; color:#64748b;">(RS 92th)</span>
+                      38.4% <span style="font-size:11px; color:#64748b;">(RS 92th)</span>
                     </div>
                   </div>
                 </td>
@@ -492,7 +492,7 @@
             <!-- Trigger Condition & Top SHAP Drivers -->
             <div style="font-size:12px; color:#334155; background:#f8fafc; border-radius:6px; padding:8px 12px; line-height:1.45;">
               <div><strong>Entry Condition:</strong> Waiting: ml_prob=0.38<0.44, slope_accel=-0.32<=0 &nbsp;|&nbsp; <strong>Max Hold:</strong> 25 trading days &nbsp;|&nbsp; <strong>Earnings:</strong> 13d</div>
-              <div style="margin-top:4px; color:#475569;"><strong>Top Model Drivers (SHAP):</strong> <code><span class="metric-tip tip-left">sector_rs<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">20-day relative strength of SMH vs SPY: Delta%20d(SMH) - Delta%20d(SPY). Positive values confirm semiconductor sector leadership.</span></span>=-0.07 (-0.060) | <span class="metric-tip tip-left">vix_ts<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">Volatility term structure ratio (VIX / VIX3M). Values < 1.0 confirm normal contango (calm regime); >= 1.0 indicates backwardation (near-term panic).</span></span>=0.94 (+0.022) | <span class="metric-tip">skew_idx<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">CBOE SKEW Index 60-day z-score. Elevated values (> +1.5) indicate institutional tail-risk hedging and out-of-the-money put demand.</span></span>=2.25 (+0.018) | <span class="metric-tip tip-right">vxn_squeeze_vel<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">5-day rate of change in Nasdaq Volatility Index (VXN). Rapid drops detect post-panic volatility compression and short squeezes.</span></span>=1.63 (-0.015) | <span class="metric-tip tip-right">slope_accel<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">5-day rate of change in normalized slope (t_norm - t_norm_prev5) capturing trend acceleration.</span></span>=-0.32 (+0.012)</code></div>
+              <div style="margin-top:4px; color:#475569;"><strong>Top Model Drivers (SHAP):</strong> <code><span class="metric-tip tip-left">sector_rs<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">20-day relative strength of SMH vs SPY: Delta%20d(SMH) - Delta%20d(SPY). Positive values confirm semiconductor sector leadership.</span></span>=-0.07 (-0.055) | <span class="metric-tip tip-left">vix_ts<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">Volatility term structure ratio (VIX / VIX3M). Values < 1.0 confirm normal contango (calm regime); >= 1.0 indicates backwardation (near-term panic).</span></span>=0.94 (+0.020) | <span class="metric-tip">skew_idx<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">CBOE SKEW Index 60-day z-score. Elevated values (> +1.5) indicate institutional tail-risk hedging and out-of-the-money put demand.</span></span>=2.25 (+0.018) | <span class="metric-tip tip-right">vxn_squeeze_vel<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">5-day rate of change in Nasdaq Volatility Index (VXN). Rapid drops detect post-panic volatility compression and short squeezes.</span></span>=1.63 (-0.012) | <span class="metric-tip tip-right">slope_accel<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">5-day rate of change in normalized slope (t_norm - t_norm_prev5) capturing trend acceleration.</span></span>=-0.32 (+0.012)</code></div>
             </div>
           </div>
         </div>
@@ -521,19 +521,19 @@
                 <td width="50%" valign="top" style="padding:10px 14px; border-right:1px solid #bae6fd;">
                   <div style="font-size:11px; color:#0369a1; font-weight:700; text-transform:uppercase;">Order (Using Settled Cash: $10,000)</div>
                   <div style="font-size:18px; font-weight:800; color:#0c4a6e; margin-top:2px;">
-                    BUY $4,045.90
+                    BUY $4,069.26
                   </div>
                   <div style="font-size:12px; color:#0284c7;">
-                    ~10.260 shares @ $394.35 (Max Risk: -$379)
+                    ~10.319 shares @ $394.35 (Max Risk: -$381)
                   </div>
                 </td>
                 <td width="50%" valign="top" style="padding:10px 14px;">
                   <div style="font-size:11px; color:#0369a1; font-weight:700; text-transform:uppercase;">Order (With ETF Rotation: $10,000)</div>
                   <div style="font-size:18px; font-weight:800; color:#0c4a6e; margin-top:2px;">
-                    BUY $4,045.90
+                    BUY $4,069.26
                   </div>
                   <div style="font-size:12px; color:#0284c7;">
-                    ~10.260 shares @ $394.35 (Max Risk: -$379)
+                    ~10.319 shares @ $394.35 (Max Risk: -$381)
                   </div>
                 </td>
               </tr>
@@ -564,7 +564,7 @@
                       <span class="metric-tip tip-right">ML Score &amp; RS<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">Composite conviction score combining Platt-calibrated win probability P(TP1 before Stop) with 20-day beta-neutral residual momentum percentile rank across the active universe.</span></span>
                     </div>
                     <div style="font-size:14px; font-weight:700; color:#0f172a; margin-top:2px;">
-                      39.2% <span style="font-size:11px; color:#64748b;">(RS 90th)</span>
+                      39.4% <span style="font-size:11px; color:#64748b;">(RS 90th)</span>
                     </div>
                   </div>
                 </td>
@@ -582,7 +582,7 @@
             <!-- Trigger Condition & Top SHAP Drivers -->
             <div style="font-size:12px; color:#334155; background:#f8fafc; border-radius:6px; padding:8px 12px; line-height:1.45;">
               <div><strong>Entry Condition:</strong> Waiting: ml_prob=0.39<0.44, slope_accel=-0.55<=0 &nbsp;|&nbsp; <strong>Max Hold:</strong> 25 trading days &nbsp;|&nbsp; <strong>Earnings:</strong> 26d</div>
-              <div style="margin-top:4px; color:#475569;"><strong>Top Model Drivers (SHAP):</strong> <code><span class="metric-tip tip-left">sector_rs<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">20-day relative strength of SMH vs SPY: Delta%20d(SMH) - Delta%20d(SPY). Positive values confirm semiconductor sector leadership.</span></span>=-0.07 (-0.053) | <span class="metric-tip tip-left">vix_ts<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">Volatility term structure ratio (VIX / VIX3M). Values < 1.0 confirm normal contango (calm regime); >= 1.0 indicates backwardation (near-term panic).</span></span>=0.94 (+0.022) | <span class="metric-tip">skew_idx<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">CBOE SKEW Index 60-day z-score. Elevated values (> +1.5) indicate institutional tail-risk hedging and out-of-the-money put demand.</span></span>=2.25 (+0.016) | <span class="metric-tip tip-right">vxn_squeeze_vel<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">5-day rate of change in Nasdaq Volatility Index (VXN). Rapid drops detect post-panic volatility compression and short squeezes.</span></span>=1.63 (-0.015) | <span class="metric-tip tip-right">slope_accel<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">5-day rate of change in normalized slope (t_norm - t_norm_prev5) capturing trend acceleration.</span></span>=-0.55 (+0.013)</code></div>
+              <div style="margin-top:4px; color:#475569;"><strong>Top Model Drivers (SHAP):</strong> <code><span class="metric-tip tip-left">sector_rs<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">20-day relative strength of SMH vs SPY: Delta%20d(SMH) - Delta%20d(SPY). Positive values confirm semiconductor sector leadership.</span></span>=-0.07 (-0.049) | <span class="metric-tip tip-left">vix_ts<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">Volatility term structure ratio (VIX / VIX3M). Values < 1.0 confirm normal contango (calm regime); >= 1.0 indicates backwardation (near-term panic).</span></span>=0.94 (+0.020) | <span class="metric-tip">skew_idx<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">CBOE SKEW Index 60-day z-score. Elevated values (> +1.5) indicate institutional tail-risk hedging and out-of-the-money put demand.</span></span>=2.25 (+0.016) | <span class="metric-tip tip-right">slope_accel<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">5-day rate of change in normalized slope (t_norm - t_norm_prev5) capturing trend acceleration.</span></span>=-0.55 (+0.013) | <span class="metric-tip tip-right">vxn_squeeze_vel<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">5-day rate of change in Nasdaq Volatility Index (VXN). Rapid drops detect post-panic volatility compression and short squeezes.</span></span>=1.63 (-0.013)</code></div>
             </div>
           </div>
         </div>
@@ -601,7 +601,7 @@
 
         <!-- Footer -->
         <div style="max-width:680px; width:100%; text-align:center; padding:20px 0 28px 0; font-size:12px; color:#64748b; border-top:1px solid #cbd5e1; margin-top:20px;">
-          SemiSwing Public Model Desk &bull; Report Created: <strong>2026-10-20 01:17:00 EDT</strong>
+          SemiSwing Public Model Desk &bull; Report Created: 2026-10-20 02:56:34 EDT
         </div>
       </td>
     </tr>

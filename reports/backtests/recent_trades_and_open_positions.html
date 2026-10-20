@@ -16,7 +16,7 @@ h2 { font-size: 18px; color: #1e293b; margin-top: 28px; margin-bottom: 12px; bor
 .notice-box { background: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #64748b; padding: 12px 16px; border-radius: 8px; margin-bottom: 24px; font-size: 12px; color: #475569; }
 .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 10px; margin-bottom: 24px; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.03); }
 table { width: 100%; min-width: 920px; border-collapse: collapse; font-size: 12px; border: none; }
-th { background: #1e293b; color: #f8fafc; text-align: left; padding: 9px 10px; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; white-space: nowrap; border: none; }
+th { background: #1e293b; color: #f8fafc; text-align: left; padding: 9px 10px; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; white-space: normal; vertical-align: bottom; border: none; }
 td { padding: 8px 10px; border-bottom: 1px solid #f1f5f9; font-variant-numeric: tabular-nums; white-space: nowrap; }
 tr:last-child td { border-bottom: none; }
 tr:nth-child(even) { background: #f8fafc; }
@@ -40,142 +40,25 @@ footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #e2e8f0; tex
 <div class='header-meta'>
   <div class='meta-badge'>Strategy Mode: <strong>ml</strong></div>
   <div class='meta-badge'>Active Open Count: <strong>2 of 4 Max Positions</strong></div>
-  <div class='meta-badge'>Report Created: <strong>2026-10-20 02:13:08 EDT</strong></div>
+  <div class='meta-badge'>Report Created: 2026-10-20 02:56:34 EDT</div>
 </div>
 <div class='cards-grid'>
   <div class='metric-card'><div class='title'>Active Open Trades</div><div class='val'>2 <span style='font-size:13px; font-weight:500; color:#64748b;'>(of 4 max slots)</span></div></div>
-  <div class='metric-card'><div class='title'>Total Invested Capital</div><div class='val'>$51,285.27</div></div>
-  <div class='metric-card'><div class='title'>Temporary Unrealized P&amp;L</div><div class='val' style='color:#16a34a;'>+514.74 (+1.01%)</div></div>
+  <div class='metric-card'><div class='title'>Total Invested Capital</div><div class='val'>$51,877.03</div></div>
+  <div class='metric-card'><div class='title'>Temporary Unrealized P&amp;L</div><div class='val' style='color:#16a34a;'>+495.29 (+0.96%)</div></div>
   <div class='metric-card'><div class='title'>Total Closed Trades (OOS)</div><div class='val'>91</div></div>
 </div>
-<h2>1. Active Open Positions (Daily Mark-to-Market)</h2>
-<div class='info-box'>
-  <strong>Why are 2 swing positions currently active?</strong><br/>
-  SemiSwing enforces strict institutional risk limits: a hard maximum of <strong>4 concurrent swing positions</strong>, a single-name position cap of 33%, and a maximum portfolio open risk of 14%. 
-  Over the past 5 trading days, 3 positions reached their algorithmic exits (<code>DELL</code> hit EOD trailing stop at +165.2% after a 153-day run, <code>SNPS</code> hit its stop loss, and <code>MU</code> hit its 25-day time stop), freeing up capacity. 
-  The model currently deploys capital into <strong>2 active swing positions</strong> (<code>AAPL</code> +4.66% and <code>MSFT</code> -1.51%), with all unallocated cash automatically earning risk-free Treasury Bill yield (FRED DTB3 @ ~4.6% APR).
-</div>
-
-        <div class='table-responsive'>
-          <table>
-            <thead>
-              <tr>
-                <th>Ticker</th>
-                <th>Tier</th>
-                <th>Shares</th>
-                <th>Entry Date</th>
-                <th>Held</th>
-                <th>Entry &rarr; Close</th>
-                <th>Protect Stop</th>
-                <th>Position ($)</th>
-                <th>Unrealized P&amp;L</th>
-                <th>Stop Dist</th>
-                <th>Top Model Drivers (SHAP)</th>
-              </tr>
-            </thead>
-            <tbody>
-              
-            <tr>
-              <td><strong style="font-size:13px; color:#0f172a;">AAPL</strong></td>
-              <td><span class="badge-tier tier-medium">MEDIUM</span></td>
-              <td>63.4</td>
-              <td>2026-09-11</td>
-              <td>27d</td>
-              <td>$327.68 &rarr; <strong>$342.94</strong></td>
-              <td>$303.99</td>
-              <td>$21,734.87</td>
-              <td style="color:#16a34a; font-weight:700;">+967.20 (+4.66%)</td>
-              <td>+11.36%</td>
-              <td class="drivers-cell">skew_idx=0.54 (-0.017) | vxn_squeeze_vel=1.06 (+0.007) | sector_rs=-0.02 (-0.005) | slope_t_norm_40d=-1.23 (+0.004) | slope_r2_20d=0.65 (-0.003)</td>
-            </tr>
-            
-            <tr>
-              <td><strong style="font-size:13px; color:#0f172a;">MSFT</strong></td>
-              <td><span class="badge-tier tier-high">HIGH</span></td>
-              <td>55.4</td>
-              <td>2026-10-16</td>
-              <td>2d</td>
-              <td>$541.69 &rarr; <strong>$533.52</strong></td>
-              <td>$507.37</td>
-              <td>$29,550.40</td>
-              <td style="color:#dc2626; font-weight:700;">-452.46 (-1.51%)</td>
-              <td>+4.90%</td>
-              <td class="drivers-cell">skew_idx=2.49 (+0.037) | vix_ts=0.89 (+0.035) | resid_mom_60=0.34 (+0.019) | sector_rs=-0.02 (-0.015) | vxn_squeeze_vel=0.34 (+0.013)</td>
-            </tr>
-            
-            </tbody>
-          </table>
-        </div>
-        
-
-        <div style="margin-top:20px; margin-bottom:28px;">
-          <div style="font-size:13.5px; font-weight:700; color:#334155; margin-bottom:8px;">Recent Model Exits (Vacated Slots in Last 10 Trading Days):</div>
-          <div class="table-responsive" style="margin-top:0;">
-            <table>
-              <thead>
-                <tr>
-                  <th>Ticker</th>
-                  <th>Holding Period</th>
-                  <th>Days Held</th>
-                  <th>Entry &rarr; Exit Price</th>
-                  <th>Realized P&amp;L</th>
-                  <th>Exit Trigger</th>
-                </tr>
-              </thead>
-              <tbody>
-                
-            <tr>
-              <td><strong>SNPS</strong></td>
-              <td>2026-10-09 &rarr; 2026-10-16</td>
-              <td>6d</td>
-              <td>$510.84 &rarr; $454.03</td>
-              <td style="color:#dc2626; font-weight:700;">-2,403 (-11.12%)</td>
-              <td><span class="badge-exit">Stop</span></td>
-            </tr>
-            
-            <tr>
-              <td><strong>DELL</strong></td>
-              <td>2026-03-11 &rarr; 2026-10-16</td>
-              <td>153d</td>
-              <td>$145.07 &rarr; $451.39</td>
-              <td style="color:#16a34a; font-weight:700;">+11,741 (+165.23%)</td>
-              <td><span class="badge-exit">Trail Stop Eod</span></td>
-            </tr>
-            
-            <tr>
-              <td><strong>MU</strong></td>
-              <td>2026-09-11 &rarr; 2026-10-15</td>
-              <td>25d</td>
-              <td>$993.74 &rarr; $930.59</td>
-              <td style="color:#dc2626; font-weight:700;">-2,042 (-6.35%)</td>
-              <td><span class="badge-exit">Time Stop 25D</span></td>
-            </tr>
-            
-            <tr>
-              <td><strong>SNDK</strong></td>
-              <td>2026-08-25 &rarr; 2026-10-08</td>
-              <td>32d</td>
-              <td>$1534.76 &rarr; $1608.33</td>
-              <td style="color:#16a34a; font-weight:700;">+989 (+4.79%)</td>
-              <td><span class="badge-exit">Time Stop 25D</span></td>
-            </tr>
-            
-              </tbody>
-            </table>
-          </div>
-        </div>
-        
-<div class='notice-box'><strong>Note on Reference Backtest vs. Real Accounts:</strong> This Card #2 report reflects the <em>algorithmic reference backtest portfolio</em> ($10K compounding starting equity, max 4 positions). For actual brokerage account holdings and personalized trade recommendations, refer to <a href='../daily/family_recommendations.html' style='color:#0284c7; font-weight:700; text-decoration:none;'>Card 4 (Personal Daily Trade Tickets)</a> and <a href='../daily/isabel_recommendations.html' style='color:#0284c7; font-weight:700; text-decoration:none;'>Card 5 (Customer IZ Daily Trade Tickets)</a>.</div>
-<h2>2. Recent 25 Out-of-Sample Closed Trades (ml)</h2>
 
     <div style="background:#ffffff; border:1px solid #cbd5e1; border-left:5px solid #2563eb; border-radius:8px; padding:16px 20px; margin-bottom:20px; font-size:13px; line-height:1.55; color:#334155;">
-      <div style="font-weight:700; color:#0f172a; margin-bottom:8px; font-size:14px;">Section 8 Trade Blotter Legend &amp; Quantitative Diagnostics</div>
-      <div style="margin-bottom:6px;">
-        <strong>Tier:</strong>
-        <span style="display:inline-block; padding:1px 6px; background:#dcfce7; color:#166534; border-radius:4px; font-size:11px; font-weight:700;">CONSENSUS</span> Dual-engine alignment (both Baseline OLS trend significance t_norm &ge; 1.8 and ML classifier agree; 1.0% risk). &nbsp;
-        <span style="display:inline-block; padding:1px 6px; background:#e0f2fe; color:#0369a1; border-radius:4px; font-size:11px; font-weight:700;">HIGH</span> Standalone ML qualification with top-quintile residual momentum (1.0% risk). &nbsp;
-        <span style="display:inline-block; padding:1px 6px; background:#f1f5f9; color:#475569; border-radius:4px; font-size:11px; font-weight:700;">MEDIUM</span> Baseline trend qualification or secondary ML score (0.75% conservative risk). &nbsp;
-        <span style="display:inline-block; padding:1px 6px; background:#fff1f2; color:#be123c; border-radius:4px; font-size:11px; font-weight:700;">LOW</span> Lower-conviction meta-labeling score (S_i,t &lt; 0.85; 0.50% risk or conservative bottom tier).
+      <div style="font-weight:700; color:#0f172a; margin-bottom:8px; font-size:14px;">Trade Blotter Legend &amp; Quantitative Diagnostics</div>
+      <div style="margin-bottom:8px;">
+        <strong>Tier Conviction Levels:</strong>
+        <ul style="margin: 6px 0 0 18px; padding: 0; line-height: 1.6;">
+          <li><span style="display:inline-block; padding:1px 6px; background:#dcfce7; color:#166534; border-radius:4px; font-size:11px; font-weight:700;">CONSENSUS</span>: Dual-engine alignment (both Baseline OLS trend significance t_norm &ge; 1.8 and ML classifier agree; 1.0% risk).</li>
+          <li><span style="display:inline-block; padding:1px 6px; background:#e0f2fe; color:#0369a1; border-radius:4px; font-size:11px; font-weight:700;">HIGH</span>: Standalone ML qualification with top-quintile residual momentum (1.0% risk).</li>
+          <li><span style="display:inline-block; padding:1px 6px; background:#f1f5f9; color:#475569; border-radius:4px; font-size:11px; font-weight:700;">MEDIUM</span>: Baseline trend qualification or secondary ML score (0.75% conservative risk).</li>
+          <li><span style="display:inline-block; padding:1px 6px; background:#fff1f2; color:#be123c; border-radius:4px; font-size:11px; font-weight:700;">LOW</span>: Lower-conviction meta-labeling score (S_i,t &lt; 0.85; 0.50% risk or conservative bottom tier).</li>
+        </ul>
       </div>
       <div style="margin-bottom:6px;">
         <strong>Shares &amp; Position ($):</strong> Dynamically calculated via Volatility-Parity / Fixed-Fractional Risk Sizing: <code>Shares = (Portfolio Equity &times; Base Risk &times; M_t &times; S_i,t) / Stop Distance</code>. Each trade risks a fixed fraction of total portfolio equity at execution, so position dollar allocations and share counts vary according to individual stock ATR volatility, tier conviction, meta-labeling multiplier S_i,t, and compounding portfolio equity over time.
@@ -209,6 +92,67 @@ footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #e2e8f0; tex
       </div>
     </div>
     
+<h2>1. Active Open Positions (Daily Mark-to-Market)</h2>
+<div class='info-box'>
+  <strong>Why are 2 swing positions currently active?</strong><br/>
+  SemiSwing enforces strict institutional risk limits: a hard maximum of <strong>4 concurrent swing positions</strong>, a single-name position cap of 33%, and a maximum portfolio open risk of 14%. 
+  Over the past 5 trading days, 3 positions reached their algorithmic exits (<code>DELL</code> hit EOD trailing stop at +165.2% after a 153-day run, <code>SNPS</code> hit its stop loss, and <code>MU</code> hit its 25-day time stop), freeing up capacity. 
+  The model currently deploys capital into <strong>2 active swing positions</strong> (<code>AAPL</code> +4.66% and <code>MSFT</code> -1.51%), with all unallocated cash automatically earning risk-free Treasury Bill yield (FRED DTB3 @ ~4.6% APR).
+</div>
+
+        <div class='table-responsive'>
+          <table>
+            <thead>
+              <tr>
+                <th>Ticker</th>
+                <th>Tier</th>
+                <th>Shares</th>
+                <th>Entry Date</th>
+                <th>Held</th>
+                <th>Entry &rarr; Close</th>
+                <th>Protect Stop</th>
+                <th>Position ($)</th>
+                <th>Unrealized P&amp;L</th>
+                <th>Stop Dist</th>
+                <th>Top Model Drivers (SHAP)</th>
+              </tr>
+            </thead>
+            <tbody>
+              
+            <tr>
+              <td><strong style="font-size:13px; color:#0f172a;">AAPL</strong></td>
+              <td><span class="badge-tier tier-high">HIGH</span></td>
+              <td>62.9</td>
+              <td>2026-09-11</td>
+              <td>27d</td>
+              <td>$327.68 &rarr; <strong>$342.94</strong></td>
+              <td>$303.99</td>
+              <td>$21,561.15</td>
+              <td style="color:#16a34a; font-weight:700;">+959.47 (+4.66%)</td>
+              <td>+11.36%</td>
+              <td class="drivers-cell">skew_idx=0.54 (-0.016) | vxn_squeeze_vel=1.06 (+0.009) | sector_rs=-0.02 (-0.004) | slope_t_norm_40d=-1.23 (+0.004) | slope_r2_20d=0.65 (-0.003)</td>
+            </tr>
+            
+            <tr>
+              <td><strong style="font-size:13px; color:#0f172a;">MSFT</strong></td>
+              <td><span class="badge-tier tier-high">HIGH</span></td>
+              <td>56.8</td>
+              <td>2026-10-16</td>
+              <td>2d</td>
+              <td>$541.69 &rarr; <strong>$533.52</strong></td>
+              <td>$507.37</td>
+              <td>$30,315.88</td>
+              <td style="color:#dc2626; font-weight:700;">-464.18 (-1.51%)</td>
+              <td>+4.90%</td>
+              <td class="drivers-cell">skew_idx=2.49 (+0.040) | vix_ts=0.89 (+0.036) | resid_mom_60=0.34 (+0.019) | sector_rs=-0.02 (-0.015) | vxn_squeeze_vel=0.34 (+0.012)</td>
+            </tr>
+            
+            </tbody>
+          </table>
+        </div>
+        
+<div class='notice-box'><strong>Note on Reference Backtest vs. Real Accounts:</strong> This Card #2 report reflects the <em>algorithmic reference backtest portfolio</em> ($10K compounding starting equity, max 4 positions). For actual brokerage account holdings and personalized trade recommendations, refer to <a href='../daily/family_recommendations.html' style='color:#0284c7; font-weight:700; text-decoration:none;'>Card 4 (Personal Daily Trade Tickets)</a> and <a href='../daily/isabel_recommendations.html' style='color:#0284c7; font-weight:700; text-decoration:none;'>Card 5 (Customer IZ Daily Trade Tickets)</a>.</div>
+<h2>2. Recent 25 Out-of-Sample Closed Trades (ml)</h2>
 
         <div class='table-responsive'>
           <table>
@@ -232,355 +176,355 @@ footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #e2e8f0; tex
             <tr>
               <td><strong style="color:#0f172a; font-size:12.5px;">SNPS</strong></td>
               <td><span class="badge-tier tier-medium">MEDIUM</span></td>
-              <td>42.3</td>
-              <td>$21,608</td>
+              <td>42.6</td>
+              <td>$21,786</td>
               <td>2026-10-09 &rarr; 2026-10-16 (6d)</td>
               <td>$510.84 &rarr; $454.03</td>
-              <td style="color:#dc2626; font-weight:700;">-2,403 (-11.12%)</td>
+              <td style="color:#dc2626; font-weight:700;">-2,423 (-11.12%)</td>
               <td style="color:#dc2626; font-weight:600;">-1.01R</td>
               <td><span class="badge-exit">Stop</span></td>
-              <td>37.8% (1.09x)</td>
-              <td class="drivers-cell">vix_ts=0.85 (-0.019) | rs_rank=0.98 (+0.012) | slope_r2_20d=0.87 (-0.010) | resid_mom_60=0.15 (-0.006) | skew_idx=0.95 (-0.004)</td>
+              <td>37.7% (1.08x)</td>
+              <td class="drivers-cell">vix_ts=0.85 (-0.020) | rs_rank=0.98 (+0.011) | slope_r2_20d=0.87 (-0.010) | resid_mom_60=0.15 (-0.006) | skew_idx=0.95 (-0.005)</td>
             </tr>
             
             <tr>
               <td><strong style="color:#0f172a; font-size:12.5px;">DELL</strong></td>
               <td><span class="badge-tier tier-high">HIGH</span></td>
-              <td>49</td>
-              <td>$7,106</td>
+              <td>49.7</td>
+              <td>$7,209</td>
               <td>2026-03-11 &rarr; 2026-10-16 (153d)</td>
               <td>$145.07 &rarr; $451.39</td>
-              <td style="color:#16a34a; font-weight:700;">+11,741 (+165.23%)</td>
+              <td style="color:#16a34a; font-weight:700;">+11,911 (+165.23%)</td>
               <td style="color:#16a34a; font-weight:600;">+11.02R</td>
               <td><span class="badge-exit">Trail Stop Eod</span></td>
-              <td>41.0% (1.29x)</td>
-              <td class="drivers-cell">rs_rank=0.98 (+0.023) | vix_ts=0.98 (+0.013) | sector_rs=0.00 (+0.012) | slope_r2_20d=0.66 (-0.011) | skew_idx=1.02 (-0.003)</td>
+              <td>41.2% (1.30x)</td>
+              <td class="drivers-cell">rs_rank=0.98 (+0.024) | vix_ts=0.98 (+0.014) | sector_rs=0.00 (+0.014) | slope_r2_20d=0.66 (-0.011) | resid_mom_20=0.19 (+0.002)</td>
             </tr>
             
             <tr>
               <td><strong style="color:#0f172a; font-size:12.5px;">MU</strong></td>
               <td><span class="badge-tier tier-high">HIGH</span></td>
-              <td>32.3</td>
-              <td>$32,129</td>
+              <td>33.2</td>
+              <td>$32,966</td>
               <td>2026-09-11 &rarr; 2026-10-15 (25d)</td>
               <td>$993.74 &rarr; $930.59</td>
-              <td style="color:#dc2626; font-weight:700;">-2,042 (-6.35%)</td>
+              <td style="color:#dc2626; font-weight:700;">-2,095 (-6.35%)</td>
               <td style="color:#dc2626; font-weight:600;">-0.42R</td>
               <td><span class="badge-exit">Time Stop 25D</span></td>
-              <td>40.3% (1.27x)</td>
-              <td class="drivers-cell">rs_rank=0.98 (+0.026) | skew_idx=0.54 (-0.018) | vix_ts=0.90 (-0.009) | vol_compress=0.54 (+0.006) | vxn_squeeze_vel=1.06 (+0.006)</td>
+              <td>40.6% (1.28x)</td>
+              <td class="drivers-cell">rs_rank=0.98 (+0.026) | skew_idx=0.54 (-0.016) | vix_ts=0.90 (-0.009) | vxn_squeeze_vel=1.06 (+0.008) | vol_compress=0.54 (+0.006)</td>
             </tr>
             
             <tr>
               <td><strong style="color:#0f172a; font-size:12.5px;">SNDK</strong></td>
               <td><span class="badge-tier tier-medium">MEDIUM</span></td>
-              <td>13.4</td>
-              <td>$20,627</td>
+              <td>13.6</td>
+              <td>$20,800</td>
               <td>2026-08-25 &rarr; 2026-10-08 (32d)</td>
               <td>$1534.76 &rarr; $1608.33</td>
-              <td style="color:#16a34a; font-weight:700;">+989 (+4.79%)</td>
+              <td style="color:#16a34a; font-weight:700;">+997 (+4.79%)</td>
               <td style="color:#16a34a; font-weight:600;">+0.32R</td>
               <td><span class="badge-exit">Time Stop 25D</span></td>
-              <td>38.5% (1.14x)</td>
-              <td class="drivers-cell">vxn_squeeze_vel=0.38 (+0.017) | sector_rs=-0.04 (-0.006) | slope_t_norm_40d=-1.74 (+0.004) | slope_r2_20d=0.68 (-0.003) | vix_ts=0.85 (-0.002)</td>
+              <td>38.4% (1.14x)</td>
+              <td class="drivers-cell">vxn_squeeze_vel=0.38 (+0.017) | sector_rs=-0.04 (-0.007) | slope_t_norm_40d=-1.74 (+0.004) | slope_r2_20d=0.68 (-0.003) | ema20_slope=0.32 (+0.002)</td>
             </tr>
             
             <tr>
               <td><strong style="color:#0f172a; font-size:12.5px;">ORCL</strong></td>
               <td><span class="badge-tier tier-low">LOW</span></td>
-              <td>98.7</td>
-              <td>$15,335</td>
+              <td>102</td>
+              <td>$15,855</td>
               <td>2026-08-14 &rarr; 2026-09-10 (19d)</td>
               <td>$155.37 &rarr; $152.27</td>
-              <td style="color:#dc2626; font-weight:700;">-306 (-2.00%)</td>
+              <td style="color:#dc2626; font-weight:700;">-317 (-2.00%)</td>
               <td style="color:#dc2626; font-weight:600;">-0.14R</td>
               <td><span class="badge-exit">Earnings Exit</span></td>
-              <td>33.6% (0.76x)</td>
-              <td class="drivers-cell">slope_t_norm_40d=-1.24 (+0.017) | vix_ts=0.79 (-0.016) | sector_rs=-0.00 (+0.016) | skew_idx=-1.48 (-0.015) | vxn_squeeze_vel=-0.96 (+0.015)</td>
+              <td>33.9% (0.78x)</td>
+              <td class="drivers-cell">slope_t_norm_40d=-1.24 (+0.017) | sector_rs=-0.00 (+0.016) | vxn_squeeze_vel=-0.96 (+0.015) | vix_ts=0.79 (-0.014) | skew_idx=-1.48 (-0.012)</td>
             </tr>
             
             <tr>
               <td><strong style="color:#0f172a; font-size:12.5px;">PLTR</strong></td>
               <td><span class="badge-tier tier-medium">MEDIUM</span></td>
-              <td>107.9</td>
-              <td>$16,837</td>
+              <td>108.5</td>
+              <td>$16,924</td>
               <td>2026-08-06 &rarr; 2026-09-10 (25d)</td>
               <td>$155.98 &rarr; $165.74</td>
-              <td style="color:#16a34a; font-weight:700;">+1,054 (+6.26%)</td>
+              <td style="color:#16a34a; font-weight:700;">+1,059 (+6.26%)</td>
               <td style="color:#16a34a; font-weight:600;">+0.42R</td>
               <td><span class="badge-exit">Time Stop 25D</span></td>
-              <td>35.3% (0.88x)</td>
-              <td class="drivers-cell">skew_idx=-1.91 (-0.054) | vxn_squeeze_vel=-2.33 (+0.051) | sector_rs=-0.07 (+0.031) | slope_t_norm_40d=0.83 (+0.025) | slope_accel=0.34 (+0.008)</td>
+              <td>35.2% (0.88x)</td>
+              <td class="drivers-cell">skew_idx=-1.91 (-0.056) | vxn_squeeze_vel=-2.33 (+0.052) | sector_rs=-0.07 (+0.029) | slope_t_norm_40d=0.83 (+0.025) | slope_accel=0.34 (+0.008)</td>
             </tr>
             
             <tr>
               <td><strong style="color:#0f172a; font-size:12.5px;">P</strong></td>
               <td><span class="badge-tier tier-high">HIGH</span></td>
-              <td>338.2</td>
-              <td>$37,572</td>
+              <td>341.8</td>
+              <td>$37,972</td>
               <td>2026-08-21 &rarr; 2026-08-24 (2d)</td>
               <td>$111.08 &rarr; $100.37</td>
-              <td style="color:#dc2626; font-weight:700;">-3,622 (-9.64%)</td>
+              <td style="color:#dc2626; font-weight:700;">-3,661 (-9.64%)</td>
               <td style="color:#dc2626; font-weight:600;">-0.66R</td>
               <td><span class="badge-exit">Earnings Exit</span></td>
-              <td>49.1% (1.48x)</td>
-              <td class="drivers-cell">vxn_squeeze_vel=0.67 (+0.036) | sector_rs=-0.06 (+0.023) | resid_mom_60=0.27 (+0.022) | ema20_slope=2.29 (+0.019) | vix_ts=0.84 (+0.012)</td>
+              <td>48.8% (1.48x)</td>
+              <td class="drivers-cell">vxn_squeeze_vel=0.67 (+0.032) | sector_rs=-0.06 (+0.024) | resid_mom_60=0.27 (+0.022) | ema20_slope=2.29 (+0.020) | vix_ts=0.84 (+0.012)</td>
             </tr>
             
             <tr>
               <td><strong style="color:#0f172a; font-size:12.5px;">AMZN</strong></td>
               <td><span class="badge-tier tier-medium">MEDIUM</span></td>
-              <td>97.9</td>
-              <td>$27,588</td>
+              <td>99.6</td>
+              <td>$28,079</td>
               <td>2026-08-05 &rarr; 2026-08-20 (12d)</td>
               <td>$281.79 &rarr; $259.93</td>
-              <td style="color:#dc2626; font-weight:700;">-2,140 (-7.76%)</td>
+              <td style="color:#dc2626; font-weight:700;">-2,178 (-7.76%)</td>
               <td style="color:#dc2626; font-weight:600;">-0.74R</td>
               <td><span class="badge-exit">Time Stop 12D</span></td>
-              <td>36.7% (1.00x)</td>
-              <td class="drivers-cell">vxn_squeeze_vel=-1.14 (+0.068) | sector_rs=-0.04 (+0.040) | slope_t_norm_40d=0.85 (+0.024) | skew_idx=-3.40 (-0.013) | slope_accel=0.48 (+0.009)</td>
+              <td>36.8% (1.01x)</td>
+              <td class="drivers-cell">vxn_squeeze_vel=-1.14 (+0.068) | sector_rs=-0.04 (+0.042) | slope_t_norm_40d=0.85 (+0.024) | skew_idx=-3.40 (-0.012) | slope_accel=0.48 (+0.009)</td>
             </tr>
             
             <tr>
               <td><strong style="color:#0f172a; font-size:12.5px;">AAPL</strong></td>
               <td><span class="badge-tier tier-medium">MEDIUM</span></td>
-              <td>94.4</td>
-              <td>$29,690</td>
+              <td>95.6</td>
+              <td>$30,083</td>
               <td>2026-07-10 &rarr; 2026-08-13 (25d)</td>
               <td>$314.67 &rarr; $305.05</td>
-              <td style="color:#dc2626; font-weight:700;">-908 (-3.06%)</td>
+              <td style="color:#dc2626; font-weight:700;">-920 (-3.06%)</td>
               <td style="color:#dc2626; font-weight:600;">-0.38R</td>
               <td><span class="badge-exit">Time Stop 25D</span></td>
-              <td>35.8% (0.94x)</td>
-              <td class="drivers-cell">vix_ts=0.83 (-0.017) | rs_rank=0.80 (+0.008) | vxn_squeeze_vel=-0.33 (-0.004) | slope_sharpe=4.73 (-0.003) | slope_t_norm_40d=-0.46 (-0.002)</td>
+              <td>35.9% (0.94x)</td>
+              <td class="drivers-cell">vix_ts=0.83 (-0.015) | rs_rank=0.80 (+0.008) | vxn_squeeze_vel=-0.33 (-0.004) | slope_sharpe=4.73 (-0.003) | vol_compress=1.66 (+0.003)</td>
             </tr>
             
             <tr>
               <td><strong style="color:#0f172a; font-size:12.5px;">AMZN</strong></td>
               <td><span class="badge-tier tier-high">HIGH</span></td>
-              <td>141</td>
-              <td>$35,108</td>
+              <td>142.6</td>
+              <td>$35,505</td>
               <td>2026-07-20 &rarr; 2026-07-28 (7d)</td>
               <td>$248.93 &rarr; $230.70</td>
-              <td style="color:#dc2626; font-weight:700;">-2,572 (-7.33%)</td>
+              <td style="color:#dc2626; font-weight:700;">-2,601 (-7.33%)</td>
               <td style="color:#dc2626; font-weight:600;">-0.80R</td>
               <td><span class="badge-exit">Earnings Exit</span></td>
-              <td>39.7% (1.23x)</td>
-              <td class="drivers-cell">vxn_squeeze_vel=1.39 (+0.020) | skew_idx=1.15 (-0.020) | slope_t_norm_40d=-2.14 (+0.013) | sector_rs=-0.11 (-0.008) | vix_ts=0.91 (+0.004)</td>
+              <td>39.9% (1.25x)</td>
+              <td class="drivers-cell">vxn_squeeze_vel=1.39 (+0.021) | skew_idx=1.15 (-0.019) | slope_t_norm_40d=-2.14 (+0.015) | sector_rs=-0.11 (-0.006) | vix_ts=0.91 (+0.004)</td>
             </tr>
             
             <tr>
               <td><strong style="color:#0f172a; font-size:12.5px;">META</strong></td>
               <td><span class="badge-tier tier-high">HIGH</span></td>
-              <td>28.6</td>
-              <td>$18,995</td>
+              <td>28.9</td>
+              <td>$19,186</td>
               <td>2026-07-15 &rarr; 2026-07-27 (9d)</td>
               <td>$663.54 &rarr; $592.99</td>
-              <td style="color:#dc2626; font-weight:700;">-2,020 (-10.63%)</td>
+              <td style="color:#dc2626; font-weight:700;">-2,040 (-10.63%)</td>
               <td style="color:#dc2626; font-weight:600;">-0.93R</td>
               <td><span class="badge-exit">Earnings Exit</span></td>
-              <td>39.3% (1.20x)</td>
-              <td class="drivers-cell">rs_rank=0.98 (+0.020) | sector_rs=-0.05 (+0.016) | vix_ts=0.85 (-0.007) | skew_idx=0.75 (-0.007) | vxn_squeeze_vel=-0.62 (-0.006)</td>
+              <td>39.3% (1.21x)</td>
+              <td class="drivers-cell">rs_rank=0.98 (+0.020) | sector_rs=-0.05 (+0.016) | vix_ts=0.85 (-0.008) | skew_idx=0.75 (-0.007) | vxn_squeeze_vel=-0.62 (-0.006)</td>
             </tr>
             
             <tr>
               <td><strong style="color:#0f172a; font-size:12.5px;">P</strong></td>
               <td><span class="badge-tier tier-high">HIGH</span></td>
-              <td>519.8</td>
-              <td>$41,512</td>
+              <td>525.7</td>
+              <td>$41,982</td>
               <td>2026-07-09 &rarr; 2026-07-15 (5d)</td>
               <td>$79.87 &rarr; $67.84</td>
-              <td style="color:#dc2626; font-weight:700;">-6,252 (-15.06%)</td>
+              <td style="color:#dc2626; font-weight:700;">-6,322 (-15.06%)</td>
               <td style="color:#dc2626; font-weight:600;">-1.00R</td>
               <td><span class="badge-exit">Stop</span></td>
-              <td>45.0% (1.43x)</td>
+              <td>44.8% (1.42x)</td>
               <td class="drivers-cell">skew_idx=1.86 (+0.040) | vxn_squeeze_vel=0.21 (+0.024) | rs_rank=0.80 (+0.008) | vix_ts=0.87 (+0.004) | slope_accel=0.33 (+0.003)</td>
             </tr>
             
             <tr>
               <td><strong style="color:#0f172a; font-size:12.5px;">ARM</strong></td>
               <td><span class="badge-tier tier-high">HIGH</span></td>
-              <td>89.6</td>
-              <td>$13,847</td>
+              <td>90.5</td>
+              <td>$13,985</td>
               <td>2026-04-01 &rarr; 2026-07-14 (71d)</td>
               <td>$154.50 &rarr; $280.97</td>
-              <td style="color:#16a34a; font-weight:700;">+9,611 (+69.41%)</td>
+              <td style="color:#16a34a; font-weight:700;">+9,707 (+69.41%)</td>
               <td style="color:#16a34a; font-weight:600;">+4.63R</td>
               <td><span class="badge-exit">Trail Stop Eod</span></td>
-              <td>42.3% (1.35x)</td>
-              <td class="drivers-cell">rs_rank=0.98 (+0.036) | vix_ts=0.99 (+0.018) | slope_t_norm=6.62 (+0.013) | skew_idx=0.04 (-0.009) | slope_r2_20d=0.73 (-0.009)</td>
+              <td>42.1% (1.34x)</td>
+              <td class="drivers-cell">rs_rank=0.98 (+0.037) | vix_ts=0.99 (+0.016) | slope_t_norm=6.62 (+0.011) | skew_idx=0.04 (-0.010) | slope_r2_20d=0.73 (-0.007)</td>
             </tr>
             
             <tr>
               <td><strong style="color:#0f172a; font-size:12.5px;">LITE</strong></td>
               <td><span class="badge-tier tier-high">HIGH</span></td>
-              <td>79.2</td>
-              <td>$10,493</td>
+              <td>80.2</td>
+              <td>$10,624</td>
               <td>2025-09-03 &rarr; 2026-07-07 (211d)</td>
               <td>$132.43 &rarr; $698.93</td>
-              <td style="color:#16a34a; font-weight:700;">+34,275 (+326.65%)</td>
+              <td style="color:#16a34a; font-weight:700;">+34,705 (+326.65%)</td>
               <td style="color:#16a34a; font-weight:600;">+25.58R</td>
               <td><span class="badge-exit">Stop Gap</span></td>
-              <td>39.0% (1.23x)</td>
-              <td class="drivers-cell">resid_mom_60=0.29 (+0.049) | slope_r2_20d=0.79 (-0.007) | ema50_slope=1.93 (-0.006) | slope_t_norm_40d=12.28 (+0.004) | vix_ts=0.89 (+0.004)</td>
+              <td>38.9% (1.23x)</td>
+              <td class="drivers-cell">resid_mom_60=0.29 (+0.048) | ema50_slope=1.93 (-0.008) | slope_t_norm_40d=12.28 (+0.006) | slope_r2_20d=0.79 (-0.006) | vix_ts=0.89 (+0.004)</td>
             </tr>
             
             <tr>
               <td><strong style="color:#0f172a; font-size:12.5px;">WDC</strong></td>
               <td><span class="badge-tier tier-medium">MEDIUM</span></td>
-              <td>63.2</td>
-              <td>$2,960</td>
+              <td>63.7</td>
+              <td>$2,982</td>
               <td>2025-05-13 &rarr; 2026-07-07 (288d)</td>
               <td>$46.85 &rarr; $531.86</td>
-              <td style="color:#16a34a; font-weight:700;">+23,139 (+781.78%)</td>
+              <td style="color:#16a34a; font-weight:700;">+23,316 (+781.78%)</td>
               <td style="color:#16a34a; font-weight:600;">+65.85R</td>
               <td><span class="badge-exit">Stop Gap</span></td>
-              <td>36.0% (1.05x)</td>
-              <td class="drivers-cell">vix_ts=0.91 (+0.025) | slope_r2_20d=0.91 (-0.009) | skew_idx=-0.25 (-0.007) | slope_r2=0.91 (-0.003) | vol_compress=0.65 (-0.003)</td>
+              <td>36.0% (1.04x)</td>
+              <td class="drivers-cell">vix_ts=0.91 (+0.026) | slope_r2_20d=0.91 (-0.009) | skew_idx=-0.25 (-0.007) | vol_compress=0.65 (-0.004) | slope_r2=0.91 (-0.003)</td>
             </tr>
             
             <tr>
               <td><strong style="color:#0f172a; font-size:12.5px;">MU</strong></td>
               <td><span class="badge-tier tier-high">HIGH</span></td>
-              <td>48.3</td>
-              <td>$14,257</td>
+              <td>49.2</td>
+              <td>$14,514</td>
               <td>2026-01-02 &rarr; 2026-03-30 (60d)</td>
               <td>$295.12 &rarr; $321.47</td>
-              <td style="color:#16a34a; font-weight:700;">+1,859 (+13.04%)</td>
+              <td style="color:#16a34a; font-weight:700;">+1,892 (+13.04%)</td>
               <td style="color:#16a34a; font-weight:600;">+0.94R</td>
               <td><span class="badge-exit">Trail Stop Eod</span></td>
-              <td>45.2% (1.42x)</td>
-              <td class="drivers-cell">rs_rank=0.98 (+0.033) | resid_mom_60=0.33 (+0.032) | vxn_squeeze_vel=0.62 (+0.022) | sector_rs=0.00 (+0.020) | slope_r2_20d=0.64 (-0.012)</td>
+              <td>45.0% (1.42x)</td>
+              <td class="drivers-cell">rs_rank=0.98 (+0.034) | resid_mom_60=0.33 (+0.030) | vxn_squeeze_vel=0.62 (+0.022) | sector_rs=0.00 (+0.017) | slope_r2_20d=0.64 (-0.012)</td>
             </tr>
             
             <tr>
               <td><strong style="color:#0f172a; font-size:12.5px;">LRCX</strong></td>
               <td><span class="badge-tier tier-low">LOW</span></td>
-              <td>12.9</td>
-              <td>$2,448</td>
+              <td>13</td>
+              <td>$2,470</td>
               <td>2026-01-05 &rarr; 2026-03-06 (43d)</td>
               <td>$189.69 &rarr; $198.84</td>
-              <td style="color:#16a34a; font-weight:700;">+210 (+8.58%)</td>
+              <td style="color:#16a34a; font-weight:700;">+212 (+8.58%)</td>
               <td style="color:#16a34a; font-weight:600;">+0.84R</td>
               <td><span class="badge-exit">Trail Stop Eod</span></td>
-              <td>26.5% (0.55x)</td>
-              <td class="drivers-cell">skew_idx=-0.98 (-0.053) | vxn_squeeze_vel=0.75 (-0.034) | vix_ts=0.81 (-0.027) | slope_r2_20d=0.62 (-0.007) | resid_mom_20=0.11 (+0.004)</td>
+              <td>26.1% (0.54x)</td>
+              <td class="drivers-cell">skew_idx=-0.98 (-0.054) | vxn_squeeze_vel=0.75 (-0.035) | vix_ts=0.81 (-0.029) | slope_r2_20d=0.62 (-0.007) | resid_mom_20=0.11 (+0.004)</td>
             </tr>
             
             <tr>
               <td><strong style="color:#0f172a; font-size:12.5px;">APP</strong></td>
               <td><span class="badge-tier tier-high">HIGH</span></td>
               <td>3.7</td>
-              <td>$2,698</td>
+              <td>$2,720</td>
               <td>2025-12-24 &rarr; 2026-01-02 (6d)</td>
               <td>$728.36 &rarr; $628.82</td>
-              <td style="color:#dc2626; font-weight:700;">-369 (-13.67%)</td>
+              <td style="color:#dc2626; font-weight:700;">-372 (-13.67%)</td>
               <td style="color:#dc2626; font-weight:600;">-1.00R</td>
               <td><span class="badge-exit">Stop</span></td>
-              <td>38.9% (1.20x)</td>
-              <td class="drivers-cell">vix_ts=0.78 (-0.064) | skew_idx=2.44 (+0.035) | rs_rank=1.00 (+0.025) | slope_r2_20d=0.60 (-0.009) | resid_mom_20=0.21 (+0.006)</td>
+              <td>39.0% (1.21x)</td>
+              <td class="drivers-cell">vix_ts=0.78 (-0.063) | skew_idx=2.44 (+0.037) | rs_rank=1.00 (+0.025) | slope_r2_20d=0.60 (-0.009) | resid_mom_20=0.21 (+0.005)</td>
             </tr>
             
             <tr>
               <td><strong style="color:#0f172a; font-size:12.5px;">GOOGL</strong></td>
               <td><span class="badge-tier tier-high">HIGH</span></td>
-              <td>46</td>
-              <td>$14,992</td>
+              <td>46.9</td>
+              <td>$15,262</td>
               <td>2025-11-25 &rarr; 2025-12-31 (25d)</td>
               <td>$325.59 &rarr; $312.17</td>
-              <td style="color:#dc2626; font-weight:700;">-618 (-4.12%)</td>
+              <td style="color:#dc2626; font-weight:700;">-629 (-4.12%)</td>
               <td style="color:#dc2626; font-weight:600;">-0.41R</td>
               <td><span class="badge-exit">Time Stop 25D</span></td>
-              <td>42.8% (1.37x)</td>
-              <td class="drivers-cell">resid_mom_60=0.33 (+0.064) | sector_rs=-0.03 (+0.040) | resid_mom_20=0.19 (+0.009) | slope_r2_20d=0.50 (-0.008) | slope_t_norm_40d=8.84 (+0.007)</td>
+              <td>42.3% (1.36x)</td>
+              <td class="drivers-cell">resid_mom_60=0.33 (+0.062) | sector_rs=-0.03 (+0.036) | slope_r2_20d=0.50 (-0.009) | resid_mom_20=0.19 (+0.008) | vxn_squeeze_vel=-0.80 (-0.006)</td>
             </tr>
             
             <tr>
               <td><strong style="color:#0f172a; font-size:12.5px;">VRT</strong></td>
               <td><span class="badge-tier tier-medium">MEDIUM</span></td>
-              <td>22.9</td>
-              <td>$2,314</td>
+              <td>23.1</td>
+              <td>$2,331</td>
               <td>2025-05-13 &rarr; 2025-12-17 (152d)</td>
               <td>$100.97 &rarr; $149.62</td>
-              <td style="color:#16a34a; font-weight:700;">+1,015 (+43.88%)</td>
+              <td style="color:#16a34a; font-weight:700;">+1,023 (+43.88%)</td>
               <td style="color:#16a34a; font-weight:600;">+2.93R</td>
               <td><span class="badge-exit">Trail Stop Eod</span></td>
-              <td>35.9% (1.04x)</td>
-              <td class="drivers-cell">vix_ts=0.91 (+0.025) | skew_idx=-0.25 (-0.007) | slope_r2_20d=0.88 (-0.006) | vol_compress=0.61 (-0.003) | slope_r2=0.90 (-0.003)</td>
+              <td>35.8% (1.03x)</td>
+              <td class="drivers-cell">vix_ts=0.91 (+0.026) | skew_idx=-0.25 (-0.007) | slope_r2_20d=0.88 (-0.006) | vol_compress=0.61 (-0.004) | slope_r2=0.90 (-0.003)</td>
             </tr>
             
             <tr>
               <td><strong style="color:#0f172a; font-size:12.5px;">AMD</strong></td>
               <td><span class="badge-tier tier-low">LOW</span></td>
-              <td>20.4</td>
-              <td>$4,503</td>
+              <td>21</td>
+              <td>$4,620</td>
               <td>2025-10-13 &rarr; 2025-11-18 (27d)</td>
               <td>$220.35 &rarr; $230.13</td>
-              <td style="color:#16a34a; font-weight:700;">+200 (+4.44%)</td>
+              <td style="color:#16a34a; font-weight:700;">+205 (+4.44%)</td>
               <td style="color:#16a34a; font-weight:600;">+0.30R</td>
               <td><span class="badge-exit">Time Stop 25D</span></td>
-              <td>31.4% (0.68x)</td>
-              <td class="drivers-cell">skew_idx=-2.34 (-0.130) | sector_rs=0.07 (+0.060) | vix_ts=0.95 (+0.035) | slope_accel=0.75 (+0.031) | slope_t_norm_40d=1.22 (+0.024)</td>
+              <td>31.6% (0.69x)</td>
+              <td class="drivers-cell">skew_idx=-2.34 (-0.133) | sector_rs=0.07 (+0.062) | vix_ts=0.95 (+0.036) | slope_accel=0.75 (+0.032) | slope_t_norm_40d=1.22 (+0.026)</td>
             </tr>
             
             <tr>
               <td><strong style="color:#0f172a; font-size:12.5px;">STX</strong></td>
               <td><span class="badge-tier tier-medium">MEDIUM</span></td>
-              <td>33.3</td>
-              <td>$3,348</td>
+              <td>33.9</td>
+              <td>$3,413</td>
               <td>2025-05-13 &rarr; 2025-10-10 (105d)</td>
               <td>$100.52 &rarr; $212.97</td>
-              <td style="color:#16a34a; font-weight:700;">+2,982 (+89.06%)</td>
+              <td style="color:#16a34a; font-weight:700;">+3,039 (+89.06%)</td>
               <td style="color:#16a34a; font-weight:600;">+7.88R</td>
               <td><span class="badge-exit">Trail Stop Eod</span></td>
-              <td>37.2% (1.13x)</td>
-              <td class="drivers-cell">vix_ts=0.91 (+0.026) | skew_idx=-0.25 (-0.007) | sector_rs=0.09 (-0.004) | rs_rank=0.98 (+0.003) | slope_r2_20d=0.95 (-0.003)</td>
+              <td>37.2% (1.14x)</td>
+              <td class="drivers-cell">vix_ts=0.91 (+0.027) | skew_idx=-0.25 (-0.007) | slope_r2_20d=0.95 (-0.004) | rs_rank=0.98 (+0.004) | sector_rs=0.09 (-0.003)</td>
             </tr>
             
             <tr>
               <td><strong style="color:#0f172a; font-size:12.5px;">CEG</strong></td>
               <td><span class="badge-tier tier-medium">MEDIUM</span></td>
-              <td>8.7</td>
-              <td>$2,432</td>
+              <td>8.9</td>
+              <td>$2,471</td>
               <td>2025-05-13 &rarr; 2025-09-02 (77d)</td>
               <td>$278.39 &rarr; $298.61</td>
-              <td style="color:#16a34a; font-weight:700;">+294 (+12.09%)</td>
+              <td style="color:#16a34a; font-weight:700;">+299 (+12.09%)</td>
               <td style="color:#16a34a; font-weight:600;">+0.83R</td>
               <td><span class="badge-exit">Stop Gap</span></td>
-              <td>36.1% (1.06x)</td>
-              <td class="drivers-cell">vix_ts=0.91 (+0.026) | slope_r2_20d=0.89 (-0.008) | skew_idx=-0.25 (-0.007) | sector_rs=0.09 (-0.003) | rs_rank=0.86 (+0.002)</td>
+              <td>36.2% (1.06x)</td>
+              <td class="drivers-cell">vix_ts=0.91 (+0.027) | slope_r2_20d=0.89 (-0.008) | skew_idx=-0.25 (-0.007) | slope_sharpe=6.83 (-0.003) | rs_rank=0.86 (+0.003)</td>
             </tr>
             
             <tr>
               <td><strong style="color:#0f172a; font-size:12.5px;">INTC</strong></td>
               <td><span class="badge-tier tier-medium">MEDIUM</span></td>
-              <td>211.1</td>
-              <td>$5,186</td>
+              <td>215.9</td>
+              <td>$5,305</td>
               <td>2025-02-24 &rarr; 2025-02-28 (5d)</td>
               <td>$24.57 &rarr; $23.71</td>
-              <td style="color:#dc2626; font-weight:700;">-180 (-3.48%)</td>
+              <td style="color:#dc2626; font-weight:700;">-184 (-3.48%)</td>
               <td style="color:#dc2626; font-weight:600;">-0.23R</td>
               <td><span class="badge-exit">Regime Off</span></td>
-              <td>37.5% (1.12x)</td>
-              <td class="drivers-cell">sector_rs=-0.05 (+0.033) | vxn_squeeze_vel=0.92 (-0.030) | slope_accel=0.63 (+0.008) | vol_compress=1.77 (+0.007) | vix_ts=0.93 (-0.006)</td>
+              <td>37.8% (1.14x)</td>
+              <td class="drivers-cell">sector_rs=-0.05 (+0.034) | vxn_squeeze_vel=0.92 (-0.029) | vol_compress=1.77 (+0.010) | slope_accel=0.63 (+0.009) | vix_ts=0.93 (-0.005)</td>
             </tr>
             
             <tr>
-              <td><strong style="color:#0f172a; font-size:12.5px;">STX</strong></td>
+              <td><strong style="color:#0f172a; font-size:12.5px;">META</strong></td>
               <td><span class="badge-tier tier-medium">MEDIUM</span></td>
-              <td>20.6</td>
-              <td>$1,977</td>
+              <td>2.7</td>
+              <td>$1,861</td>
               <td>2025-01-31 &rarr; 2025-02-28 (20d)</td>
-              <td>$95.99 &rarr; $99.58</td>
-              <td style="color:#16a34a; font-weight:700;">+74 (+3.74%)</td>
-              <td style="color:#16a34a; font-weight:600;">+0.36R</td>
+              <td>$687.54 &rarr; $663.92</td>
+              <td style="color:#dc2626; font-weight:700;">-64 (-3.43%)</td>
+              <td style="color:#dc2626; font-weight:600;">-0.40R</td>
               <td><span class="badge-exit">Regime Off</span></td>
-              <td>36.1% (1.02x)</td>
-              <td class="drivers-cell">vol_compress=1.65 (+0.010) | sector_rs=-0.03 (-0.010) | skew_idx=-0.52 (-0.004) | vix_ts=0.88 (+0.003) | slope_r2_20d=0.71 (-0.003)</td>
+              <td>34.6% (0.91x)</td>
+              <td class="drivers-cell">skew_idx=-0.52 (-0.008) | slope_accel=0.72 (+0.007) | slope_r2_20d=0.71 (-0.007) | resid_mom_60=0.19 (-0.007) | sector_rs=-0.03 (-0.006)</td>
             </tr>
             
             </tbody>
           </table>
         </div>
         
-<footer>SemiSwing Systematic Trading Engine &bull; Report Created: <strong>2026-10-20 02:13:08 EDT</strong></footer></div></body></html>
+<footer>SemiSwing Systematic Trading Engine &bull; Report Created: 2026-10-20 02:56:34 EDT</footer></div></body></html>

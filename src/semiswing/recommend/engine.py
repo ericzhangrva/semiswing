@@ -1321,26 +1321,24 @@ def render_multi_portfolio_inner_html(plans: Dict[str, DailyRecommendationPlan],
       <tr>
         <td align="center">
           <div style="max-width:680px; width:100%; text-align:left; margin-bottom:14px;">
-            <div style="background:#0f172a; border:1px solid #1e293b; border-radius:12px; padding:12px 16px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap;">
-              <div>
-                <div style="font-size:10px; text-transform:uppercase; letter-spacing:1px; color:#94a3b8; font-weight:700; margin-bottom:6px;">
-                  Select Snapshot Portfolio ({len(plans)} Loaded)
-                </div>
-                <div>
-                  {tabs_html}
-                </div>
-              </div>
-              <div style="margin-top:4px;">
-                <a href="../index.html" style="font-size:12px; color:#38bdf8; text-decoration:none; font-weight:600; margin-right:12px;">&larr; Dashboard</a>
-                <button onclick="lockSemiSwing()" style="cursor:pointer; padding:6px 12px; border-radius:6px; border:1px solid #475569; background:#1e293b; color:#94a3b8; font-size:11px; font-weight:600;">
-                  Lock Page
+            <div style="background:#0f172a; border:1px solid #1e293b; border-radius:12px; padding:14px 18px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid #1e293b;">
+                <a href="../index.html" style="font-size:12px; color:#38bdf8; text-decoration:none; font-weight:600;">&larr; Dashboard Hub</a>
+                <button onclick="lockSemiSwing()" style="cursor:pointer; padding:5px 12px; border-radius:6px; border:1px solid #475569; background:#1e293b; color:#94a3b8; font-size:11px; font-weight:600;">
+                  &#128274; Lock Page
                 </button>
+              </div>
+              <div style="font-size:10px; text-transform:uppercase; letter-spacing:1px; color:#94a3b8; font-weight:700; margin-bottom:8px;">
+                Select Snapshot Portfolio ({len(plans)} Loaded)
+              </div>
+              <div>
+                {tabs_html}
               </div>
             </div>
           </div>
           {panels_html}
           <div style="max-width:680px; width:100%; text-align:center; padding:20px 0 28px 0; font-size:12px; color:#64748b; border-top:1px solid #1e293b; margin-top:20px;">
-            SemiSwing Portfolio Desk &bull; Report Created: <strong>{created_ts}</strong>
+            SemiSwing Portfolio Desk &bull; Report Created: {created_ts}
           </div>
         </td>
       </tr>
@@ -1431,11 +1429,11 @@ def encrypt_html_with_passcode(
       Incorrect passcode. Please try again.
     </div>
     <div style="margin-top:18px; padding-top:14px; border-top:1px solid #334155; font-size:12px;">
-      <a href="../backtests/backtest_report.html" style="color:#38bdf8; text-decoration:none; font-weight:600;">
-        View Public Walk-Forward Backtest Report ($10K) &rarr;
+      <a href="../index.html" style="color:#38bdf8; text-decoration:none; font-weight:600;">
+        &larr; Return to Dashboard Hub
       </a>
       <div style="margin-top:12px; font-size:11px; color:#64748b;">
-        Report Created: <strong>{created_ts}</strong>
+        Report Created: {created_ts}
       </div>
     </div>
   </div>
@@ -1548,7 +1546,6 @@ def encrypt_html_with_passcode(
       try {{
         const html = await decryptWithPasscode(code);
         if (html) {{
-          localStorage.setItem('semiswing_passcode', code);
           document.body.style.backgroundColor = '#f1f5f9';
           document.body.style.color = '#0f172a';
           document.getElementById('lock-screen').style.display = 'none';
@@ -1564,14 +1561,6 @@ def encrypt_html_with_passcode(
         btn.textContent = 'Unlock Trade Tickets';
       }}
     }}
-
-    window.addEventListener('DOMContentLoaded', async () => {{
-      const saved = localStorage.getItem('semiswing_passcode');
-      if (saved) {{
-        document.getElementById('passcode-input').value = saved;
-        await handleUnlock(null);
-      }}
-    }});
   </script>
 </body>
 </html>
@@ -1682,9 +1671,9 @@ def render_starter_10k_html(plan: DailyRecommendationPlan, created_ts: str | Non
               </div>
             </div>
             <div style="margin-top:4px;">
-              <a href="../index.html" style="font-size:12px; color:#38bdf8; text-decoration:none; font-weight:600; margin-right:12px;">&larr; Dashboard</a>
-              <a href="../backtests/backtest_report.html" style="font-size:12px; color:#4ade80; text-decoration:none; font-weight:600; margin-right:12px;">Backtest ($10K) &rarr;</a>
-              <a href="latest_recommendations.html" style="font-size:12px; color:#cbd5e1; text-decoration:none; font-weight:600;">Multi-Portfolio Vault &#128274;</a>
+              <a href="../backtests/recent_trades_and_open_positions.html" style="font-size:12px; color:#38bdf8; text-decoration:none; font-weight:600; margin-right:12px;">&larr; 2. Open Positions (MTM)</a>
+              <a href="../index.html" style="font-size:12px; color:#cbd5e1; text-decoration:none; font-weight:600; margin-right:12px;">Dashboard Hub</a>
+              <a href="family_recommendations.html" style="font-size:12px; color:#4ade80; text-decoration:none; font-weight:600;">4. Personal Daily Tickets &rarr;</a>
             </div>
           </div>
         </div>
@@ -1693,7 +1682,7 @@ def render_starter_10k_html(plan: DailyRecommendationPlan, created_ts: str | Non
 
         <!-- Footer -->
         <div style="max-width:680px; width:100%; text-align:center; padding:20px 0 28px 0; font-size:12px; color:#64748b; border-top:1px solid #cbd5e1; margin-top:20px;">
-          SemiSwing Public Model Desk &bull; Report Created: <strong>{created_ts}</strong>
+          SemiSwing Public Model Desk &bull; Report Created: {created_ts}
         </div>
       </td>
     </tr>

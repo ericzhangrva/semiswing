@@ -1534,13 +1534,15 @@ def _df_to_md(df: pd.DataFrame) -> str:
 def _render_trade_legend_html() -> str:
     return """
     <div style="background:#ffffff; border:1px solid #cbd5e1; border-left:5px solid #2563eb; border-radius:8px; padding:16px 20px; margin-bottom:20px; font-size:13px; line-height:1.55; color:#334155;">
-      <div style="font-weight:700; color:#0f172a; margin-bottom:8px; font-size:14px;">Section 8 Trade Blotter Legend &amp; Quantitative Diagnostics</div>
-      <div style="margin-bottom:6px;">
-        <strong>Tier:</strong>
-        <span style="display:inline-block; padding:1px 6px; background:#dcfce7; color:#166534; border-radius:4px; font-size:11px; font-weight:700;">CONSENSUS</span> Dual-engine alignment (both Baseline OLS trend significance t_norm &ge; 1.8 and ML classifier agree; 1.0% risk). &nbsp;
-        <span style="display:inline-block; padding:1px 6px; background:#e0f2fe; color:#0369a1; border-radius:4px; font-size:11px; font-weight:700;">HIGH</span> Standalone ML qualification with top-quintile residual momentum (1.0% risk). &nbsp;
-        <span style="display:inline-block; padding:1px 6px; background:#f1f5f9; color:#475569; border-radius:4px; font-size:11px; font-weight:700;">MEDIUM</span> Baseline trend qualification or secondary ML score (0.75% conservative risk). &nbsp;
-        <span style="display:inline-block; padding:1px 6px; background:#fff1f2; color:#be123c; border-radius:4px; font-size:11px; font-weight:700;">LOW</span> Lower-conviction meta-labeling score (S_i,t &lt; 0.85; 0.50% risk or conservative bottom tier).
+      <div style="font-weight:700; color:#0f172a; margin-bottom:8px; font-size:14px;">Trade Blotter Legend &amp; Quantitative Diagnostics</div>
+      <div style="margin-bottom:8px;">
+        <strong>Tier Conviction Levels:</strong>
+        <ul style="margin: 6px 0 0 18px; padding: 0; line-height: 1.6;">
+          <li><span style="display:inline-block; padding:1px 6px; background:#dcfce7; color:#166534; border-radius:4px; font-size:11px; font-weight:700;">CONSENSUS</span>: Dual-engine alignment (both Baseline OLS trend significance t_norm &ge; 1.8 and ML classifier agree; 1.0% risk).</li>
+          <li><span style="display:inline-block; padding:1px 6px; background:#e0f2fe; color:#0369a1; border-radius:4px; font-size:11px; font-weight:700;">HIGH</span>: Standalone ML qualification with top-quintile residual momentum (1.0% risk).</li>
+          <li><span style="display:inline-block; padding:1px 6px; background:#f1f5f9; color:#475569; border-radius:4px; font-size:11px; font-weight:700;">MEDIUM</span>: Baseline trend qualification or secondary ML score (0.75% conservative risk).</li>
+          <li><span style="display:inline-block; padding:1px 6px; background:#fff1f2; color:#be123c; border-radius:4px; font-size:11px; font-weight:700;">LOW</span>: Lower-conviction meta-labeling score (S_i,t &lt; 0.85; 0.50% risk or conservative bottom tier).</li>
+        </ul>
       </div>
       <div style="margin-bottom:6px;">
         <strong>Shares &amp; Position ($):</strong> Dynamically calculated via Volatility-Parity / Fixed-Fractional Risk Sizing: <code>Shares = (Portfolio Equity &times; Base Risk &times; M_t &times; S_i,t) / Stop Distance</code>. Each trade risks a fixed fraction of total portfolio equity at execution, so position dollar allocations and share counts vary according to individual stock ATR volatility, tier conviction, meta-labeling multiplier S_i,t, and compounding portfolio equity over time.
@@ -1578,10 +1580,14 @@ def _render_trade_legend_html() -> str:
 
 def _render_trade_legend_md() -> str:
     return (
-        "> **Section 8 Trade Blotter Legend & Quantitative Diagnostics**\n"
+        "> **Trade Blotter Legend & Quantitative Diagnostics**\n"
+        "> - **Tier Conviction Levels:**\n"
+        ">   - `CONSENSUS`: Dual-engine alignment (both Baseline OLS trend significance $t_{\\text{norm}} \\ge 1.8$ and ML classifier agree; 1.0% risk).\n"
+        ">   - `HIGH`: Standalone ML qualification with top-quintile residual momentum (1.0% risk).\n"
+        ">   - `MEDIUM`: Baseline trend qualification or secondary ML score (0.75% conservative risk).\n"
+        ">   - `LOW`: Lower-conviction meta-labeling score ($S_{i,t} < 0.85$, 0.50% risk).\n"
         "> - **Shares & Position ($):** Dynamically calculated via Volatility-Parity / Fixed-Fractional Risk Sizing: $\\text{Shares} = (\\text{Portfolio Equity} \\times \\text{Base Risk} \\times M_t \\times S_{i,t}) / \\text{Stop Distance}$. Each trade risks a fixed fraction of portfolio equity, so share counts and dollar allocations vary based on stock ATR volatility, tier conviction, meta-labeling multiplier $S_{i,t}$, and compounding portfolio equity over time.\n"
         "> - **Partial Exits (TP1) & Blended Returns:** When Take Profit 1 triggers, partial shares are sold and stop ratchets to breakeven. `Exit ($)` reports final runner exit; `Return (%)` is the blended net return.\n"
-        "> - **Tier:** `CONSENSUS` (dual-engine alignment, 1.0% risk), `HIGH` (standalone ML top-quintile RS, 1.0% risk), `MEDIUM` (conservative 0.75% risk), `LOW` (lower-conviction meta-labeling score $S_{i,t} < 0.85$, 0.50% risk).\n"
         "> - **Win Prob:** Platt-calibrated out-of-fold probability $P(\\text{TP1 before Stop})$. Break-even threshold is $> 40.0\\%$ with a 1.5:1 payoff ratio.\n"
         "> - **Sizing Scalar:** Meta-labeling sizing multiplier $S_{i,t} = 0.50 + \\text{Rank}_{\\text{OOF}}(\\hat{p}) \\in [0.50, 1.50]$ scaling allocation by model confidence.\n"
         "> - **Top Model Drivers (SHAP):** Single-feature marginal attributions detailing model conviction:\n"
@@ -1729,20 +1735,6 @@ def generate_reports(
                 "## 7. Yearly Breakdown — ML (LightGBM + Platt, Cash + T-Bill Interest)",
                 "",
                 _df_to_md(formatted_ml_yr),
-                "",
-            ]
-        )
-
-    if best_sys is not None and not best_sys.trades.empty:
-        recent_tr = best_sys.trades.tail(25)
-        formatted_tr = _format_trade_blotter_df(recent_tr)
-        md_lines.extend(
-            [
-                f"## 8. Recent 25 OOS Trades ({best_name})",
-                "",
-                _render_trade_legend_md(),
-                "",
-                _df_to_md(formatted_tr),
                 "",
             ]
         )
@@ -1937,17 +1929,10 @@ def generate_reports(
         formatted_ml_yr = _format_yearly_table_df(ml_res.yearly_table)
         html_parts.append(_decorate_html_table(formatted_ml_yr.to_html(index=False, border=0)))
 
-    if best_sys is not None and not best_sys.trades.empty:
-        recent_tr = best_sys.trades.tail(25)
-        formatted_tr = _format_trade_blotter_df(recent_tr)
-        html_parts.append(f"<h2>8. Recent 25 OOS Trades ({best_name})</h2>")
-        html_parts.append(_render_trade_legend_html())
-        html_parts.append(_decorate_html_table(formatted_tr.to_html(index=False, border=0)))
-
     now_ts = pd.Timestamp.now(tz="America/New_York").strftime("%Y-%m-%d %H:%M:%S %Z")
     html_parts.append(
         f"<footer style='margin-top:50px; padding:24px 0 32px 0; border-top:1px solid #cbd5e1; text-align:center; font-size:12px; color:#64748b; font-family:-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,sans-serif;'>"
-        f"SemiSwing Systematic Trading Engine &bull; Report Created: <strong>{now_ts}</strong>"
+        f"SemiSwing Systematic Trading Engine &bull; Report Created: {now_ts}"
         f"</footer>"
     )
     html_parts.append("</body></html>")
@@ -2013,9 +1998,6 @@ def write_recent_trades_and_open_positions_report(
     tot_unrealized_ret = (tot_unrealized_pnl / tot_cost * 100.0) if tot_cost > 0 else 0.0
     pnl_color = "#16a34a" if tot_unrealized_pnl >= 0 else "#dc2626"
 
-    # Recent exits within last 10-15 trading days
-    recent_closed = best_sys.trades.tail(10) if (best_sys is not None and not best_sys.trades.empty) else pd.DataFrame()
-
     html_parts = [
         "<!DOCTYPE html>",
         "<html lang='en'><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'>",
@@ -2035,7 +2017,7 @@ def write_recent_trades_and_open_positions_report(
         ".notice-box { background: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #64748b; padding: 12px 16px; border-radius: 8px; margin-bottom: 24px; font-size: 12px; color: #475569; }",
         ".table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 10px; margin-bottom: 24px; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.03); }",
         "table { width: 100%; min-width: 920px; border-collapse: collapse; font-size: 12px; border: none; }",
-        "th { background: #1e293b; color: #f8fafc; text-align: left; padding: 9px 10px; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; white-space: nowrap; border: none; }",
+        "th { background: #1e293b; color: #f8fafc; text-align: left; padding: 9px 10px; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; white-space: normal; vertical-align: bottom; border: none; }",
         "td { padding: 8px 10px; border-bottom: 1px solid #f1f5f9; font-variant-numeric: tabular-nums; white-space: nowrap; }",
         "tr:last-child td { border-bottom: none; }",
         "tr:nth-child(even) { background: #f8fafc; }",
@@ -2059,7 +2041,7 @@ def write_recent_trades_and_open_positions_report(
         "<div class='header-meta'>",
         f"  <div class='meta-badge'>Strategy Mode: <strong>{best_sys.name}</strong></div>",
         f"  <div class='meta-badge'>Active Open Count: <strong>{len(open_rows)} of 4 Max Positions</strong></div>",
-        f"  <div class='meta-badge'>Report Created: <strong>{now_ts}</strong></div>",
+        f"  <div class='meta-badge'>Report Created: {now_ts}</div>",
         "</div>",
         "<div class='cards-grid'>",
         f"  <div class='metric-card'><div class='title'>Active Open Trades</div><div class='val'>{len(open_rows)} <span style='font-size:13px; font-weight:500; color:#64748b;'>(of 4 max slots)</span></div></div>",
@@ -2067,6 +2049,7 @@ def write_recent_trades_and_open_positions_report(
         f"  <div class='metric-card'><div class='title'>Temporary Unrealized P&amp;L</div><div class='val' style='color:{pnl_color};'>{tot_unrealized_pnl:+,.2f} ({tot_unrealized_ret:+.2f}%)</div></div>",
         f"  <div class='metric-card'><div class='title'>Total Closed Trades (OOS)</div><div class='val'>{len(best_sys.trades) if best_sys is not None else 0}</div></div>",
         "</div>",
+        _render_trade_legend_html(),
         "<h2>1. Active Open Positions (Daily Mark-to-Market)</h2>",
         "<div class='info-box'>",
         "  <strong>Why are 2 swing positions currently active?</strong><br/>",
@@ -2126,48 +2109,6 @@ def write_recent_trades_and_open_positions_report(
             "</div>"
         )
 
-    # Sub-section: Recent Exits in Last 10 Days
-    if not recent_closed.empty:
-        cutoff_exits = recent_closed.tail(4).iloc[::-1]
-        exit_table_rows = []
-        for _, r in cutoff_exits.iterrows():
-            ret_pct = float(r.get("return_pct", 0.0))
-            net_pnl = float(r.get("net_pnl", 0.0))
-            color = "#16a34a" if net_pnl >= 0 else "#dc2626"
-            raw_reason = str(r.get("exit_reason", "")).replace("_", " ").title()
-            exit_table_rows.append(f"""
-            <tr>
-              <td><strong>{r.get('ticker')}</strong></td>
-              <td>{pd.to_datetime(r.get('entry_date')).strftime('%Y-%m-%d')} &rarr; {pd.to_datetime(r.get('exit_date')).strftime('%Y-%m-%d')}</td>
-              <td>{int(r.get('days_held', 0))}d</td>
-              <td>${float(r.get('entry_price', 0)):.2f} &rarr; ${float(r.get('exit_price', 0)):.2f}</td>
-              <td style="color:{color}; font-weight:700;">{net_pnl:+,.0f} ({ret_pct:+.2f}%)</td>
-              <td><span class="badge-exit">{raw_reason}</span></td>
-            </tr>
-            """)
-        html_parts.append(f"""
-        <div style="margin-top:20px; margin-bottom:28px;">
-          <div style="font-size:13.5px; font-weight:700; color:#334155; margin-bottom:8px;">Recent Model Exits (Vacated Slots in Last 10 Trading Days):</div>
-          <div class="table-responsive" style="margin-top:0;">
-            <table>
-              <thead>
-                <tr>
-                  <th>Ticker</th>
-                  <th>Holding Period</th>
-                  <th>Days Held</th>
-                  <th>Entry &rarr; Exit Price</th>
-                  <th>Realized P&amp;L</th>
-                  <th>Exit Trigger</th>
-                </tr>
-              </thead>
-              <tbody>
-                {''.join(exit_table_rows)}
-              </tbody>
-            </table>
-          </div>
-        </div>
-        """)
-
     html_parts.append(
         "<div class='notice-box'>"
         "<strong>Note on Reference Backtest vs. Real Accounts:</strong> This Card #2 report reflects the <em>algorithmic reference backtest portfolio</em> ($10K compounding starting equity, max 4 positions). For actual brokerage account holdings and personalized trade recommendations, refer to <a href='../daily/family_recommendations.html' style='color:#0284c7; font-weight:700; text-decoration:none;'>Card 4 (Personal Daily Trade Tickets)</a> and <a href='../daily/isabel_recommendations.html' style='color:#0284c7; font-weight:700; text-decoration:none;'>Card 5 (Customer IZ Daily Trade Tickets)</a>."
@@ -2176,7 +2117,6 @@ def write_recent_trades_and_open_positions_report(
 
     # Section 2: Recent 25 Out-of-Sample Closed Trades
     html_parts.append(f"<h2>2. Recent 25 Out-of-Sample Closed Trades ({best_sys.name})</h2>")
-    html_parts.append(_render_trade_legend_html())
 
     recent_25 = best_sys.trades.tail(25) if (best_sys is not None and not best_sys.trades.empty) else pd.DataFrame()
     if not recent_25.empty:
@@ -2241,10 +2181,9 @@ def write_recent_trades_and_open_positions_report(
         html_parts.append("<p>No closed trades recorded.</p>")
 
     html_parts.append(
-        f"<footer>SemiSwing Systematic Trading Engine &bull; Report Created: <strong>{now_ts}</strong></footer>"
+        f"<footer>SemiSwing Systematic Trading Engine &bull; Report Created: {now_ts}</footer>"
         "</div></body></html>"
     )
 
     target_path.write_text("\n".join(html_parts), encoding="utf-8")
-    return target_path
     return target_path
