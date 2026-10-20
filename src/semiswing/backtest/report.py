@@ -1932,8 +1932,8 @@ def generate_reports(
     interactive_html = _build_interactive_dashboard_html(results)
 
     html_parts = [
-        f"<!DOCTYPE html><html><head><meta charset='utf-8'><title>SemiSwing Interactive Backtest Report</title><link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css'><script defer src='https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js'></script><script defer src='https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js' onload='renderMathInElement(document.body, {{delimiters: [{{left: \"$$\", right: \"$$\", display: true}}, {{left: \"$\", right: \"$\", display: false}}], throwOnError: false}});'></script><style>{css}</style></head><body>",
-        "<h1>SemiSwing Walk-Forward Backtest &amp; Interactive Benchmark Report (2022–2026)</h1>",
+        f"<!DOCTYPE html><html><head><meta charset='utf-8'><title>SemiSwing &bull; Interactive Strategy &amp; Benchmark Explorer</title><link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css'><script defer src='https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js'></script><script defer src='https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js' onload='renderMathInElement(document.body, {{delimiters: [{{left: \"$$\", right: \"$$\", display: true}}, {{left: \"$\", right: \"$\", display: false}}], throwOnError: false}});'></script><style>{css}</style></head><body>",
+        "<h1>Interactive Strategy &amp; Benchmark Explorer (2022–2026)</h1>",
         f"<div class='meta'><b>Data Health Score:</b> {health_score}/100 &nbsp;|&nbsp; "
         f"<b>Initial Training Warmup:</b> 2018–2021 &nbsp;|&nbsp; "
         f"<b>Platt OOF Brier:</b> {cal_stats.get('brier_raw', 'N/A')} &rarr; {cal_stats.get('brier_calibrated', 'N/A')} &nbsp;|&nbsp; "
@@ -1965,7 +1965,7 @@ def generate_reports(
     now_ts = pd.Timestamp.now(tz="America/New_York").strftime("%Y-%m-%d %H:%M:%S %Z")
     html_parts.append(
         f"<footer style='margin-top:50px; padding:24px 0 32px 0; border-top:1px solid #cbd5e1; text-align:center; font-size:12px; color:#64748b; font-family:-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,sans-serif;'>"
-        f"SemiSwing Systematic Trading Engine &bull; Report Created: {now_ts}"
+        f"SemiSwing &bull; Semiconductor &amp; AI Momentum Strategy &bull; Report Created: {now_ts}"
         f"</footer>"
     )
     html_parts.append("</body></html>")
@@ -2135,7 +2135,7 @@ def write_recent_trades_and_open_positions_report(
     html_parts = [
         "<!DOCTYPE html>",
         "<html lang='en'><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'>",
-        "<title>SemiSwing: Active Open Positions &amp; Recent Closed Trades</title>",
+        "<title>SemiSwing &bull; Active Open Positions &amp; Recent Closed Trades</title>",
         "<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css'>",
         "<script defer src='https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js'></script>",
         "<script defer src='https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js' onload='renderMathInElement(document.body, {delimiters: [{left: \"$$\", right: \"$$\", display: true}, {left: \"$\", right: \"$\", display: false}], throwOnError: false});'></script>",
@@ -2171,7 +2171,7 @@ def write_recent_trades_and_open_positions_report(
         "</style></head><body>",
         "<div class='container'>",
         "<div style='display:flex; justify-content:space-between; align-items:center;'>",
-        "  <div><div style='font-size:12px; font-weight:700; color:#0284c7; text-transform:uppercase; letter-spacing:1px;'>SemiSwing Quantitative Desk</div>",
+        "  <div><div style='font-size:12px; font-weight:700; color:#0284c7; text-transform:uppercase; letter-spacing:1px;'>SemiSwing</div>",
         "  <h1>Active Open Positions &amp; Recent 25 Closed Trades</h1></div>",
         "  <span class='badge-public'>PUBLIC AUDIT</span>",
         "</div>",
@@ -2342,7 +2342,7 @@ def write_recent_trades_and_open_positions_report(
         html_parts.append("<p>No closed trades recorded.</p>")
 
     html_parts.append(
-        f"<footer>SemiSwing Systematic Trading Engine &bull; Report Created: {now_ts}</footer>"
+        f"<footer>SemiSwing &bull; Semiconductor &amp; AI Momentum Strategy &bull; Report Created: {now_ts}</footer>"
         "</div></body></html>"
     )
 

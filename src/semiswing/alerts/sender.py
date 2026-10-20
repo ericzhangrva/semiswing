@@ -130,7 +130,7 @@ def send_resend_email(
         log_alert_locally(f"to='{recipient_email}'", "email_resend", "BLOCKED_JHU_ADDRESS")
         return False
 
-    from_addr = os.getenv("RESEND_FROM", "SemiSwing Desk <onboarding@resend.dev>").strip()
+    from_addr = os.getenv("RESEND_FROM", "SemiSwing <onboarding@resend.dev>").strip()
     payload = {
         "from": from_addr,
         "to": [recipient_email],
@@ -218,7 +218,7 @@ def send_html_email(
 
     msg = MIMEMultipart("alternative")
     msg["Subject"] = subject
-    msg["From"] = f"SemiSwing Portfolio Desk <{smtp_user}>"
+    msg["From"] = f"SemiSwing <{smtp_user}>"
     msg["To"] = target_email
 
     fallback_text = text_body or "Please view this email in an HTML-capable email client."

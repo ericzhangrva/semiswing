@@ -1176,7 +1176,7 @@ def _render_single_plan_body(plan: DailyRecommendationPlan) -> str:
               <tr>
                 <td align="left" valign="top">
                   <div style="font-size:11px; text-transform:uppercase; letter-spacing:1px; color:#38bdf8; font-weight:700;">
-                    SemiSwing Daily Portfolio Desk
+                    SemiSwing
                   </div>
                   <div style="font-size:22px; font-weight:800; margin-top:4px; color:#f8fafc;">
                     Daily Trade Ticket &mdash; {plan.as_of_date}
@@ -1255,7 +1255,7 @@ def _render_single_plan_body(plan: DailyRecommendationPlan) -> str:
 
           <!-- Footer -->
           <div style="text-align:center; font-size:11px; color:#64748b; padding:12px 0 24px 0; border-top:1px solid #cbd5e1;">
-            SemiSwing Unleveraged AI &amp; Semiconductor Swing System &bull;
+            SemiSwing &bull; Semiconductor &amp; AI Momentum Strategy &bull;
             SMH ${plan.smh_close:.2f} (EMA100 ${plan.smh_ema100:.2f} / EMA200 ${plan.smh_ema200:.2f}) &bull;
             3M T-Bill Cash Yield: {plan.cash_rate_apy_pct:.2f}% APY
           </div>
@@ -1338,7 +1338,7 @@ def render_multi_portfolio_inner_html(plans: Dict[str, DailyRecommendationPlan],
           </div>
           {panels_html}
           <div style="max-width:680px; width:100%; text-align:center; padding:20px 0 28px 0; font-size:12px; color:#64748b; border-top:1px solid #1e293b; margin-top:20px;">
-            SemiSwing Portfolio Desk &bull; Report Created: {created_ts}
+            SemiSwing &bull; Semiconductor &amp; AI Momentum Strategy &bull; Report Created: {created_ts}
           </div>
         </td>
       </tr>
@@ -1395,12 +1395,12 @@ def encrypt_html_with_passcode(
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SemiSwing Protected Trade Ticket ({as_of_date})</title>
+  <title>SemiSwing &bull; Protected Daily Trade Tickets ({as_of_date})</title>
 </head>
 <body style="margin:0; padding:20px 12px; background-color:#0f172a; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color:#f8fafc;">
   <div id="lock-screen" style="max-width:420px; margin:70px auto; background:#1e293b; border:1px solid #334155; border-radius:14px; padding:28px 24px; text-align:center; box-shadow:0 20px 25px -5px rgba(0,0,0,0.4);">
     <div style="font-size:11px; text-transform:uppercase; letter-spacing:1.2px; color:#38bdf8; font-weight:700;">
-      SemiSwing Portfolio Vault
+      SemiSwing &bull; Secure Authentication
     </div>
     <h1 style="font-size:21px; font-weight:800; margin:8px 0 6px 0; color:#f8fafc;">
       Daily Trade Tickets ({as_of_date})
@@ -1653,7 +1653,7 @@ def render_starter_10k_html(plan: DailyRecommendationPlan, created_ts: str | Non
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SemiSwing $10K Starter Portfolio &amp; Trade Allocation Guide ({plan.as_of_date})</title>
+  <title>SemiSwing &bull; $10K Starter Portfolio Allocation Guide ({plan.as_of_date})</title>
 </head>
 <body style="margin:0; padding:20px 12px; background-color:#f1f5f9; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color:#0f172a;">
   <table width="100%" cellpadding="0" cellspacing="0" border="0">
@@ -1664,7 +1664,7 @@ def render_starter_10k_html(plan: DailyRecommendationPlan, created_ts: str | Non
           <div style="background:#0f172a; border:1px solid #1e293b; border-radius:12px; padding:12px 18px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap;">
             <div>
               <div style="font-size:10px; text-transform:uppercase; letter-spacing:1px; color:#38bdf8; font-weight:700;">
-                SemiSwing Public Reference Desk
+                SemiSwing
               </div>
               <div style="font-size:15px; font-weight:800; color:#f8fafc; margin-top:2px;">
                 $10K Starter Portfolio &bull; Clean Cash Allocation Guide
@@ -1682,7 +1682,7 @@ def render_starter_10k_html(plan: DailyRecommendationPlan, created_ts: str | Non
 
         <!-- Footer -->
         <div style="max-width:680px; width:100%; text-align:center; padding:20px 0 28px 0; font-size:12px; color:#64748b; border-top:1px solid #cbd5e1; margin-top:20px;">
-          SemiSwing Public Model Desk &bull; Report Created: {created_ts}
+          SemiSwing &bull; Semiconductor &amp; AI Momentum Strategy &bull; Report Created: {created_ts}
         </div>
       </td>
     </tr>

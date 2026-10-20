@@ -411,12 +411,12 @@ def _write_cloudflare_pages_index(as_of_date: str, regime_on: bool, num_portfoli
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SemiSwing Cloud Dashboard ({as_of_date})</title>
+  <title>SemiSwing Portfolio &amp; Trading Hub ({as_of_date})</title>
 </head>
 <body style="margin:0; padding:32px 16px; background:#0f172a; color:#f8fafc; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
   <div style="max-width:720px; margin:0 auto;">
     <div style="font-size:12px; text-transform:uppercase; letter-spacing:1px; color:#38bdf8; font-weight:700;">
-      SemiSwing Automated Trading Desk
+      SemiSwing Portfolio &amp; Trading Hub
     </div>
     <h1 style="margin:6px 0 8px 0; font-size:26px;">AI &amp; Semiconductor Swing Dashboard</h1>
     <p style="color:#94a3b8; font-size:14px; margin-top:0;">
@@ -483,7 +483,7 @@ def _write_cloudflare_pages_index(as_of_date: str, regime_on: bool, num_portfoli
     </div>
 
     <div style="margin-top:36px; padding-top:16px; border-top:1px solid #334155; text-align:center; font-size:12px; color:#64748b;">
-      SemiSwing Automated Trading Desk &bull; Report Created: {now_ts}
+      SemiSwing &bull; Semiconductor &amp; AI Momentum Strategy &bull; Report Created: {now_ts}
     </div>
   </div>
 </body>
