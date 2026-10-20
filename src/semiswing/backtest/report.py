@@ -1427,6 +1427,180 @@ def _build_institutional_gates(
     return pd.DataFrame(gates), gates, all_pass
 
 
+def _format_yearly_table_df(df: pd.DataFrame) -> pd.DataFrame:
+    """Format yearly breakdown table with professional Title Case headers and clean financial formats."""
+    if df.empty:
+        return df
+    records = []
+    for _, r in df.iterrows():
+        yr = int(r["year"])
+        tot_ret = float(r.get("total_return_pct", 0.0))
+        cagr = float(r.get("cagr_pct", tot_ret))
+        max_dd = float(r.get("max_dd_pct", 0.0))
+        vol = float(r.get("vol_pct", r.get("vol", 0.0)))
+        records.append({
+            "Year": str(yr),
+            "Total Return (%)": f"{tot_ret:+.2f}%",
+            "CAGR (%)": f"{cagr:+.2f}%",
+            "Ann. Vol (%)": f"{vol:.1f}%" if vol > 0 else "N/A",
+            "Sharpe": f"{float(r.get('sharpe', 0.0)):.2f}",
+            "Sortino": f"{float(r.get('sortino', 0.0)):.2f}",
+            "Max Drawdown (%)": f"-{abs(max_dd):.2f}%",
+            "100% Cash Days (%)": f"{float(r.get('cash_days_pct', 0.0)):.1f}%",
+            "Trades": int(r.get("trades", 0)),
+            "Win Rate (%)": f"{float(r.get('win_rate_pct', 0.0)):.1f}%",
+            "Profit Factor": f"{float(r.get('profit_factor', 0.0)):.2f}",
+            "Avg R": f"{float(r.get('avg_r', 0.0)):+.2f}R",
+        })
+    return pd.DataFrame(records)
+
+
+def _format_trade_blotter_df(df: pd.DataFrame) -> pd.DataFrame:
+    """Format closed trades log into an institutional trade blotter with zero internal database field leaks."""
+    if df.empty:
+        return df
+    records = []
+    for _, r in df.iterrows():
+        ret_pct = float(r.get("return_pct", 0.0))
+        net_pnl = float(r.get("net_pnl", 0.0))
+        r_mult = float(r.get("r_multiple", 0.0))
+        raw_reason = str(r.get("exit_reason", "")).replace("_", " ").title()
+        sh = float(r.get("shares", 0.0))
+        sh_str = f"{sh:,.0f}" if sh.is_integer() else f"{sh:,.1f}"
+        notional = float(r.get("notional", 0.0))
+        records.append({
+            "Ticker": str(r.get("ticker", "")),
+            "Tier": str(r.get("tier", "MEDIUM")),
+            "Shares": sh_str,
+            "Position ($)": f"${notional:,.2f}",
+            "Entry Date": pd.to_datetime(r.get("entry_date")).strftime("%Y-%m-%d"),
+            "Exit Date": pd.to_datetime(r.get("exit_date")).strftime("%Y-%m-%d"),
+            "Days Held": int(r.get("days_held", 0)),
+            "Entry ($)": f"${float(r.get('entry_price', 0.0)):.2f}",
+            "Exit ($)": f"${float(r.get('exit_price', 0.0)):.2f}",
+            "Initial Stop ($)": f"${float(r.get('initial_stop', 0.0)):.2f}",
+            "Return (%)": f"{ret_pct:+.2f}%",
+            "Net P&L ($)": f"{net_pnl:+,.0f}",
+            "R-Multiple": f"{r_mult:+.2f}R",
+            "Exit Reason": raw_reason,
+            "Win Prob": f"{float(r.get('entry_prob', 0.0)) * 100:.1f}%",
+            "Sizing Scalar": f"{float(r.get('size_scalar', 1.0)):.2f}x",
+            "Top Model Drivers": str(r.get("shap_summary", "N/A")),
+        })
+    return pd.DataFrame(records)
+
+
+def _decorate_html_table(html_str: str) -> str:
+    """Add mouse-over tooltips to whitelisted metrics in table headers where mouse-over is on the text."""
+    for col, tip in WHITELIST_METRIC_TIPS.items():
+        pattern = re.compile(rf"<th>\s*{re.escape(col)}\s*</th>", re.IGNORECASE)
+        html_str = pattern.sub(f"<th>{_render_metric_tooltip(col, tip)}</th>", html_str)
+    return html_str
+
+
+def _df_to_md(df: pd.DataFrame) -> str:
+    if df.empty:
+        return "_No data_"
+    col_name_map = {
+        "total_return_pct": "Total Return (%)",
+        "cagr_pct": "CAGR (%)",
+        "sharpe": "Sharpe",
+        "deflated_sharpe_prob": "Deflated SR Prob",
+        "sortino": "Sortino",
+        "max_dd_pct": "Max Drawdown (%)",
+        "profit_factor": "Profit Factor",
+        "win_rate_pct": "Win Rate (%)",
+        "avg_r": "Avg R",
+        "cash_days_pct": "100% Cash Days (%)",
+        "Gate": "Institutional Gate",
+        "Value": "Realized Metric",
+        "Status": "Gate Status",
+    }
+    cols = [col_name_map.get(str(c), str(c).replace("_", " ")) for c in df.columns]
+    header = "| " + " | ".join(cols) + " |"
+    sep = "| " + " | ".join(["---"] * len(cols)) + " |"
+    body = []
+    for _, r in df.iterrows():
+        row_vals = []
+        for c in df.columns:
+            val_str = str(r[c]).replace("|", ";").replace("Adaptive L_t", "Adaptive `L_t`")
+            if ("_" in val_str or "=" in val_str) and not val_str.startswith("`"):
+                val_str = f"`{val_str}`"
+            row_vals.append(val_str)
+        body.append("| " + " | ".join(row_vals) + " |")
+    return "\n".join([header, sep] + body)
+
+
+def _render_trade_legend_html() -> str:
+    return """
+    <div style="background:#ffffff; border:1px solid #cbd5e1; border-left:5px solid #2563eb; border-radius:8px; padding:16px 20px; margin-bottom:20px; font-size:13px; line-height:1.55; color:#334155;">
+      <div style="font-weight:700; color:#0f172a; margin-bottom:8px; font-size:14px;">Section 8 Trade Blotter Legend &amp; Quantitative Diagnostics</div>
+      <div style="margin-bottom:6px;">
+        <strong>Tier:</strong>
+        <span style="display:inline-block; padding:1px 6px; background:#dcfce7; color:#166534; border-radius:4px; font-size:11px; font-weight:700;">CONSENSUS</span> Dual-engine alignment (both Baseline OLS trend significance t_norm &ge; 1.8 and ML classifier agree; 1.0% risk). &nbsp;
+        <span style="display:inline-block; padding:1px 6px; background:#e0f2fe; color:#0369a1; border-radius:4px; font-size:11px; font-weight:700;">HIGH</span> Standalone ML qualification with top-quintile residual momentum (1.0% risk). &nbsp;
+        <span style="display:inline-block; padding:1px 6px; background:#f1f5f9; color:#475569; border-radius:4px; font-size:11px; font-weight:700;">MEDIUM</span> Baseline trend qualification or secondary ML score (0.75% conservative risk). &nbsp;
+        <span style="display:inline-block; padding:1px 6px; background:#fff1f2; color:#be123c; border-radius:4px; font-size:11px; font-weight:700;">LOW</span> Lower-conviction meta-labeling score (S_i,t &lt; 0.85; 0.50% risk or conservative bottom tier).
+      </div>
+      <div style="margin-bottom:6px;">
+        <strong>Shares &amp; Position ($):</strong> Dynamically calculated via Volatility-Parity / Fixed-Fractional Risk Sizing: <code>Shares = (Portfolio Equity &times; Base Risk &times; M_t &times; S_i,t) / Stop Distance</code>. Each trade risks a fixed fraction of total portfolio equity at execution, so position dollar allocations and share counts vary according to individual stock ATR volatility, tier conviction, meta-labeling multiplier S_i,t, and compounding portfolio equity over time.
+      </div>
+      <div style="margin-bottom:6px;">
+        <strong>Partial Profit Taking (TP1) &amp; Blended Returns:</strong> When Take Profit 1 (TP1) triggers, partial shares are sold and stop is moved to breakeven. <code>Exit ($)</code> reports the final runner share exit price, while <code>Return (%)</code> and <code>R Multiple</code> reflect the blended net performance across the entire position.
+      </div>
+      <div style="margin-bottom:6px;">
+        <strong>Win Prob:</strong> Platt-calibrated posterior probability P(Hits +1.5R target before Hard Stop) produced out-of-fold by shallow LightGBM trees. With a 1.5:1 reward-to-risk ratio, any probability P &gt; 40.0% yields positive mathematical expectancy.
+      </div>
+      <div style="margin-bottom:6px;">
+        <strong>Sizing Scalar:</strong> Continuous meta-labeling position sizing multiplier S_i,t &isin; [0.50, 1.50] (L&oacute;pez de Prado framework). Maps predicted win probability into historical out-of-fold percentile rank: S_i,t = 0.50 + Rank_OOF(p). Conviction scales position sizes dynamically between 0.50x and 1.50x without expanding total risk caps.
+      </div>
+      <div>
+        <strong>Top Model Drivers (SHAP):</strong> Single-feature marginal contributions detailing model conviction:
+        <ul style="margin: 6px 0 0 18px; padding: 0; line-height: 1.55;">
+          <li><code>sector_rs</code>: 20-day relative strength of SMH vs SPY: Delta%20d(SMH) - Delta%20d(SPY). Positive values confirm semiconductor sector leadership.</li>
+          <li><code>vix_ts</code>: Volatility term structure ratio (VIX / VIX3M). Values &lt; 1.0 confirm normal contango (calm regime); &ge; 1.0 indicates backwardation (near-term panic).</li>
+          <li><code>skew_idx</code>: CBOE SKEW Index 60-day rolling z-score (min_periods=20). Elevated values (&gt; +1.5) indicate institutional tail-risk hedging and out-of-the-money put demand.</li>
+          <li><code>resid_mom_60</code>: 60-day idiosyncratic residual momentum relative to SMH after stripping market beta. Confirms stock-specific momentum decoupled from sector drift.</li>
+          <li><code>resid_mom_20</code>: 20-day idiosyncratic residual momentum relative to SMH after stripping market beta.</li>
+          <li><code>rs_rank</code>: Cross-sectional percentile rank [0.0, 1.0] of 20-day residual momentum across the active tradeable universe.</li>
+          <li><code>vol_compress</code>: Realized volatility compression ratio (RV_10d / RV_60d). Values &lt; 0.70 indicate price coiling prior to directional breakout.</li>
+          <li><code>vxn_squeeze_vel</code>: 252-day rolling z-score of 5-day rate of change in Nasdaq Volatility Index (VXN). Rapid drops detect post-panic volatility compression.</li>
+          <li><code>slope_r2_20d</code>: Coefficient of determination (R^2 in [0, 1]) from 20-day log-price linear regression measuring trend smoothness.</li>
+          <li><code>slope_t_norm</code>: Adaptive window L_t sample-size normalized OLS t-statistic measuring directional trend conviction.</li>
+          <li><code>slope_accel</code>: Multi-scale slope acceleration: (beta_10d - beta_40d) / sigma_20 normalized by 20-day return volatility.</li>
+          <li><code>ema20_slope</code>: 5-day slope of 20-day exponential moving average in ATR units: (EMA20_t / EMA20_{t-5} - 1) / ATR%_14.</li>
+          <li><code>ema50_slope</code>: 10-day slope of 50-day exponential moving average in ATR units: (EMA50_t / EMA50_{t-10} - 1) / ATR%_14.</li>
+        </ul>
+      </div>
+    </div>
+    """
+
+
+def _render_trade_legend_md() -> str:
+    return (
+        "> **Section 8 Trade Blotter Legend & Quantitative Diagnostics**\n"
+        "> - **Shares & Position ($):** Dynamically calculated via Volatility-Parity / Fixed-Fractional Risk Sizing: $\\text{Shares} = (\\text{Portfolio Equity} \\times \\text{Base Risk} \\times M_t \\times S_{i,t}) / \\text{Stop Distance}$. Each trade risks a fixed fraction of portfolio equity, so share counts and dollar allocations vary based on stock ATR volatility, tier conviction, meta-labeling multiplier $S_{i,t}$, and compounding portfolio equity over time.\n"
+        "> - **Partial Exits (TP1) & Blended Returns:** When Take Profit 1 triggers, partial shares are sold and stop ratchets to breakeven. `Exit ($)` reports final runner exit; `Return (%)` is the blended net return.\n"
+        "> - **Tier:** `CONSENSUS` (dual-engine alignment, 1.0% risk), `HIGH` (standalone ML top-quintile RS, 1.0% risk), `MEDIUM` (conservative 0.75% risk), `LOW` (lower-conviction meta-labeling score $S_{i,t} < 0.85$, 0.50% risk).\n"
+        "> - **Win Prob:** Platt-calibrated out-of-fold probability $P(\\text{TP1 before Stop})$. Break-even threshold is $> 40.0\\%$ with a 1.5:1 payoff ratio.\n"
+        "> - **Sizing Scalar:** Meta-labeling sizing multiplier $S_{i,t} = 0.50 + \\text{Rank}_{\\text{OOF}}(\\hat{p}) \\in [0.50, 1.50]$ scaling allocation by model confidence.\n"
+        "> - **Top Model Drivers (SHAP):** Single-feature marginal attributions detailing model conviction:\n"
+        ">   - `sector_rs`: 20-day relative strength of SMH vs SPY. Positive values confirm semiconductor sector leadership.\n"
+        ">   - `vix_ts`: Volatility term structure ratio (VIX / VIX3M). Values $< 1.0$ confirm normal contango (calm regime); $\\ge 1.0$ indicates backwardation.\n"
+        ">   - `skew_idx`: CBOE SKEW Index 60-day rolling z-score. Elevated values ($> +1.5$) indicate institutional tail-risk put demand.\n"
+        ">   - `resid_mom_60`: 60-day idiosyncratic residual momentum relative to SMH after stripping market beta.\n"
+        ">   - `resid_mom_20`: 20-day idiosyncratic residual momentum relative to SMH after stripping market beta.\n"
+        ">   - `rs_rank`: Cross-sectional percentile rank ($[0.0, 1.0]$) of 20-day residual momentum across the universe.\n"
+        ">   - `vol_compress`: Realized volatility compression ratio (RV_10d / RV_60d). Values $< 0.70$ indicate price coiling prior to breakout.\n"
+        ">   - `vxn_squeeze_vel`: 252-day rolling z-score of 5-day change in Nasdaq Volatility Index (VXN).\n"
+        ">   - `slope_r2_20d`: Coefficient of determination ($R^2 \\in [0, 1]$) from 20-day log-price regression measuring trend smoothness.\n"
+        ">   - `slope_t_norm`: Adaptive window $L_t$ normalized OLS $t$-statistic measuring directional trend conviction.\n"
+        ">   - `slope_accel`: Multi-scale slope acceleration: $(\\beta_{10d} - \\beta_{40d}) / \\sigma_{20}$.\n"
+        ">   - `ema20_slope`: 5-day slope of 20-day EMA in ATR units.\n"
+        ">   - `ema50_slope`: 10-day slope of 50-day EMA in ATR units."
+    )
+
+
 def generate_reports(
     results: Dict[str, BacktestResult],
     cal_stats: Dict[str, float],
@@ -1489,105 +1663,7 @@ def generate_reports(
     }
     manifest_path.write_text(json.dumps(manifest_data, indent=2), encoding="utf-8")
 
-    def _format_yearly_table_df(df: pd.DataFrame) -> pd.DataFrame:
-        """Format yearly breakdown table with professional Title Case headers and clean financial formats."""
-        if df.empty:
-            return df
-        records = []
-        for _, r in df.iterrows():
-            yr = int(r["year"])
-            tot_ret = float(r.get("total_return_pct", 0.0))
-            cagr = float(r.get("cagr_pct", tot_ret))
-            max_dd = float(r.get("max_dd_pct", 0.0))
-            vol = float(r.get("vol_pct", r.get("vol", 0.0)))
-            records.append({
-                "Year": str(yr),
-                "Total Return (%)": f"{tot_ret:+.2f}%",
-                "CAGR (%)": f"{cagr:+.2f}%",
-                "Ann. Vol (%)": f"{vol:.1f}%" if vol > 0 else "N/A",
-                "Sharpe": f"{float(r.get('sharpe', 0.0)):.2f}",
-                "Sortino": f"{float(r.get('sortino', 0.0)):.2f}",
-                "Max Drawdown (%)": f"-{abs(max_dd):.2f}%",
-                "100% Cash Days (%)": f"{float(r.get('cash_days_pct', 0.0)):.1f}%",
-                "Trades": int(r.get("trades", 0)),
-                "Win Rate (%)": f"{float(r.get('win_rate_pct', 0.0)):.1f}%",
-                "Profit Factor": f"{float(r.get('profit_factor', 0.0)):.2f}",
-                "Avg R": f"{float(r.get('avg_r', 0.0)):+.2f}R",
-            })
-        return pd.DataFrame(records)
 
-    def _format_trade_blotter_df(df: pd.DataFrame) -> pd.DataFrame:
-        """Format closed trades log into an institutional trade blotter with zero internal database field leaks."""
-        if df.empty:
-            return df
-        records = []
-        for _, r in df.iterrows():
-            ret_pct = float(r.get("return_pct", 0.0))
-            net_pnl = float(r.get("net_pnl", 0.0))
-            r_mult = float(r.get("r_multiple", 0.0))
-            raw_reason = str(r.get("exit_reason", "")).replace("_", " ").title()
-            sh = float(r.get("shares", 0.0))
-            sh_str = f"{sh:,.0f}" if sh.is_integer() else f"{sh:,.1f}"
-            notional = float(r.get("notional", 0.0))
-            records.append({
-                "Ticker": str(r.get("ticker", "")),
-                "Tier": str(r.get("tier", "MEDIUM")),
-                "Shares": sh_str,
-                "Position ($)": f"${notional:,.2f}",
-                "Entry Date": pd.to_datetime(r.get("entry_date")).strftime("%Y-%m-%d"),
-                "Exit Date": pd.to_datetime(r.get("exit_date")).strftime("%Y-%m-%d"),
-                "Days Held": int(r.get("days_held", 0)),
-                "Entry ($)": f"${float(r.get('entry_price', 0.0)):.2f}",
-                "Exit ($)": f"${float(r.get('exit_price', 0.0)):.2f}",
-                "Initial Stop ($)": f"${float(r.get('initial_stop', 0.0)):.2f}",
-                "Return (%)": f"{ret_pct:+.2f}%",
-                "Net P&L ($)": f"{net_pnl:+,.0f}",
-                "R-Multiple": f"{r_mult:+.2f}R",
-                "Exit Reason": raw_reason,
-                "Win Prob": f"{float(r.get('entry_prob', 0.0)) * 100:.1f}%",
-                "Sizing Scalar": f"{float(r.get('size_scalar', 1.0)):.2f}x",
-                "Top Model Drivers": str(r.get("shap_summary", "N/A")),
-            })
-        return pd.DataFrame(records)
-
-    def _decorate_html_table(html_str: str) -> str:
-        """Add mouse-over tooltips to whitelisted metrics in table headers where mouse-over is on the text."""
-        for col, tip in WHITELIST_METRIC_TIPS.items():
-            pattern = re.compile(rf"<th>\s*{re.escape(col)}\s*</th>", re.IGNORECASE)
-            html_str = pattern.sub(f"<th>{_render_metric_tooltip(col, tip)}</th>", html_str)
-        return html_str
-
-    def _df_to_md(df: pd.DataFrame) -> str:
-        if df.empty:
-            return "_No data_"
-        col_name_map = {
-            "total_return_pct": "Total Return (%)",
-            "cagr_pct": "CAGR (%)",
-            "sharpe": "Sharpe",
-            "deflated_sharpe_prob": "Deflated SR Prob",
-            "sortino": "Sortino",
-            "max_dd_pct": "Max Drawdown (%)",
-            "profit_factor": "Profit Factor",
-            "win_rate_pct": "Win Rate (%)",
-            "avg_r": "Avg R",
-            "cash_days_pct": "100% Cash Days (%)",
-            "Gate": "Institutional Gate",
-            "Value": "Realized Metric",
-            "Status": "Gate Status",
-        }
-        cols = [col_name_map.get(str(c), str(c).replace("_", " ")) for c in df.columns]
-        header = "| " + " | ".join(cols) + " |"
-        sep = "| " + " | ".join(["---"] * len(cols)) + " |"
-        body = []
-        for _, r in df.iterrows():
-            row_vals = []
-            for c in df.columns:
-                val_str = str(r[c]).replace("|", ";").replace("Adaptive L_t", "Adaptive `L_t`")
-                if ("_" in val_str or "=" in val_str) and not val_str.startswith("`"):
-                    val_str = f"`{val_str}`"
-                row_vals.append(val_str)
-            body.append("| " + " | ".join(row_vals) + " |")
-        return "\n".join([header, sep] + body)
 
     md_lines = [
         "# SemiSwing Walk-Forward Backtest Report (2022–2026 Out-of-Sample)",
@@ -1634,74 +1710,6 @@ def generate_reports(
         _df_to_md(df_ai),
         "",
     ]
-
-    def _render_trade_legend_html() -> str:
-        return """
-        <div style="background:#ffffff; border:1px solid #cbd5e1; border-left:5px solid #2563eb; border-radius:8px; padding:16px 20px; margin-bottom:20px; font-size:13px; line-height:1.55; color:#334155;">
-          <div style="font-weight:700; color:#0f172a; margin-bottom:8px; font-size:14px;">Section 8 Trade Blotter Legend &amp; Quantitative Diagnostics</div>
-          <div style="margin-bottom:6px;">
-            <strong>Tier:</strong>
-            <span style="display:inline-block; padding:1px 6px; background:#dcfce7; color:#166534; border-radius:4px; font-size:11px; font-weight:700;">CONSENSUS</span> Dual-engine alignment (both Baseline OLS trend significance t_norm &ge; 1.8 and ML classifier agree; 1.0% risk). &nbsp;
-            <span style="display:inline-block; padding:1px 6px; background:#e0f2fe; color:#0369a1; border-radius:4px; font-size:11px; font-weight:700;">HIGH</span> Standalone ML qualification with top-quintile residual momentum (1.0% risk). &nbsp;
-            <span style="display:inline-block; padding:1px 6px; background:#f1f5f9; color:#475569; border-radius:4px; font-size:11px; font-weight:700;">MEDIUM</span> Baseline trend qualification or secondary ML score (0.75% conservative risk). &nbsp;
-            <span style="display:inline-block; padding:1px 6px; background:#fff1f2; color:#be123c; border-radius:4px; font-size:11px; font-weight:700;">LOW</span> Lower-conviction meta-labeling score (S_i,t &lt; 0.85; 0.50% risk or conservative bottom tier).
-          </div>
-          <div style="margin-bottom:6px;">
-            <strong>Shares &amp; Position ($):</strong> Dynamically calculated via Volatility-Parity / Fixed-Fractional Risk Sizing: <code>Shares = (Portfolio Equity &times; Base Risk &times; M_t &times; S_i,t) / Stop Distance</code>. Each trade risks a fixed fraction of total portfolio equity at execution, so position dollar allocations and share counts vary according to individual stock ATR volatility, tier conviction, meta-labeling multiplier S_i,t, and compounding portfolio equity over time.
-          </div>
-          <div style="margin-bottom:6px;">
-            <strong>Partial Profit Taking (TP1) &amp; Blended Returns:</strong> When Take Profit 1 (TP1) triggers, partial shares are sold and stop is moved to breakeven. <code>Exit ($)</code> reports the final runner share exit price, while <code>Return (%)</code> and <code>R Multiple</code> reflect the blended net performance across the entire position.
-          </div>
-          <div style="margin-bottom:6px;">
-            <strong>Win Prob:</strong> Platt-calibrated posterior probability P(Hits +1.5R target before Hard Stop) produced out-of-fold by shallow LightGBM trees. With a 1.5:1 reward-to-risk ratio, any probability P &gt; 40.0% yields positive mathematical expectancy.
-          </div>
-          <div style="margin-bottom:6px;">
-            <strong>Sizing Scalar:</strong> Continuous meta-labeling position sizing multiplier S_i,t &isin; [0.50, 1.50] (L&oacute;pez de Prado framework). Maps predicted win probability into historical out-of-fold percentile rank: S_i,t = 0.50 + Rank_OOF(p). Conviction scales position sizes dynamically between 0.50x and 1.50x without expanding total risk caps.
-          </div>
-          <div>
-            <strong>Top Model Drivers (SHAP):</strong> Single-feature marginal contributions detailing model conviction:
-            <ul style="margin: 6px 0 0 18px; padding: 0; line-height: 1.55;">
-              <li><code>sector_rs</code>: 20-day relative strength of SMH vs SPY: Delta%20d(SMH) - Delta%20d(SPY). Positive values confirm semiconductor sector leadership.</li>
-              <li><code>vix_ts</code>: Volatility term structure ratio (VIX / VIX3M). Values &lt; 1.0 confirm normal contango (calm regime); &ge; 1.0 indicates backwardation (near-term panic).</li>
-              <li><code>skew_idx</code>: CBOE SKEW Index 60-day rolling z-score (min_periods=20). Elevated values (&gt; +1.5) indicate institutional tail-risk hedging and out-of-the-money put demand.</li>
-              <li><code>resid_mom_60</code>: 60-day idiosyncratic residual momentum relative to SMH after stripping market beta. Confirms stock-specific momentum decoupled from sector drift.</li>
-              <li><code>resid_mom_20</code>: 20-day idiosyncratic residual momentum relative to SMH after stripping market beta.</li>
-              <li><code>rs_rank</code>: Cross-sectional percentile rank [0.0, 1.0] of 20-day residual momentum across the active tradeable universe.</li>
-              <li><code>vol_compress</code>: Realized volatility compression ratio (RV_10d / RV_60d). Values &lt; 0.70 indicate price coiling prior to directional breakout.</li>
-              <li><code>vxn_squeeze_vel</code>: 252-day rolling z-score of 5-day rate of change in Nasdaq Volatility Index (VXN). Rapid drops detect post-panic volatility compression.</li>
-              <li><code>slope_r2_20d</code>: Coefficient of determination (R^2 in [0, 1]) from 20-day log-price linear regression measuring trend smoothness.</li>
-              <li><code>slope_t_norm</code>: Adaptive window L_t sample-size normalized OLS t-statistic measuring directional trend conviction.</li>
-              <li><code>slope_accel</code>: Multi-scale slope acceleration: (beta_10d - beta_40d) / sigma_20 normalized by 20-day return volatility.</li>
-              <li><code>ema20_slope</code>: 5-day slope of 20-day exponential moving average in ATR units: (EMA20_t / EMA20_{t-5} - 1) / ATR%_14.</li>
-              <li><code>ema50_slope</code>: 10-day slope of 50-day exponential moving average in ATR units: (EMA50_t / EMA50_{t-10} - 1) / ATR%_14.</li>
-            </ul>
-          </div>
-        </div>
-        """
-
-    def _render_trade_legend_md() -> str:
-        return (
-            "> **Section 8 Trade Blotter Legend & Quantitative Diagnostics**\n"
-            "> - **Shares & Position ($):** Dynamically calculated via Volatility-Parity / Fixed-Fractional Risk Sizing: $\\text{Shares} = (\\text{Portfolio Equity} \\times \\text{Base Risk} \\times M_t \\times S_{i,t}) / \\text{Stop Distance}$. Each trade risks a fixed fraction of portfolio equity, so share counts and dollar allocations vary based on stock ATR volatility, tier conviction, meta-labeling multiplier $S_{i,t}$, and compounding portfolio equity over time.\n"
-            "> - **Partial Exits (TP1) & Blended Returns:** When Take Profit 1 triggers, partial shares are sold and stop ratchets to breakeven. `Exit ($)` reports final runner exit; `Return (%)` is the blended net return.\n"
-            "> - **Tier:** `CONSENSUS` (dual-engine alignment, 1.0% risk), `HIGH` (standalone ML top-quintile RS, 1.0% risk), `MEDIUM` (conservative 0.75% risk), `LOW` (lower-conviction meta-labeling score $S_{i,t} < 0.85$, 0.50% risk).\n"
-            "> - **Win Prob:** Platt-calibrated out-of-fold probability $P(\\text{TP1 before Stop})$. Break-even threshold is $> 40.0\\%$ with a 1.5:1 payoff ratio.\n"
-            "> - **Sizing Scalar:** Meta-labeling sizing multiplier $S_{i,t} = 0.50 + \\text{Rank}_{\\text{OOF}}(\\hat{p}) \\in [0.50, 1.50]$ scaling allocation by model confidence.\n"
-            "> - **Top Model Drivers (SHAP):** Single-feature marginal attributions detailing model conviction:\n"
-            ">   - `sector_rs`: 20-day relative strength of SMH vs SPY. Positive values confirm semiconductor sector leadership.\n"
-            ">   - `vix_ts`: Volatility term structure ratio (VIX / VIX3M). Values $< 1.0$ confirm normal contango (calm regime); $\\ge 1.0$ indicates backwardation.\n"
-            ">   - `skew_idx`: CBOE SKEW Index 60-day rolling z-score. Elevated values ($> +1.5$) indicate institutional tail-risk put demand.\n"
-            ">   - `resid_mom_60`: 60-day idiosyncratic residual momentum relative to SMH after stripping market beta.\n"
-            ">   - `resid_mom_20`: 20-day idiosyncratic residual momentum relative to SMH after stripping market beta.\n"
-            ">   - `rs_rank`: Cross-sectional percentile rank ($[0.0, 1.0]$) of 20-day residual momentum across the universe.\n"
-            ">   - `vol_compress`: Realized volatility compression ratio (RV_10d / RV_60d). Values $< 0.70$ indicate price coiling prior to breakout.\n"
-            ">   - `vxn_squeeze_vel`: 252-day rolling z-score of 5-day change in Nasdaq Volatility Index (VXN).\n"
-            ">   - `slope_r2_20d`: Coefficient of determination ($R^2 \\in [0, 1]$) from 20-day log-price regression measuring trend smoothness.\n"
-            ">   - `slope_t_norm`: Adaptive window $L_t$ normalized OLS $t$-statistic measuring directional trend conviction.\n"
-            ">   - `slope_accel`: Multi-scale slope acceleration: $(\\beta_{10d} - \\beta_{40d}) / \\sigma_{20}$.\n"
-            ">   - `ema20_slope`: 5-day slope of 20-day EMA in ATR units.\n"
-            ">   - `ema50_slope`: 10-day slope of 50-day EMA in ATR units."
-        )
 
     if base_res is not None and not base_res.yearly_table.empty:
         formatted_base_yr = _format_yearly_table_df(base_res.yearly_table)
@@ -1946,3 +1954,128 @@ def generate_reports(
     html_path.write_text("\n".join(html_parts), encoding="utf-8")
 
     return html_path, md_path
+
+
+def write_recent_trades_and_open_positions_report(
+    best_sys: BacktestResult,
+    panel: pd.DataFrame,
+    out_path: Path | None = None,
+) -> Path:
+    """Generate a standalone public HTML report for Active Open Positions (MTM) and Recent 25 Closed Trades."""
+    target_path = out_path or (PROJECT_ROOT / "reports" / "backtests" / "recent_trades_and_open_positions.html")
+    target_path.parent.mkdir(parents=True, exist_ok=True)
+
+    now_ts = pd.Timestamp.now(tz="America/New_York").strftime("%Y-%m-%d %H:%M:%S %Z")
+    latest_panel_prices = {}
+    if panel is not None and not panel.empty:
+        latest_panel_prices = panel.groupby("ticker")["close"].last().to_dict()
+
+    open_rows = []
+    tot_invested = 0.0
+    tot_unrealized_pnl = 0.0
+    tot_cost = 0.0
+
+    if hasattr(best_sys, "open_positions") and best_sys.open_positions:
+        for ticker, pos in best_sys.open_positions.items():
+            last_close = latest_panel_prices.get(ticker, pos.last_valid_close or pos.entry_price)
+            pos_val = pos.shares * last_close
+            cost = pos.shares * pos.entry_price
+            unrealized_pnl = (last_close - pos.entry_price) * pos.shares
+            unrealized_ret = (last_close / pos.entry_price - 1.0) * 100.0 if pos.entry_price > 0 else 0.0
+            stop_dist_pct = (last_close - pos.current_stop) / last_close * 100.0 if last_close > 0 else 0.0
+            entry_dt_str = str(pos.entry_date)[:10]
+
+            tot_invested += pos_val
+            tot_cost += cost
+            tot_unrealized_pnl += unrealized_pnl
+
+            open_rows.append({
+                "Ticker": ticker,
+                "Tier": pos.tier,
+                "Shares": f"{pos.shares:.1f}",
+                "Entry Date": entry_dt_str,
+                "Days Held": pos.days_held,
+                "Entry ($)": f"${pos.entry_price:,.2f}",
+                "Current Stop ($)": f"${pos.current_stop:,.2f}",
+                "Latest Close ($)": f"${last_close:,.2f}",
+                "Position Value ($)": f"${pos_val:,.2f}",
+                "Unrealized P&L ($)": f"{unrealized_pnl:+,.2f}",
+                "Unrealized Ret (%)": f"{unrealized_ret:+.2f}%",
+                "Stop Distance (%)": f"{stop_dist_pct:+.2f}%",
+                "Top Model Drivers": pos.shap_summary or "N/A",
+            })
+
+    open_df = pd.DataFrame(open_rows)
+
+    recent_tr = best_sys.trades.tail(25) if (best_sys is not None and not best_sys.trades.empty) else pd.DataFrame()
+    formatted_tr = _format_trade_blotter_df(recent_tr) if not recent_tr.empty else pd.DataFrame()
+
+    tot_unrealized_ret = (tot_unrealized_pnl / tot_cost * 100.0) if tot_cost > 0 else 0.0
+    pnl_color = "#16a34a" if tot_unrealized_pnl >= 0 else "#dc2626"
+
+    html_parts = [
+        "<!DOCTYPE html>",
+        "<html lang='en'><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'>",
+        "<title>SemiSwing: Active Open Positions &amp; Recent Closed Trades</title>",
+        "<style>",
+        "body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 24px; background: #f1f5f9; color: #1e293b; line-height: 1.5; }",
+        ".container { max-width: 1280px; margin: 0 auto; background: #ffffff; padding: 32px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }",
+        "h1 { margin-top: 0; font-size: 26px; color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 12px; }",
+        "h2 { font-size: 19px; color: #1e293b; margin-top: 28px; margin-bottom: 12px; border-left: 4px solid #0284c7; padding-left: 10px; }",
+        ".header-meta { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; font-size: 13px; color: #64748b; }",
+        ".meta-badge { background: #f8fafc; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 6px; }",
+        ".cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }",
+        ".metric-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; }",
+        ".metric-card .title { font-size: 12px; font-weight: 700; text-transform: uppercase; color: #64748b; letter-spacing: 0.5px; }",
+        ".metric-card .val { font-size: 22px; font-weight: 800; color: #0f172a; margin-top: 4px; }",
+        "table { width: 100%; border-collapse: collapse; margin-top: 12px; margin-bottom: 24px; font-size: 13px; border: 1px solid #e2e8f0; }",
+        "th { background: #1e293b; color: #ffffff; text-align: left; padding: 10px 12px; font-weight: 600; white-space: nowrap; }",
+        "td { padding: 9px 12px; border-bottom: 1px solid #e2e8f0; }",
+        "tr:nth-child(even) { background: #f8fafc; }",
+        ".badge-open { background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; padding: 2px 8px; border-radius: 999px; font-weight: 700; font-size: 11px; }",
+        ".badge-public { background: #052e16; color: #4ade80; border: 1px solid #16a34a; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; }",
+        "footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #e2e8f0; text-align: center; font-size: 12px; color: #64748b; }",
+        "</style></head><body>",
+        "<div class='container'>",
+        "<div style='display:flex; justify-content:space-between; align-items:center;'>",
+        "  <div><div style='font-size:12px; font-weight:700; color:#0284c7; text-transform:uppercase; letter-spacing:1px;'>SemiSwing Quantitative Desk</div>",
+        "  <h1>Active Open Positions &amp; Recent 25 Closed Trades</h1></div>",
+        "  <span class='badge-public'>PUBLIC AUDIT</span>",
+        "</div>",
+        "<div class='header-meta'>",
+        f"  <div class='meta-badge'>Strategy Mode: <strong>{best_sys.name}</strong></div>",
+        f"  <div class='meta-badge'>Active Open Count: <strong>{len(open_rows)}</strong></div>",
+        f"  <div class='meta-badge'>Report Created: <strong>{now_ts}</strong></div>",
+        "</div>",
+        "<div class='cards-grid'>",
+        f"  <div class='metric-card'><div class='title'>Active Open Trades</div><div class='val'>{len(open_rows)}</div></div>",
+        f"  <div class='metric-card'><div class='title'>Total Invested Capital</div><div class='val'>${tot_invested:,.2f}</div></div>",
+        f"  <div class='metric-card'><div class='title'>Temporary Unrealized P&amp;L</div><div class='val' style='color:{pnl_color};'>{tot_unrealized_pnl:+,.2f} ({tot_unrealized_ret:+.2f}%)</div></div>",
+        f"  <div class='metric-card'><div class='title'>Total Closed Trades (OOS)</div><div class='val'>{len(best_sys.trades) if best_sys is not None else 0}</div></div>",
+        "</div>",
+        "<h2>1. Active Open Positions (Daily Mark-to-Market)</h2>",
+    ]
+
+    if not open_df.empty:
+        html_parts.append(_decorate_html_table(open_df.to_html(index=False, border=0)))
+    else:
+        html_parts.append(
+            "<div style='background:#f8fafc; border:1px solid #cbd5e1; border-left:4px solid #0284c7; padding:16px; border-radius:6px; color:#475569; margin:16px 0;'>"
+            "<strong>No Open Swing Positions Active:</strong> All prior trades have reached their natural exits (Stop Loss, TP1, or Time Stop). Portfolio capital is currently parked in 100% Cash / 3-Month T-Bills."
+            "</div>"
+        )
+
+    html_parts.append(f"<h2>2. Recent 25 Out-of-Sample Closed Trades ({best_sys.name})</h2>")
+    html_parts.append(_render_trade_legend_html())
+    if not formatted_tr.empty:
+        html_parts.append(_decorate_html_table(formatted_tr.to_html(index=False, border=0)))
+    else:
+        html_parts.append("<p>No closed trades recorded.</p>")
+
+    html_parts.append(
+        f"<footer>SemiSwing Systematic Trading Engine &bull; Report Created: <strong>{now_ts}</strong></footer>"
+        "</div></body></html>"
+    )
+
+    target_path.write_text("\n".join(html_parts), encoding="utf-8")
+    return target_path

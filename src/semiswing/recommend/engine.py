@@ -10,6 +10,8 @@ import numpy as np
 import pandas as pd
 
 from semiswing.config import (
+    FAMILY_PORTFOLIO_KEYS,
+    ISABEL_PORTFOLIO_KEYS,
     PROJECT_ROOT,
     PortfolioSettings,
     StrategySettings,
@@ -1581,9 +1583,14 @@ def write_recommendation_reports(
     out_dir: Path | None = None,
     all_plans: Dict[str, DailyRecommendationPlan] | None = None,
     passcode: str | None = None,
+    family_plans: Dict[str, DailyRecommendationPlan] | None = None,
+    isabel_plans: Dict[str, DailyRecommendationPlan] | None = None,
 ) -> tuple[Path, Path]:
     """
-    Write daily Markdown (local gitignored) and Passcode-Encrypted Multi-Portfolio HTML Trade Ticket reports to `reports/daily/`.
+    Write daily Markdown (local gitignored) and Passcode-Encrypted Multi-Portfolio HTML Trade Ticket reports:
+    - `family_recommendations.html` (Card 4: Eric, Alissa, Fei; encrypted with FAMILY_PORTFOLIO_PASSCODE)
+    - `isabel_recommendations.html` (Card 5: Isabel; encrypted with ISABEL_PORTFOLIO_PASSCODE)
+    - `latest_recommendations.html` (legacy alias)
     """
     import os
 
@@ -1591,33 +1598,59 @@ def write_recommendation_reports(
     target_dir.mkdir(parents=True, exist_ok=True)
 
     plans_dict = all_plans or {"main": plan}
-    effective_passcode = (passcode or os.environ.get("PORTFOLIO_PASSCODE", "")).strip()
-    if not effective_passcode:
-        raise ValueError(
-            "PORTFOLIO_PASSCODE is required to encrypt daily trade ticket report. "
-            "Set it in your local .env or CI secrets."
-        )
+    now_ts = pd.Timestamp.now(tz="America/New_York").strftime("%Y-%m-%d %H:%M:%S %Z")
 
+    # Partition into Family and Isabel groups
+    fam_dict = family_plans or {
+        k: v for k, v in plans_dict.items() if k in FAMILY_PORTFOLIO_KEYS or k not in ISABEL_PORTFOLIO_KEYS
+    }
+    isa_dict = isabel_plans or {k: v for k, v in plans_dict.items() if k in ISABEL_PORTFOLIO_KEYS}
+
+    # Passcodes from env or args
+    fam_pass = (os.environ.get("FAMILY_PORTFOLIO_PASSCODE", "") or passcode or os.environ.get("PORTFOLIO_PASSCODE", "")).strip()
+    isa_pass = (os.environ.get("ISABEL_PORTFOLIO_PASSCODE", "") or passcode or os.environ.get("PORTFOLIO_PASSCODE", "")).strip()
+
+    # Fallback if no specific passcode is configured
+    legacy_pass = (passcode or os.environ.get("PORTFOLIO_PASSCODE", "")).strip()
+    if not fam_pass:
+        fam_pass = legacy_pass
+    if not isa_pass:
+        isa_pass = legacy_pass
+
+    # 1. Local markdown summary (gitignored)
     md_path = target_dir / f"{plan.as_of_date}_recommendations.md"
-    html_path = target_dir / "latest_recommendations.html"
-    dated_html_path = target_dir / f"{plan.as_of_date}_recommendations.html"
-
-    # Combine markdown locally (gitignored)
     md_sections = []
     for slug, p in plans_dict.items():
         md_sections.append(f"### PORTFOLIO: {slug}\n" + render_recommendation_email_text(p))
     md_path.write_text("\n\n" + ("\n\n" + "=" * 72 + "\n\n").join(md_sections), encoding="utf-8")
 
-    now_ts = pd.Timestamp.now(tz="America/New_York").strftime("%Y-%m-%d %H:%M:%S %Z")
+    # 2. Family Encrypted HTML (Card 4)
+    html_path = target_dir / "latest_recommendations.html"
+    fam_html_path = target_dir / "family_recommendations.html"
+    if fam_dict:
+        if not fam_pass:
+            raise ValueError("FAMILY_PORTFOLIO_PASSCODE or PORTFOLIO_PASSCODE is required to encrypt family tickets.")
+        inner_fam = render_multi_portfolio_inner_html(fam_dict, created_ts=now_ts)
+        enc_fam = encrypt_html_with_passcode(
+            inner_fam, fam_pass, plan.as_of_date, portfolio_names=list(fam_dict.keys()), created_ts=now_ts
+        )
+        fam_html_path.write_text(enc_fam, encoding="utf-8")
+        (target_dir / f"{plan.as_of_date}_family_recommendations.html").write_text(enc_fam, encoding="utf-8")
+        html_path.write_text(enc_fam, encoding="utf-8")
+        (target_dir / f"{plan.as_of_date}_recommendations.html").write_text(enc_fam, encoding="utf-8")
 
-    # Build multi-portfolio inner HTML and encrypt with passcode
-    inner_multi_html = render_multi_portfolio_inner_html(plans_dict, created_ts=now_ts)
-    encrypted_html = encrypt_html_with_passcode(
-        inner_multi_html, effective_passcode, plan.as_of_date, portfolio_names=list(plans_dict.keys()), created_ts=now_ts
-    )
+    # 3. Isabel Encrypted HTML (Card 5)
+    isa_html_path = target_dir / "isabel_recommendations.html"
+    if isa_dict:
+        if not isa_pass:
+            raise ValueError("ISABEL_PORTFOLIO_PASSCODE or PORTFOLIO_PASSCODE is required to encrypt Isabel tickets.")
+        inner_isa = render_multi_portfolio_inner_html(isa_dict, created_ts=now_ts)
+        enc_isa = encrypt_html_with_passcode(
+            inner_isa, isa_pass, plan.as_of_date, portfolio_names=list(isa_dict.keys()), created_ts=now_ts
+        )
+        isa_html_path.write_text(enc_isa, encoding="utf-8")
+        (target_dir / f"{plan.as_of_date}_isabel_recommendations.html").write_text(enc_isa, encoding="utf-8")
 
-    html_path.write_text(encrypted_html, encoding="utf-8")
-    dated_html_path.write_text(encrypted_html, encoding="utf-8")
     return html_path, md_path
 
 

@@ -47,6 +47,7 @@ class BacktestResult:
     metrics_2022_bear: Dict[str, float] = field(default_factory=dict)
     metrics_ai_era: Dict[str, float] = field(default_factory=dict)
     yearly_table: pd.DataFrame = field(default_factory=pd.DataFrame)
+    open_positions: Dict[str, Position] = field(default_factory=dict)
 
 
 CORE_PRE2022_SEMI_TICKERS: tuple[str, ...] = (
@@ -611,7 +612,12 @@ def run_portfolio_backtest(
     eq_df = pd.DataFrame(eq_rows)
     trades_df = pd.DataFrame(closed_trades)
 
-    res = BacktestResult(name=mode, equity_curve=eq_df, trades=trades_df)
+    res = BacktestResult(
+        name=mode,
+        equity_curve=eq_df,
+        trades=trades_df,
+        open_positions={k: v for k, v in open_positions.items()},
+    )
     res.metrics_overall = compute_period_metrics(eq_df, trades_df)
     res.metrics_2022_bear = compute_period_metrics(eq_df, trades_df, "2022-01-01", "2022-12-31")
     res.metrics_ai_era = compute_period_metrics(eq_df, trades_df, strategy.backtest.ai_era_start, None)

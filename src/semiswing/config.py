@@ -10,6 +10,12 @@ from pydantic import BaseModel, Field
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
+try:
+    from dotenv import load_dotenv
+    load_dotenv(PROJECT_ROOT / ".env")
+except Exception:
+    pass
+
 TICKER_ALIASES: Dict[str, str] = {
     "PSTG": "P",  # Pure Storage, Inc. -> Everpure, Inc. (transitioned from PSTG to P on 2026-04-17)
 }
@@ -257,68 +263,53 @@ def _xor_crypt_bytes(data: bytes, passcode: str, salt: bytes, nonce: bytes) -> t
     return out_bytes, tag
 
 
-def save_encrypted_portfolios_vault(passcode: Optional[str] = None) -> Path:
-    """Encrypt `config/portfolios/private/*.yaml` into `config/portfolios/encrypted_portfolios.json` for safe cloud execution."""
+FAMILY_PORTFOLIO_KEYS: tuple[str, ...] = ("alissa", "eric", "fei_cb", "fei_se_401k")
+ISABEL_PORTFOLIO_KEYS: tuple[str, ...] = ("isabel",)
+
+
+def _encrypt_vault_payload(raw_json: str, passcode: str, target_path: Path) -> Path:
+    """Encrypt JSON string with PBKDF2-HMAC-SHA256 and AES-CTR/HMAC-SHA256, write to disk."""
     import base64
     import json
-    import os
     import secrets
 
-    effective_passcode = (passcode or os.environ.get("PORTFOLIO_PASSCODE", "")).strip()
-    if not effective_passcode:
-        raise ValueError(
-            "PORTFOLIO_PASSCODE is required to encrypt private portfolios vault. "
-            "Set it in your local .env or CI secrets."
-        )
-
-    raw_json = export_private_portfolios_json().encode("utf-8")
     salt = secrets.token_bytes(16)
     nonce = secrets.token_bytes(16)
-    ct_bytes, tag = _xor_crypt_bytes(raw_json, effective_passcode, salt, nonce)
+    ct_bytes, tag = _xor_crypt_bytes(raw_json.encode("utf-8"), passcode, salt, nonce)
 
-    vault_path = PROJECT_ROOT / "config" / "portfolios" / "encrypted_portfolios.json"
-    vault_path.parent.mkdir(parents=True, exist_ok=True)
+    target_path.parent.mkdir(parents=True, exist_ok=True)
     vault_obj = {
         "salt": base64.b64encode(salt).decode("ascii"),
         "nonce": base64.b64encode(nonce).decode("ascii"),
         "tag": base64.b64encode(tag).decode("ascii"),
         "ct": base64.b64encode(ct_bytes).decode("ascii"),
     }
-    vault_path.write_text(json.dumps(vault_obj, indent=2), encoding="utf-8")
-    return vault_path
+    target_path.write_text(json.dumps(vault_obj, indent=2), encoding="utf-8")
+    return target_path
 
 
-def load_encrypted_portfolios_vault(passcode: Optional[str] = None) -> Dict[str, PortfolioSettings]:
-    """Decrypt `config/portfolios/encrypted_portfolios.json` in memory (used by GitHub Actions at 9:00 AM ET)."""
+def _decrypt_vault_payload(target_path: Path, passcode: str) -> Dict[str, PortfolioSettings]:
+    """Decrypt encrypted vault JSON into Dict[str, PortfolioSettings]."""
     import base64
     import hashlib
     import hmac
     import json
-    import os
 
-    effective_passcode = (passcode or os.environ.get("PORTFOLIO_PASSCODE", "")).strip()
-    if not effective_passcode:
-        raise ValueError(
-            "PORTFOLIO_PASSCODE is required to decrypt encrypted_portfolios.json. "
-            "Set it in your local .env or CI secrets."
-        )
-
-    vault_path = PROJECT_ROOT / "config" / "portfolios" / "encrypted_portfolios.json"
-    if not vault_path.exists():
+    if not target_path.exists():
         return {}
-    vault_obj = json.loads(vault_path.read_text(encoding="utf-8"))
+    vault_obj = json.loads(target_path.read_text(encoding="utf-8"))
     salt = base64.b64decode(vault_obj["salt"])
     nonce = base64.b64decode(vault_obj["nonce"])
     tag = base64.b64decode(vault_obj["tag"])
     ct_bytes = base64.b64decode(vault_obj["ct"])
 
-    master_key = hashlib.pbkdf2_hmac("sha256", effective_passcode.encode("utf-8"), salt, 150_000, dklen=64)
+    master_key = hashlib.pbkdf2_hmac("sha256", passcode.encode("utf-8"), salt, 150_000, dklen=64)
     mac_key = master_key[32:64]
     expected_tag = hmac.digest(mac_key, nonce + ct_bytes, "sha256")
     if not hmac.compare_digest(tag, expected_tag):
-        raise ValueError("Invalid PORTFOLIO_PASSCODE for decrypting encrypted_portfolios.json")
+        raise ValueError(f"Invalid passcode for decrypting {target_path.name}")
 
-    pt_bytes, _ = _xor_crypt_bytes(ct_bytes, effective_passcode, salt, nonce)
+    pt_bytes, _ = _xor_crypt_bytes(ct_bytes, passcode, salt, nonce)
     raw_map = json.loads(pt_bytes.decode("utf-8"))
     portfolios: Dict[str, PortfolioSettings] = {}
     for k in sorted(raw_map.keys()):
@@ -326,44 +317,119 @@ def load_encrypted_portfolios_vault(passcode: Optional[str] = None) -> Dict[str,
     return portfolios
 
 
-def load_all_portfolio_settings() -> Dict[str, PortfolioSettings]:
-    """
-    Load all user portfolios in priority order:
-    1. `PORTFOLIOS_SECRET_JSON` environment variable (if set).
-    2. Local gitignored `config/portfolios/private/*.yaml` files (and auto-sync `encrypted_portfolios.json`).
-    3. Encrypted cloud vault `config/portfolios/encrypted_portfolios.json` (used on GitHub Actions at 9AM).
-    4. Fallback to `config/portfolio.yaml`.
-    """
+def export_private_portfolios_json(group: Optional[str] = None) -> str:
+    """Serialize private portfolios into a compact JSON string (filtered by group if specified)."""
     import json
+
+    private_dir = PROJECT_ROOT / "config" / "portfolios" / "private"
+    payload: Dict[str, dict] = {}
+    if private_dir.exists():
+        for yf in sorted(private_dir.glob("*.yaml")):
+            stem = yf.stem
+            if group == "family" and stem not in FAMILY_PORTFOLIO_KEYS:
+                continue
+            if group == "isabel" and stem not in ISABEL_PORTFOLIO_KEYS:
+                continue
+            with open(yf, "r", encoding="utf-8") as f:
+                raw = yaml.safe_load(f) or {}
+            payload[stem] = PortfolioSettings(**raw).model_dump()
+    return json.dumps(payload, separators=(",", ":"))
+
+
+def save_encrypted_portfolios_vault(passcode: Optional[str] = None) -> List[Path]:
+    """
+    Encrypt private portfolios into separate vaults:
+    - `encrypted_family.json` via FAMILY_PORTFOLIO_PASSCODE env var
+    - `encrypted_isabel.json` via ISABEL_PORTFOLIO_PASSCODE env var
+    - `encrypted_portfolios.json` legacy/fallback vault
+    """
     import os
 
-    passcode = os.environ.get("PORTFOLIO_PASSCODE", "").strip()
-    secret_json = os.environ.get("PORTFOLIOS_SECRET_JSON", "").strip()
-    if secret_json:
-        raw_map = json.loads(secret_json)
-        portfolios: Dict[str, PortfolioSettings] = {}
-        for k in sorted(raw_map.keys()):
-            portfolios[k] = PortfolioSettings(**raw_map[k])
-        if portfolios:
-            return portfolios
+    family_pass = (os.environ.get("FAMILY_PORTFOLIO_PASSCODE", "") or passcode or os.environ.get("PORTFOLIO_PASSCODE", "")).strip()
+    isabel_pass = (os.environ.get("ISABEL_PORTFOLIO_PASSCODE", "") or passcode or os.environ.get("PORTFOLIO_PASSCODE", "")).strip()
+    legacy_pass = (passcode or os.environ.get("PORTFOLIO_PASSCODE", "") or family_pass).strip()
+
+    saved = []
+    vault_dir = PROJECT_ROOT / "config" / "portfolios"
+
+    if family_pass:
+        fam_json = export_private_portfolios_json(group="family")
+        p = _encrypt_vault_payload(fam_json, family_pass, vault_dir / "encrypted_family.json")
+        saved.append(p)
+
+    if isabel_pass:
+        isa_json = export_private_portfolios_json(group="isabel")
+        p = _encrypt_vault_payload(isa_json, isabel_pass, vault_dir / "encrypted_isabel.json")
+        saved.append(p)
+
+    if legacy_pass:
+        all_json = export_private_portfolios_json()
+        p = _encrypt_vault_payload(all_json, legacy_pass, vault_dir / "encrypted_portfolios.json")
+        saved.append(p)
+
+    return saved
+
+
+def load_family_portfolio_settings() -> Dict[str, PortfolioSettings]:
+    """Load Family accounts (Eric, Alissa, Fei CB, Fei SE 401K)."""
+    import os
 
     private_dir = PROJECT_ROOT / "config" / "portfolios" / "private"
     if private_dir.exists():
-        yaml_files = sorted(private_dir.glob("*.yaml"))
-        if yaml_files:
-            portfolios = {}
-            for yf in yaml_files:
+        family = {}
+        for k in FAMILY_PORTFOLIO_KEYS:
+            yf = private_dir / f"{k}.yaml"
+            if yf.exists():
                 with open(yf, "r", encoding="utf-8") as f:
                     raw = yaml.safe_load(f) or {}
-                portfolios[yf.stem] = PortfolioSettings(**raw)
-            if passcode:
-                save_encrypted_portfolios_vault(passcode=passcode)
-            return portfolios
+                family[k] = PortfolioSettings(**raw)
+        if family:
+            return family
 
-    if passcode:
-        vault_portfolios = load_encrypted_portfolios_vault(passcode=passcode)
-        if vault_portfolios:
-            return vault_portfolios
+    fam_pass = (os.environ.get("FAMILY_PORTFOLIO_PASSCODE", "") or os.environ.get("PORTFOLIO_PASSCODE", "")).strip()
+    if fam_pass:
+        fam_vault = PROJECT_ROOT / "config" / "portfolios" / "encrypted_family.json"
+        if fam_vault.exists():
+            return _decrypt_vault_payload(fam_vault, fam_pass)
+        legacy_vault = PROJECT_ROOT / "config" / "portfolios" / "encrypted_portfolios.json"
+        if legacy_vault.exists():
+            all_p = _decrypt_vault_payload(legacy_vault, fam_pass)
+            return {k: v for k, v in all_p.items() if k in FAMILY_PORTFOLIO_KEYS}
+
+    return {}
+
+
+def load_isabel_portfolio_settings() -> Dict[str, PortfolioSettings]:
+    """Load Isabel portfolio (Roth IRA, 401K, HSA)."""
+    import os
+
+    private_dir = PROJECT_ROOT / "config" / "portfolios" / "private"
+    yf = private_dir / "isabel.yaml"
+    if yf.exists():
+        with open(yf, "r", encoding="utf-8") as f:
+            raw = yaml.safe_load(f) or {}
+        return {"isabel": PortfolioSettings(**raw)}
+
+    isa_pass = (os.environ.get("ISABEL_PORTFOLIO_PASSCODE", "") or os.environ.get("PORTFOLIO_PASSCODE", "")).strip()
+    if isa_pass:
+        isa_vault = PROJECT_ROOT / "config" / "portfolios" / "encrypted_isabel.json"
+        if isa_vault.exists():
+            return _decrypt_vault_payload(isa_vault, isa_pass)
+        legacy_vault = PROJECT_ROOT / "config" / "portfolios" / "encrypted_portfolios.json"
+        if legacy_vault.exists():
+            all_p = _decrypt_vault_payload(legacy_vault, isa_pass)
+            return {k: v for k, v in all_p.items() if k in ISABEL_PORTFOLIO_KEYS}
+
+    return {}
+
+
+def load_all_portfolio_settings() -> Dict[str, PortfolioSettings]:
+    """Load all portfolios combining Family and Isabel."""
+    family = load_family_portfolio_settings()
+    isabel = load_isabel_portfolio_settings()
+    combined = {**family, **isabel}
+    if combined:
+        return combined
 
     fallback_path = PROJECT_ROOT / "config" / "portfolio.yaml"
     if fallback_path.exists():
@@ -371,20 +437,6 @@ def load_all_portfolio_settings() -> Dict[str, PortfolioSettings]:
             raw = yaml.safe_load(f) or {}
         return {"main": PortfolioSettings(**raw)}
     return {"main": PortfolioSettings()}
-
-
-def export_private_portfolios_json() -> str:
-    """Serialize all `config/portfolios/private/*.yaml` portfolios into a compact JSON string."""
-    import json
-
-    private_dir = PROJECT_ROOT / "config" / "portfolios" / "private"
-    payload: Dict[str, dict] = {}
-    if private_dir.exists():
-        for yf in sorted(private_dir.glob("*.yaml")):
-            with open(yf, "r", encoding="utf-8") as f:
-                raw = yaml.safe_load(f) or {}
-            payload[yf.stem] = PortfolioSettings(**raw).model_dump()
-    return json.dumps(payload, separators=(",", ":"))
 
 
 

@@ -231,3 +231,36 @@ def test_missing_single_stock_bar_forward_fills_mark_to_market():
     assert row_d2["equity"] > 9500.0, f"Mark-to-market cliff occurred: {row_d2['equity']}"
 
 
+def test_split_encrypted_vaults_and_passcodes():
+    """Verify that encrypted family and isabel vaults decrypt properly with environment passcodes and fail with bad ones."""
+    import os
+    import pytest
+    from semiswing.config import PROJECT_ROOT, _decrypt_vault_payload
+
+    fam_pass = os.environ.get("FAMILY_PORTFOLIO_PASSCODE", "").strip()
+    isa_pass = os.environ.get("ISABEL_PORTFOLIO_PASSCODE", "").strip()
+
+    fam_vault = PROJECT_ROOT / "config" / "portfolios" / "encrypted_family.json"
+    isa_vault = PROJECT_ROOT / "config" / "portfolios" / "encrypted_isabel.json"
+
+    assert fam_vault.exists(), "encrypted_family.json missing"
+    assert isa_vault.exists(), "encrypted_isabel.json missing"
+
+    if fam_pass:
+        fam = _decrypt_vault_payload(fam_vault, fam_pass)
+        assert set(fam.keys()) == {"alissa", "eric", "fei_cb", "fei_se_401k"}
+        assert "403b" not in fam
+
+    if isa_pass:
+        isa = _decrypt_vault_payload(isa_vault, isa_pass)
+        assert set(isa.keys()) == {"isabel"}
+        assert isa["isabel"].cash > 0
+
+    with pytest.raises(ValueError):
+        _decrypt_vault_payload(fam_vault, "wrong_passcode_xyz_never_match")
+
+    with pytest.raises(ValueError):
+        _decrypt_vault_payload(isa_vault, "wrong_passcode_xyz_never_match")
+
+
+

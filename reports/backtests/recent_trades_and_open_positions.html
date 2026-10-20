@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang='en'><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'>
+<title>SemiSwing: Active Open Positions &amp; Recent Closed Trades</title>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 24px; background: #f1f5f9; color: #1e293b; line-height: 1.5; }
+.container { max-width: 1280px; margin: 0 auto; background: #ffffff; padding: 32px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+h1 { margin-top: 0; font-size: 26px; color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 12px; }
+h2 { font-size: 19px; color: #1e293b; margin-top: 28px; margin-bottom: 12px; border-left: 4px solid #0284c7; padding-left: 10px; }
+.header-meta { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; font-size: 13px; color: #64748b; }
+.meta-badge { background: #f8fafc; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 6px; }
+.cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+.metric-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; }
+.metric-card .title { font-size: 12px; font-weight: 700; text-transform: uppercase; color: #64748b; letter-spacing: 0.5px; }
+.metric-card .val { font-size: 22px; font-weight: 800; color: #0f172a; margin-top: 4px; }
+table { width: 100%; border-collapse: collapse; margin-top: 12px; margin-bottom: 24px; font-size: 13px; border: 1px solid #e2e8f0; }
+th { background: #1e293b; color: #ffffff; text-align: left; padding: 10px 12px; font-weight: 600; white-space: nowrap; }
+td { padding: 9px 12px; border-bottom: 1px solid #e2e8f0; }
+tr:nth-child(even) { background: #f8fafc; }
+.badge-open { background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; padding: 2px 8px; border-radius: 999px; font-weight: 700; font-size: 11px; }
+.badge-public { background: #052e16; color: #4ade80; border: 1px solid #16a34a; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #e2e8f0; text-align: center; font-size: 12px; color: #64748b; }
+</style></head><body>
+<div class='container'>
+<div style='display:flex; justify-content:space-between; align-items:center;'>
+  <div><div style='font-size:12px; font-weight:700; color:#0284c7; text-transform:uppercase; letter-spacing:1px;'>SemiSwing Quantitative Desk</div>
+  <h1>Active Open Positions &amp; Recent 25 Closed Trades</h1></div>
+  <span class='badge-public'>PUBLIC AUDIT</span>
+</div>
+<div class='header-meta'>
+  <div class='meta-badge'>Strategy Mode: <strong>ml</strong></div>
+  <div class='meta-badge'>Active Open Count: <strong>2</strong></div>
+  <div class='meta-badge'>Report Created: <strong>2026-10-20 01:17:00 EDT</strong></div>
+</div>
+<div class='cards-grid'>
+  <div class='metric-card'><div class='title'>Active Open Trades</div><div class='val'>2</div></div>
+  <div class='metric-card'><div class='title'>Total Invested Capital</div><div class='val'>$51,285.27</div></div>
+  <div class='metric-card'><div class='title'>Temporary Unrealized P&amp;L</div><div class='val' style='color:#16a34a;'>+514.74 (+1.01%)</div></div>
+  <div class='metric-card'><div class='title'>Total Closed Trades (OOS)</div><div class='val'>91</div></div>
+</div>
+<h2>1. Active Open Positions (Daily Mark-to-Market)</h2>
+<table class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>Ticker</th>
+      <th>Tier</th>
+      <th>Shares</th>
+      <th>Entry Date</th>
+      <th>Days Held</th>
+      <th>Entry ($)</th>
+      <th>Current Stop ($)</th>
+      <th>Latest Close ($)</th>
+      <th>Position Value ($)</th>
+      <th>Unrealized P&amp;L ($)</th>
+      <th>Unrealized Ret (%)</th>
+      <th>Stop Distance (%)</th>
+      <th>Top Model Drivers</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>AAPL</td>
+      <td>MEDIUM</td>
+      <td>63.4</td>
+      <td>2026-09-11</td>
+      <td>27</td>
+      <td>$327.68</td>
+      <td>$303.99</td>
+      <td>$342.94</td>
+      <td>$21,734.87</td>
+      <td>+967.20</td>
+      <td>+4.66%</td>
+      <td>+11.36%</td>
+      <td>skew_idx=0.54 (-0.017) | vxn_squeeze_vel=1.06 (+0.007) | sector_rs=-0.02 (-0.005) | slope_t_norm_40d=-1.23 (+0.004) | slope_r2_20d=0.65 (-0.003)</td>
+    </tr>
+    <tr>
+      <td>MSFT</td>
+      <td>HIGH</td>
+      <td>55.4</td>
+      <td>2026-10-16</td>
+      <td>2</td>
+      <td>$541.69</td>
+      <td>$507.37</td>
+      <td>$533.52</td>
+      <td>$29,550.40</td>
+      <td>-452.46</td>
+      <td>-1.51%</td>
+      <td>+4.90%</td>
+      <td>skew_idx=2.49 (+0.037) | vix_ts=0.89 (+0.035) | resid_mom_60=0.34 (+0.019) | sector_rs=-0.02 (-0.015) | vxn_squeeze_vel=0.34 (+0.013)</td>
+    </tr>
+  </tbody>
+</table>
+<h2>2. Recent 25 Out-of-Sample Closed Trades (ml)</h2>
+
+    <div style="background:#ffffff; border:1px solid #cbd5e1; border-left:5px solid #2563eb; border-radius:8px; padding:16px 20px; margin-bottom:20px; font-size:13px; line-height:1.55; color:#334155;">
+      <div style="font-weight:700; color:#0f172a; margin-bottom:8px; font-size:14px;">Section 8 Trade Blotter Legend &amp; Quantitative Diagnostics</div>
+      <div style="margin-bottom:6px;">
+        <strong>Tier:</strong>
+        <span style="display:inline-block; padding:1px 6px; background:#dcfce7; color:#166534; border-radius:4px; font-size:11px; font-weight:700;">CONSENSUS</span> Dual-engine alignment (both Baseline OLS trend significance t_norm &ge; 1.8 and ML classifier agree; 1.0% risk). &nbsp;
+        <span style="display:inline-block; padding:1px 6px; background:#e0f2fe; color:#0369a1; border-radius:4px; font-size:11px; font-weight:700;">HIGH</span> Standalone ML qualification with top-quintile residual momentum (1.0% risk). &nbsp;
+        <span style="display:inline-block; padding:1px 6px; background:#f1f5f9; color:#475569; border-radius:4px; font-size:11px; font-weight:700;">MEDIUM</span> Baseline trend qualification or secondary ML score (0.75% conservative risk). &nbsp;
+        <span style="display:inline-block; padding:1px 6px; background:#fff1f2; color:#be123c; border-radius:4px; font-size:11px; font-weight:700;">LOW</span> Lower-conviction meta-labeling score (S_i,t &lt; 0.85; 0.50% risk or conservative bottom tier).
+      </div>
+      <div style="margin-bottom:6px;">
+        <strong>Shares &amp; Position ($):</strong> Dynamically calculated via Volatility-Parity / Fixed-Fractional Risk Sizing: <code>Shares = (Portfolio Equity &times; Base Risk &times; M_t &times; S_i,t) / Stop Distance</code>. Each trade risks a fixed fraction of total portfolio equity at execution, so position dollar allocations and share counts vary according to individual stock ATR volatility, tier conviction, meta-labeling multiplier S_i,t, and compounding portfolio equity over time.
+      </div>
+      <div style="margin-bottom:6px;">
+        <strong>Partial Profit Taking (TP1) &amp; Blended Returns:</strong> When Take Profit 1 (TP1) triggers, partial shares are sold and stop is moved to breakeven. <code>Exit ($)</code> reports the final runner share exit price, while <code>Return (%)</code> and <code>R Multiple</code> reflect the blended net performance across the entire position.
+      </div>
+      <div style="margin-bottom:6px;">
+        <strong>Win Prob:</strong> Platt-calibrated posterior probability P(Hits +1.5R target before Hard Stop) produced out-of-fold by shallow LightGBM trees. With a 1.5:1 reward-to-risk ratio, any probability P &gt; 40.0% yields positive mathematical expectancy.
+      </div>
+      <div style="margin-bottom:6px;">
+        <strong>Sizing Scalar:</strong> Continuous meta-labeling position sizing multiplier S_i,t &isin; [0.50, 1.50] (L&oacute;pez de Prado framework). Maps predicted win probability into historical out-of-fold percentile rank: S_i,t = 0.50 + Rank_OOF(p). Conviction scales position sizes dynamically between 0.50x and 1.50x without expanding total risk caps.
+      </div>
+      <div>
+        <strong>Top Model Drivers (SHAP):</strong> Single-feature marginal contributions detailing model conviction:
+        <ul style="margin: 6px 0 0 18px; padding: 0; line-height: 1.55;">
+          <li><code>sector_rs</code>: 20-day relative strength of SMH vs SPY: Delta%20d(SMH) - Delta%20d(SPY). Positive values confirm semiconductor sector leadership.</li>
+          <li><code>vix_ts</code>: Volatility term structure ratio (VIX / VIX3M). Values &lt; 1.0 confirm normal contango (calm regime); &ge; 1.0 indicates backwardation (near-term panic).</li>
+          <li><code>skew_idx</code>: CBOE SKEW Index 60-day rolling z-score (min_periods=20). Elevated values (&gt; +1.5) indicate institutional tail-risk hedging and out-of-the-money put demand.</li>
+          <li><code>resid_mom_60</code>: 60-day idiosyncratic residual momentum relative to SMH after stripping market beta. Confirms stock-specific momentum decoupled from sector drift.</li>
+          <li><code>resid_mom_20</code>: 20-day idiosyncratic residual momentum relative to SMH after stripping market beta.</li>
+          <li><code>rs_rank</code>: Cross-sectional percentile rank [0.0, 1.0] of 20-day residual momentum across the active tradeable universe.</li>
+          <li><code>vol_compress</code>: Realized volatility compression ratio (RV_10d / RV_60d). Values &lt; 0.70 indicate price coiling prior to directional breakout.</li>
+          <li><code>vxn_squeeze_vel</code>: 252-day rolling z-score of 5-day rate of change in Nasdaq Volatility Index (VXN). Rapid drops detect post-panic volatility compression.</li>
+          <li><code>slope_r2_20d</code>: Coefficient of determination (R^2 in [0, 1]) from 20-day log-price linear regression measuring trend smoothness.</li>
+          <li><code>slope_t_norm</code>: Adaptive window L_t sample-size normalized OLS t-statistic measuring directional trend conviction.</li>
+          <li><code>slope_accel</code>: Multi-scale slope acceleration: (beta_10d - beta_40d) / sigma_20 normalized by 20-day return volatility.</li>
+          <li><code>ema20_slope</code>: 5-day slope of 20-day exponential moving average in ATR units: (EMA20_t / EMA20_{t-5} - 1) / ATR%_14.</li>
+          <li><code>ema50_slope</code>: 10-day slope of 50-day exponential moving average in ATR units: (EMA50_t / EMA50_{t-10} - 1) / ATR%_14.</li>
+        </ul>
+      </div>
+    </div>
+    
+<table class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>Ticker</th>
+      <th>Tier</th>
+      <th>Shares</th>
+      <th>Position ($)</th>
+      <th>Entry Date</th>
+      <th>Exit Date</th>
+      <th>Days Held</th>
+      <th>Entry ($)</th>
+      <th>Exit ($)</th>
+      <th>Initial Stop ($)</th>
+      <th>Return (%)</th>
+      <th>Net P&amp;L ($)</th>
+      <th>R-Multiple</th>
+      <th>Exit Reason</th>
+      <th>Win Prob</th>
+      <th>Sizing Scalar</th>
+      <th>Top Model Drivers</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>STX</td>
+      <td>MEDIUM</td>
+      <td>20.6</td>
+      <td>$1,976.67</td>
+      <td>2025-01-31</td>
+      <td>2025-02-28</td>
+      <td>20</td>
+      <td>$95.99</td>
+      <td>$99.58</td>
+      <td>$85.96</td>
+      <td>+3.74%</td>
+      <td>+74</td>
+      <td>+0.36R</td>
+      <td>Regime Off</td>
+      <td>36.1%</td>
+      <td>1.02x</td>
+      <td>vol_compress=1.65 (+0.010) | sector_rs=-0.03 (-0.010) | skew_idx=-0.52 (-0.004) | vix_ts=0.88 (+0.003) | slope_r2_20d=0.71 (-0.003)</td>
+    </tr>
+    <tr>
+      <td>INTC</td>
+      <td>MEDIUM</td>
+      <td>211.1</td>
+      <td>$5,185.53</td>
+      <td>2025-02-24</td>
+      <td>2025-02-28</td>
+      <td>5</td>
+      <td>$24.57</td>
+      <td>$23.71</td>
+      <td>$20.88</td>
+      <td>-3.48%</td>
+      <td>-180</td>
+      <td>-0.23R</td>
+      <td>Regime Off</td>
+      <td>37.5%</td>
+      <td>1.12x</td>
+      <td>sector_rs=-0.05 (+0.033) | vxn_squeeze_vel=0.92 (-0.030) | slope_accel=0.63 (+0.008) | vol_compress=1.77 (+0.007) | vix_ts=0.93 (-0.006)</td>
+    </tr>
+    <tr>
+      <td>CEG</td>
+      <td>MEDIUM</td>
+      <td>8.7</td>
+      <td>$2,431.72</td>
+      <td>2025-05-13</td>
+      <td>2025-09-02</td>
+      <td>77</td>
+      <td>$278.39</td>
+      <td>$298.61</td>
+      <td>$237.89</td>
+      <td>+12.09%</td>
+      <td>+294</td>
+      <td>+0.83R</td>
+      <td>Stop Gap</td>
+      <td>36.1%</td>
+      <td>1.06x</td>
+      <td>vix_ts=0.91 (+0.026) | slope_r2_20d=0.89 (-0.008) | skew_idx=-0.25 (-0.007) | sector_rs=0.09 (-0.003) | rs_rank=0.86 (+0.002)</td>
+    </tr>
+    <tr>
+      <td>STX</td>
+      <td>MEDIUM</td>
+      <td>33.3</td>
+      <td>$3,348.07</td>
+      <td>2025-05-13</td>
+      <td>2025-10-10</td>
+      <td>105</td>
+      <td>$100.52</td>
+      <td>$212.97</td>
+      <td>$89.16</td>
+      <td>+89.06%</td>
+      <td>+2,982</td>
+      <td>+7.88R</td>
+      <td>Trail Stop Eod</td>
+      <td>37.2%</td>
+      <td>1.13x</td>
+      <td>vix_ts=0.91 (+0.026) | skew_idx=-0.25 (-0.007) | sector_rs=0.09 (-0.004) | rs_rank=0.98 (+0.003) | slope_r2_20d=0.95 (-0.003)</td>
+    </tr>
+    <tr>
+      <td>AMD</td>
+      <td>LOW</td>
+      <td>20.4</td>
+      <td>$4,502.98</td>
+      <td>2025-10-13</td>
+      <td>2025-11-18</td>
+      <td>27</td>
+      <td>$220.35</td>
+      <td>$230.13</td>
+      <td>$187.30</td>
+      <td>+4.44%</td>
+      <td>+200</td>
+      <td>+0.30R</td>
+      <td>Time Stop 25D</td>
+      <td>31.4%</td>
+      <td>0.68x</td>
+      <td>skew_idx=-2.34 (-0.130) | sector_rs=0.07 (+0.060) | vix_ts=0.95 (+0.035) | slope_accel=0.75 (+0.031) | slope_t_norm_40d=1.22 (+0.024)</td>
+    </tr>
+    <tr>
+      <td>VRT</td>
+      <td>MEDIUM</td>
+      <td>22.9</td>
+      <td>$2,314.03</td>
+      <td>2025-05-13</td>
+      <td>2025-12-17</td>
+      <td>152</td>
+      <td>$100.97</td>
+      <td>$149.62</td>
+      <td>$85.82</td>
+      <td>+43.88%</td>
+      <td>+1,015</td>
+      <td>+2.93R</td>
+      <td>Trail Stop Eod</td>
+      <td>35.9%</td>
+      <td>1.04x</td>
+      <td>vix_ts=0.91 (+0.025) | skew_idx=-0.25 (-0.007) | slope_r2_20d=0.88 (-0.006) | vol_compress=0.61 (-0.003) | slope_r2=0.90 (-0.003)</td>
+    </tr>
+    <tr>
+      <td>GOOGL</td>
+      <td>HIGH</td>
+      <td>46</td>
+      <td>$14,991.64</td>
+      <td>2025-11-25</td>
+      <td>2025-12-31</td>
+      <td>25</td>
+      <td>$325.59</td>
+      <td>$312.17</td>
+      <td>$292.61</td>
+      <td>-4.12%</td>
+      <td>-618</td>
+      <td>-0.41R</td>
+      <td>Time Stop 25D</td>
+      <td>42.8%</td>
+      <td>1.37x</td>
+      <td>resid_mom_60=0.33 (+0.064) | sector_rs=-0.03 (+0.040) | resid_mom_20=0.19 (+0.009) | slope_r2_20d=0.50 (-0.008) | slope_t_norm_40d=8.84 (+0.007)</td>
+    </tr>
+    <tr>
+      <td>APP</td>
+      <td>HIGH</td>
+      <td>3.7</td>
+      <td>$2,697.83</td>
+      <td>2025-12-24</td>
+      <td>2026-01-02</td>
+      <td>6</td>
+      <td>$728.36</td>
+      <td>$628.82</td>
+      <td>$629.26</td>
+      <td>-13.67%</td>
+      <td>-369</td>
+      <td>-1.00R</td>
+      <td>Stop</td>
+      <td>38.9%</td>
+      <td>1.20x</td>
+      <td>vix_ts=0.78 (-0.064) | skew_idx=2.44 (+0.035) | rs_rank=1.00 (+0.025) | slope_r2_20d=0.60 (-0.009) | resid_mom_20=0.21 (+0.006)</td>
+    </tr>
+    <tr>
+      <td>LRCX</td>
+      <td>LOW</td>
+      <td>12.9</td>
+      <td>$2,448.45</td>
+      <td>2026-01-05</td>
+      <td>2026-03-06</td>
+      <td>43</td>
+      <td>$189.69</td>
+      <td>$198.84</td>
+      <td>$170.24</td>
+      <td>+8.58%</td>
+      <td>+210</td>
+      <td>+0.84R</td>
+      <td>Trail Stop Eod</td>
+      <td>26.5%</td>
+      <td>0.55x</td>
+      <td>skew_idx=-0.98 (-0.053) | vxn_squeeze_vel=0.75 (-0.034) | vix_ts=0.81 (-0.027) | slope_r2_20d=0.62 (-0.007) | resid_mom_20=0.11 (+0.004)</td>
+    </tr>
+    <tr>
+      <td>MU</td>
+      <td>HIGH</td>
+      <td>48.3</td>
+      <td>$14,257.08</td>
+      <td>2026-01-02</td>
+      <td>2026-03-30</td>
+      <td>60</td>
+      <td>$295.12</td>
+      <td>$321.47</td>
+      <td>$254.16</td>
+      <td>+13.04%</td>
+      <td>+1,859</td>
+      <td>+0.94R</td>
+      <td>Trail Stop Eod</td>
+      <td>45.2%</td>
+      <td>1.42x</td>
+      <td>rs_rank=0.98 (+0.033) | resid_mom_60=0.33 (+0.032) | vxn_squeeze_vel=0.62 (+0.022) | sector_rs=0.00 (+0.020) | slope_r2_20d=0.64 (-0.012)</td>
+    </tr>
+    <tr>
+      <td>WDC</td>
+      <td>MEDIUM</td>
+      <td>63.2</td>
+      <td>$2,959.78</td>
+      <td>2025-05-13</td>
+      <td>2026-07-07</td>
+      <td>288</td>
+      <td>$46.85</td>
+      <td>$531.86</td>
+      <td>$41.29</td>
+      <td>+781.78%</td>
+      <td>+23,139</td>
+      <td>+65.85R</td>
+      <td>Stop Gap</td>
+      <td>36.0%</td>
+      <td>1.05x</td>
+      <td>vix_ts=0.91 (+0.025) | slope_r2_20d=0.91 (-0.009) | skew_idx=-0.25 (-0.007) | slope_r2=0.91 (-0.003) | vol_compress=0.65 (-0.003)</td>
+    </tr>
+    <tr>
+      <td>LITE</td>
+      <td>HIGH</td>
+      <td>79.2</td>
+      <td>$10,492.70</td>
+      <td>2025-09-03</td>
+      <td>2026-07-07</td>
+      <td>211</td>
+      <td>$132.43</td>
+      <td>$698.93</td>
+      <td>$115.52</td>
+      <td>+326.65%</td>
+      <td>+34,275</td>
+      <td>+25.58R</td>
+      <td>Stop Gap</td>
+      <td>39.0%</td>
+      <td>1.23x</td>
+      <td>resid_mom_60=0.29 (+0.049) | slope_r2_20d=0.79 (-0.007) | ema50_slope=1.93 (-0.006) | slope_t_norm_40d=12.28 (+0.004) | vix_ts=0.89 (+0.004)</td>
+    </tr>
+    <tr>
+      <td>ARM</td>
+      <td>HIGH</td>
+      <td>89.6</td>
+      <td>$13,846.84</td>
+      <td>2026-04-01</td>
+      <td>2026-07-14</td>
+      <td>71</td>
+      <td>$154.50</td>
+      <td>$280.97</td>
+      <td>$131.32</td>
+      <td>+69.41%</td>
+      <td>+9,611</td>
+      <td>+4.63R</td>
+      <td>Trail Stop Eod</td>
+      <td>42.3%</td>
+      <td>1.35x</td>
+      <td>rs_rank=0.98 (+0.036) | vix_ts=0.99 (+0.018) | slope_t_norm=6.62 (+0.013) | skew_idx=0.04 (-0.009) | slope_r2_20d=0.73 (-0.009)</td>
+    </tr>
+    <tr>
+      <td>P</td>
+      <td>HIGH</td>
+      <td>519.8</td>
+      <td>$41,512.21</td>
+      <td>2026-07-09</td>
+      <td>2026-07-15</td>
+      <td>5</td>
+      <td>$79.87</td>
+      <td>$67.84</td>
+      <td>$67.89</td>
+      <td>-15.06%</td>
+      <td>-6,252</td>
+      <td>-1.00R</td>
+      <td>Stop</td>
+      <td>45.0%</td>
+      <td>1.43x</td>
+      <td>skew_idx=1.86 (+0.040) | vxn_squeeze_vel=0.21 (+0.024) | rs_rank=0.80 (+0.008) | vix_ts=0.87 (+0.004) | slope_accel=0.33 (+0.003)</td>
+    </tr>
+    <tr>
+      <td>META</td>
+      <td>HIGH</td>
+      <td>28.6</td>
+      <td>$18,994.76</td>
+      <td>2026-07-15</td>
+      <td>2026-07-27</td>
+      <td>9</td>
+      <td>$663.54</td>
+      <td>$592.99</td>
+      <td>$587.40</td>
+      <td>-10.63%</td>
+      <td>-2,020</td>
+      <td>-0.93R</td>
+      <td>Earnings Exit</td>
+      <td>39.3%</td>
+      <td>1.20x</td>
+      <td>rs_rank=0.98 (+0.020) | sector_rs=-0.05 (+0.016) | vix_ts=0.85 (-0.007) | skew_idx=0.75 (-0.007) | vxn_squeeze_vel=-0.62 (-0.006)</td>
+    </tr>
+    <tr>
+      <td>AMZN</td>
+      <td>HIGH</td>
+      <td>141</td>
+      <td>$35,108.35</td>
+      <td>2026-07-20</td>
+      <td>2026-07-28</td>
+      <td>7</td>
+      <td>$248.93</td>
+      <td>$230.70</td>
+      <td>$226.16</td>
+      <td>-7.33%</td>
+      <td>-2,572</td>
+      <td>-0.80R</td>
+      <td>Earnings Exit</td>
+      <td>39.7%</td>
+      <td>1.23x</td>
+      <td>vxn_squeeze_vel=1.39 (+0.020) | skew_idx=1.15 (-0.020) | slope_t_norm_40d=-2.14 (+0.013) | sector_rs=-0.11 (-0.008) | vix_ts=0.91 (+0.004)</td>
+    </tr>
+    <tr>
+      <td>AAPL</td>
+      <td>MEDIUM</td>
+      <td>94.4</td>
+      <td>$29,689.63</td>
+      <td>2026-07-10</td>
+      <td>2026-08-13</td>
+      <td>25</td>
+      <td>$314.67</td>
+      <td>$305.05</td>
+      <td>$289.65</td>
+      <td>-3.06%</td>
+      <td>-908</td>
+      <td>-0.38R</td>
+      <td>Time Stop 25D</td>
+      <td>35.8%</td>
+      <td>0.94x</td>
+      <td>vix_ts=0.83 (-0.017) | rs_rank=0.80 (+0.008) | vxn_squeeze_vel=-0.33 (-0.004) | slope_sharpe=4.73 (-0.003) | slope_t_norm_40d=-0.46 (-0.002)</td>
+    </tr>
+    <tr>
+      <td>AMZN</td>
+      <td>MEDIUM</td>
+      <td>97.9</td>
+      <td>$27,588.42</td>
+      <td>2026-08-05</td>
+      <td>2026-08-20</td>
+      <td>12</td>
+      <td>$281.79</td>
+      <td>$259.93</td>
+      <td>$252.32</td>
+      <td>-7.76%</td>
+      <td>-2,140</td>
+      <td>-0.74R</td>
+      <td>Time Stop 12D</td>
+      <td>36.7%</td>
+      <td>1.00x</td>
+      <td>vxn_squeeze_vel=-1.14 (+0.068) | sector_rs=-0.04 (+0.040) | slope_t_norm_40d=0.85 (+0.024) | skew_idx=-3.40 (-0.013) | slope_accel=0.48 (+0.009)</td>
+    </tr>
+    <tr>
+      <td>P</td>
+      <td>HIGH</td>
+      <td>338.2</td>
+      <td>$37,571.94</td>
+      <td>2026-08-21</td>
+      <td>2026-08-24</td>
+      <td>2</td>
+      <td>$111.08</td>
+      <td>$100.37</td>
+      <td>$94.76</td>
+      <td>-9.64%</td>
+      <td>-3,622</td>
+      <td>-0.66R</td>
+      <td>Earnings Exit</td>
+      <td>49.1%</td>
+      <td>1.48x</td>
+      <td>vxn_squeeze_vel=0.67 (+0.036) | sector_rs=-0.06 (+0.023) | resid_mom_60=0.27 (+0.022) | ema20_slope=2.29 (+0.019) | vix_ts=0.84 (+0.012)</td>
+    </tr>
+    <tr>
+      <td>PLTR</td>
+      <td>MEDIUM</td>
+      <td>107.9</td>
+      <td>$16,836.88</td>
+      <td>2026-08-06</td>
+      <td>2026-09-10</td>
+      <td>25</td>
+      <td>$155.98</td>
+      <td>$165.74</td>
+      <td>$132.58</td>
+      <td>+6.26%</td>
+      <td>+1,054</td>
+      <td>+0.42R</td>
+      <td>Time Stop 25D</td>
+      <td>35.3%</td>
+      <td>0.88x</td>
+      <td>skew_idx=-1.91 (-0.054) | vxn_squeeze_vel=-2.33 (+0.051) | sector_rs=-0.07 (+0.031) | slope_t_norm_40d=0.83 (+0.025) | slope_accel=0.34 (+0.008)</td>
+    </tr>
+    <tr>
+      <td>ORCL</td>
+      <td>LOW</td>
+      <td>98.7</td>
+      <td>$15,335.11</td>
+      <td>2026-08-14</td>
+      <td>2026-09-10</td>
+      <td>19</td>
+      <td>$155.37</td>
+      <td>$152.27</td>
+      <td>$132.74</td>
+      <td>-2.00%</td>
+      <td>-306</td>
+      <td>-0.14R</td>
+      <td>Earnings Exit</td>
+      <td>33.6%</td>
+      <td>0.76x</td>
+      <td>slope_t_norm_40d=-1.24 (+0.017) | vix_ts=0.79 (-0.016) | sector_rs=-0.00 (+0.016) | skew_idx=-1.48 (-0.015) | vxn_squeeze_vel=-0.96 (+0.015)</td>
+    </tr>
+    <tr>
+      <td>SNDK</td>
+      <td>MEDIUM</td>
+      <td>13.4</td>
+      <td>$20,626.64</td>
+      <td>2026-08-25</td>
+      <td>2026-10-08</td>
+      <td>32</td>
+      <td>$1534.76</td>
+      <td>$1608.33</td>
+      <td>$1304.55</td>
+      <td>+4.79%</td>
+      <td>+989</td>
+      <td>+0.32R</td>
+      <td>Time Stop 25D</td>
+      <td>38.5%</td>
+      <td>1.14x</td>
+      <td>vxn_squeeze_vel=0.38 (+0.017) | sector_rs=-0.04 (-0.006) | slope_t_norm_40d=-1.74 (+0.004) | slope_r2_20d=0.68 (-0.003) | vix_ts=0.85 (-0.002)</td>
+    </tr>
+    <tr>
+      <td>MU</td>
+      <td>HIGH</td>
+      <td>32.3</td>
+      <td>$32,129.25</td>
+      <td>2026-09-11</td>
+      <td>2026-10-15</td>
+      <td>25</td>
+      <td>$993.74</td>
+      <td>$930.59</td>
+      <td>$844.68</td>
+      <td>-6.35%</td>
+      <td>-2,042</td>
+      <td>-0.42R</td>
+      <td>Time Stop 25D</td>
+      <td>40.3%</td>
+      <td>1.27x</td>
+      <td>rs_rank=0.98 (+0.026) | skew_idx=0.54 (-0.018) | vix_ts=0.90 (-0.009) | vol_compress=0.54 (+0.006) | vxn_squeeze_vel=1.06 (+0.006)</td>
+    </tr>
+    <tr>
+      <td>DELL</td>
+      <td>HIGH</td>
+      <td>49</td>
+      <td>$7,105.71</td>
+      <td>2026-03-11</td>
+      <td>2026-10-16</td>
+      <td>153</td>
+      <td>$145.07</td>
+      <td>$451.39</td>
+      <td>$123.31</td>
+      <td>+165.23%</td>
+      <td>+11,741</td>
+      <td>+11.02R</td>
+      <td>Trail Stop Eod</td>
+      <td>41.0%</td>
+      <td>1.29x</td>
+      <td>rs_rank=0.98 (+0.023) | vix_ts=0.98 (+0.013) | sector_rs=0.00 (+0.012) | slope_r2_20d=0.66 (-0.011) | skew_idx=1.02 (-0.003)</td>
+    </tr>
+    <tr>
+      <td>SNPS</td>
+      <td>MEDIUM</td>
+      <td>42.3</td>
+      <td>$21,607.57</td>
+      <td>2026-10-09</td>
+      <td>2026-10-16</td>
+      <td>6</td>
+      <td>$510.84</td>
+      <td>$454.03</td>
+      <td>$454.35</td>
+      <td>-11.12%</td>
+      <td>-2,403</td>
+      <td>-1.01R</td>
+      <td>Stop</td>
+      <td>37.8%</td>
+      <td>1.09x</td>
+      <td>vix_ts=0.85 (-0.019) | rs_rank=0.98 (+0.012) | slope_r2_20d=0.87 (-0.010) | resid_mom_60=0.15 (-0.006) | skew_idx=0.95 (-0.004)</td>
+    </tr>
+  </tbody>
+</table>
+<footer>SemiSwing Systematic Trading Engine &bull; Report Created: <strong>2026-10-20 01:17:00 EDT</strong></footer></div></body></html>

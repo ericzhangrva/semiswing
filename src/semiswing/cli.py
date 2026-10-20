@@ -16,6 +16,7 @@ from semiswing.backtest.report import (
     compute_benchmark_result,
     compute_cash_tbill_benchmark,
     generate_reports,
+    write_recent_trades_and_open_positions_report,
 )
 from semiswing.config import (
     PROJECT_ROOT,
@@ -23,6 +24,8 @@ from semiswing.config import (
     export_private_portfolios_json,
     load_all_portfolio_settings,
     load_events_settings,
+    load_family_portfolio_settings,
+    load_isabel_portfolio_settings,
     load_portfolio_settings,
     load_strategy_settings,
     load_universe_settings,
@@ -150,45 +153,13 @@ def backtest(
 
     html_path = PROJECT_ROOT / report
     html_out, md_out = generate_reports(results, cal_stats, health_score, html_path)
-
-    for title, attr in [
-        ("Full Out-of-Sample Walk-Forward (2022-2026)", "metrics_overall"),
-        ("View A: 2022 Bear Market Stress Test (2022)", "metrics_2022_bear"),
-        ("View B: Modern AI Cycle (2023-2026)", "metrics_ai_era"),
-    ]:
-        tbl = Table(title=title)
-        for col in [
-            "Strategy",
-            "Return %",
-            "CAGR %",
-            "Sharpe",
-            "Sortino",
-            "Max DD %",
-            "Cash Days %",
-            "Trades",
-            "Win Rate %",
-            "Profit Factor",
-            "Avg R",
-        ]:
-            tbl.add_column(col)
-        for name, res in results.items():
-            m = getattr(res, attr)
-            tbl.add_row(
-                name,
-                f"{m['total_return_pct']:.1f}%",
-                f"{m['cagr_pct']:.1f}%",
-                f"{m['sharpe']:.2f}",
-                f"{m['sortino']:.2f}",
-                f"{m['max_dd_pct']:.1f}%",
-                f"{m['cash_days_pct']:.1f}%",
-                str(m["trades"]),
-                f"{m['win_rate_pct']:.1f}%",
-                f"{m['profit_factor']:.2f}",
-                f"{m['avg_r']:.2f}R",
-            )
-        console.print(tbl)
-
+    recent_html = write_recent_trades_and_open_positions_report(
+        res_ml,
+        panel_ml,
+        PROJECT_ROOT / "reports" / "backtests" / "recent_trades_and_open_positions.html",
+    )
     console.print(f"[bold green]HTML Report written to:[/bold green] {html_out}")
+    console.print(f"[bold green]Recent Trades & Open Positions Report written to:[/bold green] {recent_html}")
     console.print(f"[bold green]Markdown Report written to:[/bold green] {md_out}")
 
 
@@ -279,9 +250,12 @@ def recommend(
     panel, _, _ = run_walkforward_ml_predictions(panel, strategy, health_score=health_score)
 
     cap_override = capital if capital > 0 else None
-    all_plans = {}
-    for slug, pcfg in all_portfolios.items():
-        all_plans[slug] = build_daily_recommendation_plan(
+    family_portfolios = load_family_portfolio_settings()
+    isabel_portfolios = load_isabel_portfolio_settings()
+    all_portfolios = {**family_portfolios, **isabel_portfolios}
+
+    family_plans = {
+        slug: build_daily_recommendation_plan(
             panel=panel,
             strategy=strategy,
             universe=universe,
@@ -289,11 +263,33 @@ def recommend(
             health_score=health_score,
             capital_override=cap_override,
         )
+        for slug, pcfg in family_portfolios.items()
+    }
 
+    isabel_plans = {
+        slug: build_daily_recommendation_plan(
+            panel=panel,
+            strategy=strategy,
+            universe=universe,
+            portfolio=pcfg,
+            health_score=health_score,
+            capital_override=cap_override,
+        )
+        for slug, pcfg in isabel_portfolios.items()
+    }
+
+    all_plans = {**family_plans, **isabel_plans}
     primary_plan = next(iter(all_plans.values()))
     try:
-        html_out, md_out = write_recommendation_reports(primary_plan, all_plans=all_plans, passcode=passcode)
-        console.print(f"\n[bold green]Encrypted Multi-Portfolio HTML Trade Ticket written to:[/bold green] {html_out}")
+        html_out, md_out = write_recommendation_reports(
+            primary_plan,
+            all_plans=all_plans,
+            family_plans=family_plans,
+            isabel_plans=isabel_plans,
+            passcode=passcode,
+        )
+        console.print(f"\n[bold green]Encrypted Family HTML Trade Tickets (Card 4) written to:[/bold green] reports/daily/family_recommendations.html")
+        console.print(f"[bold green]Encrypted Isabel HTML Trade Tickets (Card 5) written to:[/bold green] reports/daily/isabel_recommendations.html")
         console.print(f"[bold green]Local Plain-Text / Markdown Ticket written to:[/bold green] {md_out}")
     except ValueError as e:
         console.print(f"\n[bold yellow]Skipped Encrypted Daily Trade Tickets: {e}[/bold yellow]")
@@ -402,8 +398,8 @@ def _is_us_market_open_day(dt: pd.Timestamp | None = None) -> tuple[bool, str]:
     return True, "NYSE Market Open Day"
 
 
-def _write_cloudflare_pages_index(as_of_date: str, regime_on: bool, num_portfolios: int = 2) -> Path:
-    """Write a clean root `reports/index.html` dashboard hub for Cloudflare Pages (without exposing raw balances)."""
+def _write_cloudflare_pages_index(as_of_date: str, regime_on: bool, num_portfolios: int = 5) -> Path:
+    """Write a clean root `reports/index.html` dashboard hub for Cloudflare Pages (5 Scorecards)."""
     idx_path = PROJECT_ROOT / "reports" / "index.html"
     idx_path.parent.mkdir(parents=True, exist_ok=True)
     regime_badge = "RISK-ON (Swing Entries Enabled)" if regime_on else "DEFENSIVE (Hold Core / Cash)"
@@ -418,7 +414,7 @@ def _write_cloudflare_pages_index(as_of_date: str, regime_on: bool, num_portfoli
   <title>SemiSwing Cloud Dashboard ({as_of_date})</title>
 </head>
 <body style="margin:0; padding:32px 16px; background:#0f172a; color:#f8fafc; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
-  <div style="max-width:680px; margin:0 auto;">
+  <div style="max-width:720px; margin:0 auto;">
     <div style="font-size:12px; text-transform:uppercase; letter-spacing:1px; color:#38bdf8; font-weight:700;">
       SemiSwing Automated Cloud Desk
     </div>
@@ -426,40 +422,62 @@ def _write_cloudflare_pages_index(as_of_date: str, regime_on: bool, num_portfoli
     <p style="color:#94a3b8; font-size:14px; margin-top:0;">
       Latest Bar: <strong>{as_of_date}</strong> &bull;
       Regime: <strong style="color:{regime_color};">{regime_badge}</strong> &bull;
-      Portfolios: <strong>Passcode Protected ({num_portfolios} Snapshots)</strong>
+      Portfolios: <strong>Passcode Protected ({num_portfolios} Accounts)</strong>
     </p>
 
     <div style="display:grid; gap:16px; margin-top:24px;">
-      <!-- Card 1 (Top): $10K Starter Portfolio & Trade Allocation Guide (Clean Cash) - PUBLIC -->
-      <a href="daily/starter_10k.html" style="display:block; text-decoration:none; background:#1e293b; border:1px solid #334155; border-left:5px solid #38bdf8; border-radius:10px; padding:20px;">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <div style="font-size:18px; font-weight:800; color:#f8fafc;">1. $10K Starter Portfolio &amp; Trade Allocation Guide &rarr;</div>
-          <span style="background:#052e16; color:#4ade80; border:1px solid #16a34a; padding:3px 10px; border-radius:999px; font-size:11px; font-weight:700;">PUBLIC</span>
-        </div>
-        <div style="font-size:13px; color:#94a3b8; margin-top:6px;">
-          Public reference allocation assuming starting with $10,000 in cash. Provides exact dollar trade tickets for top AI &amp; semiconductor swing setups, with unallocated cash parked in SMH (Bull Core) or 3-Month T-Bills (Cash Yield).
-        </div>
-      </a>
-
-      <!-- Card 2 (Middle): Multi-Portfolio Daily Trade Tickets (Passcode Locked) - PROTECTED -->
-      <a href="daily/latest_recommendations.html" style="display:block; text-decoration:none; background:#1e293b; border:1px solid #334155; border-left:5px solid #a855f7; border-radius:10px; padding:20px;">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <div style="font-size:18px; font-weight:800; color:#f8fafc;">2. Today's Daily Trade Tickets (Passcode Locked) &rarr;</div>
-          <span style="background:#0f172a; color:#38bdf8; border:1px solid #0284c7; padding:3px 10px; border-radius:999px; font-size:11px; font-weight:700;">PROTECTED</span>
-        </div>
-        <div style="font-size:13px; color:#94a3b8; margin-top:6px;">
-          Requires passcode to decrypt. View Step 1 (Holdings SELL / HOLD actions) and Step 2 (Exact $ Buy Tickets, Stop-Loss, TP1, and SHAP drivers) across all portfolio snapshots.
-        </div>
-      </a>
-
-      <!-- Card 3 (Bottom): Walk-Forward Backtest Report & Equity Curves ($10K) - PUBLIC -->
+      <!-- Card 1: Walk-Forward Backtest Report & Performance Tearsheet ($10K) - PUBLIC -->
       <a href="backtests/backtest_report.html" style="display:block; text-decoration:none; background:#1e293b; border:1px solid #334155; border-left:5px solid #4ade80; border-radius:10px; padding:20px;">
         <div style="display:flex; justify-content:space-between; align-items:center;">
-          <div style="font-size:18px; font-weight:800; color:#f8fafc;">3. Walk-Forward Backtest Report &amp; Equity Curves ($10K) &rarr;</div>
+          <div style="font-size:18px; font-weight:800; color:#f8fafc;">1. Walk-Forward Backtest Report &amp; Equity Curves ($10K) &rarr;</div>
           <span style="background:#052e16; color:#4ade80; border:1px solid #16a34a; padding:3px 10px; border-radius:999px; font-size:11px; font-weight:700;">PUBLIC</span>
         </div>
         <div style="font-size:13px; color:#94a3b8; margin-top:6px;">
-          Public $10,000 out-of-sample walk-forward evaluation (2022&ndash;Present): compares Adaptive Baseline, LightGBM + Platt, SMH Bull Core + Swing, QQQ, and SPY.
+          Institutional $10,000 out-of-sample walk-forward backtest tearsheet (2022&ndash;Present): compares Adaptive Baseline, LightGBM + Platt, SMH Bull Core + Swing, QQQ, and SPY with institutional gate metrics.
+        </div>
+      </a>
+
+      <!-- Card 2: Recent Closed Trades (25) & Active Open Positions (MTM) - PUBLIC -->
+      <a href="backtests/recent_trades_and_open_positions.html" style="display:block; text-decoration:none; background:#1e293b; border:1px solid #334155; border-left:5px solid #38bdf8; border-radius:10px; padding:20px;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div style="font-size:18px; font-weight:800; color:#f8fafc;">2. Recent Closed Trades (25) &amp; Active Open Positions (MTM) &rarr;</div>
+          <span style="background:#052e16; color:#4ade80; border:1px solid #16a34a; padding:3px 10px; border-radius:999px; font-size:11px; font-weight:700;">PUBLIC</span>
+        </div>
+        <div style="font-size:13px; color:#94a3b8; margin-top:6px;">
+          Real-time Mark-to-Market (MTM) paper profit/loss ledger for all currently active swing trades, alongside the 25 most recent completed out-of-sample trades with SHAP feature attributions and metric legend.
+        </div>
+      </a>
+
+      <!-- Card 3: $10K Starter Portfolio & Trade Allocation Guide (Clean Cash) - PUBLIC -->
+      <a href="daily/starter_10k.html" style="display:block; text-decoration:none; background:#1e293b; border:1px solid #334155; border-left:5px solid #f59e0b; border-radius:10px; padding:20px;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div style="font-size:18px; font-weight:800; color:#f8fafc;">3. $10K Starter Portfolio &amp; Trade Allocation Guide &rarr;</div>
+          <span style="background:#052e16; color:#4ade80; border:1px solid #16a34a; padding:3px 10px; border-radius:999px; font-size:11px; font-weight:700;">PUBLIC</span>
+        </div>
+        <div style="font-size:13px; color:#94a3b8; margin-top:6px;">
+          Public reference allocation assuming starting with $10,000 in clean cash. Provides exact dollar trade tickets for top AI &amp; semiconductor swing setups, with unallocated cash parked in SMH (Bull Core) or 3-Month T-Bills (Cash Yield).
+        </div>
+      </a>
+
+      <!-- Card 4: Family Daily Trade Tickets (Eric, Alissa, Fei) - PROTECTED -->
+      <a href="daily/family_recommendations.html" style="display:block; text-decoration:none; background:#1e293b; border:1px solid #334155; border-left:5px solid #a855f7; border-radius:10px; padding:20px;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div style="font-size:18px; font-weight:800; color:#f8fafc;">4. Family Daily Trade Tickets (Eric, Alissa, Fei) &rarr;</div>
+          <span style="background:#0f172a; color:#c084fc; border:1px solid #9333ea; padding:3px 10px; border-radius:999px; font-size:11px; font-weight:700;">PROTECTED</span>
+        </div>
+        <div style="font-size:13px; color:#94a3b8; margin-top:6px;">
+          Requires family passcode to decrypt. Covers all accounts for Eric, Alissa, and Fei (Individual TOD, Minor Roth IRA, Cash Balance, Self-Employed 401K). Step 1 (Holdings SELL/HOLD actions) and Step 2 (Exact $ Buy Tickets, Stop-Loss, TP1).
+        </div>
+      </a>
+
+      <!-- Card 5: Isabel Daily Trade Tickets - PROTECTED -->
+      <a href="daily/isabel_recommendations.html" style="display:block; text-decoration:none; background:#1e293b; border:1px solid #334155; border-left:5px solid #ec4899; border-radius:10px; padding:20px;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div style="font-size:18px; font-weight:800; color:#f8fafc;">5. Isabel Daily Trade Tickets &rarr;</div>
+          <span style="background:#0f172a; color:#f472b6; border:1px solid #db2777; padding:3px 10px; border-radius:999px; font-size:11px; font-weight:700;">PROTECTED</span>
+        </div>
+        <div style="font-size:13px; color:#94a3b8; margin-top:6px;">
+          Requires Isabel's passcode to decrypt. Covers Isabel's dedicated investment portfolio (Roth IRA, Capital One 401K, HSA). Exact trade actions and dollar buy allocations.
         </div>
       </a>
     </div>
@@ -541,11 +559,19 @@ def daily_run(
     bt_html, _ = generate_reports(
         results, cal_stats, health_score, PROJECT_ROOT / "reports" / "backtests" / "backtest_report.html"
     )
+    recent_html = write_recent_trades_and_open_positions_report(
+        results["ML (LightGBM + Platt)"],
+        panel_ml,
+        PROJECT_ROOT / "reports" / "backtests" / "recent_trades_and_open_positions.html",
+    )
 
     console.print(f"[bold cyan]4/4 Generating Passcode-Encrypted Trade Tickets for {len(all_portfolios)} portfolio(s)...[/bold cyan]")
-    all_plans = {}
-    for slug, pcfg in all_portfolios.items():
-        all_plans[slug] = build_daily_recommendation_plan(
+    family_portfolios = load_family_portfolio_settings()
+    isabel_portfolios = load_isabel_portfolio_settings()
+    all_portfolios = {**family_portfolios, **isabel_portfolios}
+
+    family_plans = {
+        slug: build_daily_recommendation_plan(
             panel=panel_ml,
             strategy=strategy,
             universe=universe,
@@ -553,11 +579,33 @@ def daily_run(
             health_score=health_score,
             capital_override=None,
         )
+        for slug, pcfg in family_portfolios.items()
+    }
 
+    isabel_plans = {
+        slug: build_daily_recommendation_plan(
+            panel=panel_ml,
+            strategy=strategy,
+            universe=universe,
+            portfolio=pcfg,
+            health_score=health_score,
+            capital_override=None,
+        )
+        for slug, pcfg in isabel_portfolios.items()
+    }
+
+    all_plans = {**family_plans, **isabel_plans}
     primary_plan = next(iter(all_plans.values()))
     try:
-        rec_html, rec_md = write_recommendation_reports(primary_plan, all_plans=all_plans, passcode=passcode)
-        console.print(f"[bold green]Updated Encrypted Daily Trade Tickets:[/bold green] {rec_html}")
+        html_out, md_out = write_recommendation_reports(
+            primary_plan,
+            all_plans=all_plans,
+            family_plans=family_plans,
+            isabel_plans=isabel_plans,
+            passcode=passcode,
+        )
+        console.print(f"[bold green]Updated Encrypted Family Daily Trade Tickets (Card 4):[/bold green] reports/daily/family_recommendations.html")
+        console.print(f"[bold green]Updated Encrypted Isabel Daily Trade Tickets (Card 5):[/bold green] reports/daily/isabel_recommendations.html")
     except ValueError as e:
         console.print(f"[bold yellow]Skipped Encrypted Daily Trade Tickets: {e}[/bold yellow]")
 
@@ -609,12 +657,14 @@ def sync_secrets(
     import os
     from semiswing.config import save_encrypted_portfolios_vault
 
-    eff_passcode = (passcode or os.environ.get("PORTFOLIO_PASSCODE", "")).strip()
-    if not eff_passcode:
-        raise typer.BadParameter("PORTFOLIO_PASSCODE is required. Pass --passcode or set PORTFOLIO_PASSCODE in .env.")
+    eff_family = (os.environ.get("FAMILY_PORTFOLIO_PASSCODE", "") or passcode or os.environ.get("PORTFOLIO_PASSCODE", "")).strip()
+    eff_isabel = (os.environ.get("ISABEL_PORTFOLIO_PASSCODE", "") or passcode or os.environ.get("PORTFOLIO_PASSCODE", "")).strip()
+    if not eff_family and not eff_isabel:
+        raise typer.BadParameter("FAMILY_PORTFOLIO_PASSCODE / ISABEL_PORTFOLIO_PASSCODE or PORTFOLIO_PASSCODE is required.")
 
-    vault_path = save_encrypted_portfolios_vault(passcode=eff_passcode)
-    console.print(f"[bold green]Successfully encrypted private portfolios into:[/bold green] {vault_path}")
+    vault_paths = save_encrypted_portfolios_vault(passcode=passcode)
+    for vp in vault_paths:
+        console.print(f"[bold green]Successfully encrypted private portfolios into:[/bold green] {vp}")
 
 
 

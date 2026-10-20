@@ -43,6 +43,8 @@ jobs:
           TZ: America/New_York
           PORTFOLIOS_SECRET_JSON: ${{ secrets.PORTFOLIOS_SECRET_JSON }}
           PORTFOLIO_PASSCODE: ${{ secrets.PORTFOLIO_PASSCODE }}
+          FAMILY_PORTFOLIO_PASSCODE: ${{ secrets.FAMILY_PORTFOLIO_PASSCODE }}
+          ISABEL_PORTFOLIO_PASSCODE: ${{ secrets.ISABEL_PORTFOLIO_PASSCODE }}
           ALERT_EMAIL: ${{ secrets.ALERT_EMAIL }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           SMTP_HOST: ${{ secrets.SMTP_HOST || 'smtp.gmail.com' }}
