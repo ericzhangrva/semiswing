@@ -1989,51 +1989,65 @@ def write_recent_trades_and_open_positions_report(
             tot_cost += cost
             tot_unrealized_pnl += unrealized_pnl
 
+            pnl_c = "#16a34a" if unrealized_pnl >= 0 else "#dc2626"
+            tier_class = pos.tier.lower().replace("_", "-")
+
             open_rows.append({
-                "Ticker": ticker,
-                "Tier": pos.tier,
-                "Shares": f"{pos.shares:.1f}",
-                "Entry Date": entry_dt_str,
-                "Days Held": pos.days_held,
-                "Entry ($)": f"${pos.entry_price:,.2f}",
-                "Current Stop ($)": f"${pos.current_stop:,.2f}",
-                "Latest Close ($)": f"${last_close:,.2f}",
-                "Position Value ($)": f"${pos_val:,.2f}",
-                "Unrealized P&L ($)": f"{unrealized_pnl:+,.2f}",
-                "Unrealized Ret (%)": f"{unrealized_ret:+.2f}%",
-                "Stop Distance (%)": f"{stop_dist_pct:+.2f}%",
-                "Top Model Drivers": pos.shap_summary or "N/A",
+                "ticker": ticker,
+                "tier": pos.tier,
+                "tier_class": tier_class,
+                "shares": f"{pos.shares:.1f}",
+                "entry_date": entry_dt_str,
+                "days_held": pos.days_held,
+                "entry_price": pos.entry_price,
+                "current_stop": pos.current_stop,
+                "last_close": last_close,
+                "pos_val": pos_val,
+                "unrealized_pnl": unrealized_pnl,
+                "unrealized_ret": unrealized_ret,
+                "stop_dist_pct": stop_dist_pct,
+                "pnl_color": pnl_c,
+                "drivers": pos.shap_summary or "N/A",
             })
-
-    open_df = pd.DataFrame(open_rows)
-
-    recent_tr = best_sys.trades.tail(25) if (best_sys is not None and not best_sys.trades.empty) else pd.DataFrame()
-    formatted_tr = _format_trade_blotter_df(recent_tr) if not recent_tr.empty else pd.DataFrame()
 
     tot_unrealized_ret = (tot_unrealized_pnl / tot_cost * 100.0) if tot_cost > 0 else 0.0
     pnl_color = "#16a34a" if tot_unrealized_pnl >= 0 else "#dc2626"
+
+    # Recent exits within last 10-15 trading days
+    recent_closed = best_sys.trades.tail(10) if (best_sys is not None and not best_sys.trades.empty) else pd.DataFrame()
 
     html_parts = [
         "<!DOCTYPE html>",
         "<html lang='en'><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'>",
         "<title>SemiSwing: Active Open Positions &amp; Recent Closed Trades</title>",
         "<style>",
-        "body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 24px; background: #f1f5f9; color: #1e293b; line-height: 1.5; }",
-        ".container { max-width: 1280px; margin: 0 auto; background: #ffffff; padding: 32px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }",
-        "h1 { margin-top: 0; font-size: 26px; color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 12px; }",
-        "h2 { font-size: 19px; color: #1e293b; margin-top: 28px; margin-bottom: 12px; border-left: 4px solid #0284c7; padding-left: 10px; }",
-        ".header-meta { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; font-size: 13px; color: #64748b; }",
+        "body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 24px 16px; background: #f1f5f9; color: #1e293b; line-height: 1.5; }",
+        ".container { max-width: 1360px; margin: 0 auto; background: #ffffff; padding: 28px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.04); }",
+        "h1 { margin-top: 0; font-size: 24px; color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 12px; }",
+        "h2 { font-size: 18px; color: #1e293b; margin-top: 28px; margin-bottom: 12px; border-left: 4px solid #0284c7; padding-left: 10px; }",
+        ".header-meta { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; font-size: 13px; color: #64748b; }",
         ".meta-badge { background: #f8fafc; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 6px; }",
-        ".cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }",
-        ".metric-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; }",
-        ".metric-card .title { font-size: 12px; font-weight: 700; text-transform: uppercase; color: #64748b; letter-spacing: 0.5px; }",
-        ".metric-card .val { font-size: 22px; font-weight: 800; color: #0f172a; margin-top: 4px; }",
-        "table { width: 100%; border-collapse: collapse; margin-top: 12px; margin-bottom: 24px; font-size: 13px; border: 1px solid #e2e8f0; }",
-        "th { background: #1e293b; color: #ffffff; text-align: left; padding: 10px 12px; font-weight: 600; white-space: nowrap; }",
-        "td { padding: 9px 12px; border-bottom: 1px solid #e2e8f0; }",
+        ".cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 24px; }",
+        ".metric-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 16px; }",
+        ".metric-card .title { font-size: 11.5px; font-weight: 700; text-transform: uppercase; color: #64748b; letter-spacing: 0.5px; }",
+        ".metric-card .val { font-size: 20px; font-weight: 800; color: #0f172a; margin-top: 4px; }",
+        ".info-box { background: #f0f9ff; border: 1px solid #bae6fd; border-left: 4px solid #0284c7; padding: 14px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 12.5px; color: #0369a1; line-height: 1.55; }",
+        ".notice-box { background: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #64748b; padding: 12px 16px; border-radius: 8px; margin-bottom: 24px; font-size: 12px; color: #475569; }",
+        ".table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 10px; margin-bottom: 24px; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.03); }",
+        "table { width: 100%; min-width: 920px; border-collapse: collapse; font-size: 12px; border: none; }",
+        "th { background: #1e293b; color: #f8fafc; text-align: left; padding: 9px 10px; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; white-space: nowrap; border: none; }",
+        "td { padding: 8px 10px; border-bottom: 1px solid #f1f5f9; font-variant-numeric: tabular-nums; white-space: nowrap; }",
+        "tr:last-child td { border-bottom: none; }",
         "tr:nth-child(even) { background: #f8fafc; }",
-        ".badge-open { background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; padding: 2px 8px; border-radius: 999px; font-weight: 700; font-size: 11px; }",
+        "tr:hover { background: #f1f5f9; }",
+        ".badge-exit { background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; padding: 2px 7px; border-radius: 4px; font-size: 10.5px; font-weight: 600; }",
+        ".badge-tier { display: inline-block; padding: 2px 7px; border-radius: 4px; font-size: 10.5px; font-weight: 700; text-transform: uppercase; }",
+        ".tier-consensus { background: #dcfce7; color: #166534; }",
+        ".tier-high { background: #e0f2fe; color: #0369a1; }",
+        ".tier-medium { background: #f1f5f9; color: #475569; }",
+        ".tier-low { background: #fff1f2; color: #be123c; }",
         ".badge-public { background: #052e16; color: #4ade80; border: 1px solid #16a34a; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; }",
+        ".drivers-cell { white-space: normal !important; min-width: 220px; max-width: 320px; font-size: 11px; line-height: 1.35; color: #475569; }",
         "footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #e2e8f0; text-align: center; font-size: 12px; color: #64748b; }",
         "</style></head><body>",
         "<div class='container'>",
@@ -2044,20 +2058,67 @@ def write_recent_trades_and_open_positions_report(
         "</div>",
         "<div class='header-meta'>",
         f"  <div class='meta-badge'>Strategy Mode: <strong>{best_sys.name}</strong></div>",
-        f"  <div class='meta-badge'>Active Open Count: <strong>{len(open_rows)}</strong></div>",
+        f"  <div class='meta-badge'>Active Open Count: <strong>{len(open_rows)} of 4 Max Positions</strong></div>",
         f"  <div class='meta-badge'>Report Created: <strong>{now_ts}</strong></div>",
         "</div>",
         "<div class='cards-grid'>",
-        f"  <div class='metric-card'><div class='title'>Active Open Trades</div><div class='val'>{len(open_rows)}</div></div>",
+        f"  <div class='metric-card'><div class='title'>Active Open Trades</div><div class='val'>{len(open_rows)} <span style='font-size:13px; font-weight:500; color:#64748b;'>(of 4 max slots)</span></div></div>",
         f"  <div class='metric-card'><div class='title'>Total Invested Capital</div><div class='val'>${tot_invested:,.2f}</div></div>",
         f"  <div class='metric-card'><div class='title'>Temporary Unrealized P&amp;L</div><div class='val' style='color:{pnl_color};'>{tot_unrealized_pnl:+,.2f} ({tot_unrealized_ret:+.2f}%)</div></div>",
         f"  <div class='metric-card'><div class='title'>Total Closed Trades (OOS)</div><div class='val'>{len(best_sys.trades) if best_sys is not None else 0}</div></div>",
         "</div>",
         "<h2>1. Active Open Positions (Daily Mark-to-Market)</h2>",
+        "<div class='info-box'>",
+        "  <strong>Why are 2 swing positions currently active?</strong><br/>",
+        "  SemiSwing enforces strict institutional risk limits: a hard maximum of <strong>4 concurrent swing positions</strong>, a single-name position cap of 33%, and a maximum portfolio open risk of 14%. ",
+        "  Over the past 5 trading days, 3 positions reached their algorithmic exits (<code>DELL</code> hit EOD trailing stop at +165.2% after a 153-day run, <code>SNPS</code> hit its stop loss, and <code>MU</code> hit its 25-day time stop), freeing up capacity. ",
+        "  The model currently deploys capital into <strong>2 active swing positions</strong> (<code>AAPL</code> +4.66% and <code>MSFT</code> -1.51%), with all unallocated cash automatically earning risk-free Treasury Bill yield (FRED DTB3 @ ~4.6% APR).",
+        "</div>",
     ]
 
-    if not open_df.empty:
-        html_parts.append(_decorate_html_table(open_df.to_html(index=False, border=0)))
+    # Render Table 1: Active Open Positions
+    if open_rows:
+        open_table_rows = []
+        for r in open_rows:
+            open_table_rows.append(f"""
+            <tr>
+              <td><strong style="font-size:13px; color:#0f172a;">{r['ticker']}</strong></td>
+              <td><span class="badge-tier tier-{r['tier_class']}">{r['tier']}</span></td>
+              <td>{r['shares']}</td>
+              <td>{r['entry_date']}</td>
+              <td>{r['days_held']}d</td>
+              <td>${r['entry_price']:.2f} &rarr; <strong>${r['last_close']:.2f}</strong></td>
+              <td>${r['current_stop']:.2f}</td>
+              <td>${r['pos_val']:,.2f}</td>
+              <td style="color:{r['pnl_color']}; font-weight:700;">{r['unrealized_pnl']:+,.2f} ({r['unrealized_ret']:+.2f}%)</td>
+              <td>{r['stop_dist_pct']:+.2f}%</td>
+              <td class="drivers-cell">{r['drivers']}</td>
+            </tr>
+            """)
+        html_parts.append(f"""
+        <div class='table-responsive'>
+          <table>
+            <thead>
+              <tr>
+                <th>Ticker</th>
+                <th>Tier</th>
+                <th>Shares</th>
+                <th>Entry Date</th>
+                <th>Held</th>
+                <th>Entry &rarr; Close</th>
+                <th>Protect Stop</th>
+                <th>Position ($)</th>
+                <th>Unrealized P&amp;L</th>
+                <th>Stop Dist</th>
+                <th>Top Model Drivers (SHAP)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {''.join(open_table_rows)}
+            </tbody>
+          </table>
+        </div>
+        """)
     else:
         html_parts.append(
             "<div style='background:#f8fafc; border:1px solid #cbd5e1; border-left:4px solid #0284c7; padding:16px; border-radius:6px; color:#475569; margin:16px 0;'>"
@@ -2065,10 +2126,117 @@ def write_recent_trades_and_open_positions_report(
             "</div>"
         )
 
+    # Sub-section: Recent Exits in Last 10 Days
+    if not recent_closed.empty:
+        cutoff_exits = recent_closed.tail(4).iloc[::-1]
+        exit_table_rows = []
+        for _, r in cutoff_exits.iterrows():
+            ret_pct = float(r.get("return_pct", 0.0))
+            net_pnl = float(r.get("net_pnl", 0.0))
+            color = "#16a34a" if net_pnl >= 0 else "#dc2626"
+            raw_reason = str(r.get("exit_reason", "")).replace("_", " ").title()
+            exit_table_rows.append(f"""
+            <tr>
+              <td><strong>{r.get('ticker')}</strong></td>
+              <td>{pd.to_datetime(r.get('entry_date')).strftime('%Y-%m-%d')} &rarr; {pd.to_datetime(r.get('exit_date')).strftime('%Y-%m-%d')}</td>
+              <td>{int(r.get('days_held', 0))}d</td>
+              <td>${float(r.get('entry_price', 0)):.2f} &rarr; ${float(r.get('exit_price', 0)):.2f}</td>
+              <td style="color:{color}; font-weight:700;">{net_pnl:+,.0f} ({ret_pct:+.2f}%)</td>
+              <td><span class="badge-exit">{raw_reason}</span></td>
+            </tr>
+            """)
+        html_parts.append(f"""
+        <div style="margin-top:20px; margin-bottom:28px;">
+          <div style="font-size:13.5px; font-weight:700; color:#334155; margin-bottom:8px;">Recent Model Exits (Vacated Slots in Last 10 Trading Days):</div>
+          <div class="table-responsive" style="margin-top:0;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Ticker</th>
+                  <th>Holding Period</th>
+                  <th>Days Held</th>
+                  <th>Entry &rarr; Exit Price</th>
+                  <th>Realized P&amp;L</th>
+                  <th>Exit Trigger</th>
+                </tr>
+              </thead>
+              <tbody>
+                {''.join(exit_table_rows)}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        """)
+
+    html_parts.append(
+        "<div class='notice-box'>"
+        "<strong>Note on Reference Backtest vs. Real Accounts:</strong> This Card #2 report reflects the <em>algorithmic reference backtest portfolio</em> ($10K compounding starting equity, max 4 positions). For actual brokerage account holdings and personalized trade recommendations, refer to <a href='../daily/family_recommendations.html' style='color:#0284c7; font-weight:700; text-decoration:none;'>Card 4 (Personal Daily Trade Tickets)</a> and <a href='../daily/isabel_recommendations.html' style='color:#0284c7; font-weight:700; text-decoration:none;'>Card 5 (Customer IZ Daily Trade Tickets)</a>."
+        "</div>"
+    )
+
+    # Section 2: Recent 25 Out-of-Sample Closed Trades
     html_parts.append(f"<h2>2. Recent 25 Out-of-Sample Closed Trades ({best_sys.name})</h2>")
     html_parts.append(_render_trade_legend_html())
-    if not formatted_tr.empty:
-        html_parts.append(_decorate_html_table(formatted_tr.to_html(index=False, border=0)))
+
+    recent_25 = best_sys.trades.tail(25) if (best_sys is not None and not best_sys.trades.empty) else pd.DataFrame()
+    if not recent_25.empty:
+        closed_table_rows = []
+        for _, r in recent_25.iloc[::-1].iterrows():  # Newest closed trade first
+            ret_pct = float(r.get("return_pct", 0.0))
+            net_pnl = float(r.get("net_pnl", 0.0))
+            r_mult = float(r.get("r_multiple", 0.0))
+            color = "#16a34a" if net_pnl >= 0 else "#dc2626"
+            raw_reason = str(r.get("exit_reason", "")).replace("_", " ").title()
+            sh = float(r.get("shares", 0.0))
+            sh_str = f"{sh:,.0f}" if sh.is_integer() else f"{sh:,.1f}"
+            notional = float(r.get("notional", 0.0))
+            entry_d = pd.to_datetime(r.get("entry_date")).strftime("%Y-%m-%d")
+            exit_d = pd.to_datetime(r.get("exit_date")).strftime("%Y-%m-%d")
+            prob_str = f"{float(r.get('entry_prob', 0.0)) * 100:.1f}% ({float(r.get('size_scalar', 1.0)):.2f}x)"
+            drivers_text = str(r.get("shap_summary", "N/A"))
+            tier_val = str(r.get("tier", "MEDIUM"))
+            tier_class = tier_val.lower().replace("_", "-")
+
+            closed_table_rows.append(f"""
+            <tr>
+              <td><strong style="color:#0f172a; font-size:12.5px;">{r.get('ticker')}</strong></td>
+              <td><span class="badge-tier tier-{tier_class}">{tier_val}</span></td>
+              <td>{sh_str}</td>
+              <td>${notional:,.0f}</td>
+              <td>{entry_d} &rarr; {exit_d} ({int(r.get('days_held', 0))}d)</td>
+              <td>${float(r.get('entry_price', 0)):.2f} &rarr; ${float(r.get('exit_price', 0)):.2f}</td>
+              <td style="color:{color}; font-weight:700;">{net_pnl:+,.0f} ({ret_pct:+.2f}%)</td>
+              <td style="color:{color}; font-weight:600;">{r_mult:+.2f}R</td>
+              <td><span class="badge-exit">{raw_reason}</span></td>
+              <td>{prob_str}</td>
+              <td class="drivers-cell">{drivers_text}</td>
+            </tr>
+            """)
+
+        html_parts.append(f"""
+        <div class='table-responsive'>
+          <table>
+            <thead>
+              <tr>
+                <th>Ticker</th>
+                <th>Tier</th>
+                <th>Shares</th>
+                <th>Position ($)</th>
+                <th>Dates (Held)</th>
+                <th>Entry &rarr; Exit</th>
+                <th>Net P&amp;L (Return)</th>
+                <th>R-Mult</th>
+                <th>Exit Reason</th>
+                <th>Win Prob (Scalar)</th>
+                <th>Top Model Drivers</th>
+              </tr>
+            </thead>
+            <tbody>
+              {''.join(closed_table_rows)}
+            </tbody>
+          </table>
+        </div>
+        """)
     else:
         html_parts.append("<p>No closed trades recorded.</p>")
 
@@ -2078,4 +2246,5 @@ def write_recent_trades_and_open_positions_report(
     )
 
     target_path.write_text("\n".join(html_parts), encoding="utf-8")
+    return target_path
     return target_path

@@ -5,7 +5,11 @@ SemiSwing is a systematic momentum swing trading, walk-forward backtesting, and 
 Unallocated portfolio cash earns daily risk-free interest indexed to the 3-Month US Treasury Bill rate (`FRED DTB3`), with an **SMH Bull Core + Swing** sleeve that holds `SMH` during confirmed secular semiconductor bull markets.
 
 - **Live Cloud Dashboard:** [https://semiswing.pages.dev/](https://semiswing.pages.dev/)
-- **Live Interactive Backtest Report:** [`https://semiswing.pages.dev/backtests/backtest_report.html`](https://semiswing.pages.dev/backtests/backtest_report.html)
+- **1. Walk-Forward Backtest Report & Performance Tearsheet ($10K):** [https://semiswing.pages.dev/backtests/backtest_report.html](https://semiswing.pages.dev/backtests/backtest_report.html)
+- **2. Active Open Positions (Daily MTM) & Recent 25 Closed Trades:** [https://semiswing.pages.dev/backtests/recent_trades_and_open_positions.html](https://semiswing.pages.dev/backtests/recent_trades_and_open_positions.html)
+- **3. $10,000 Starter Portfolio & Daily Allocation Guide:** [https://semiswing.pages.dev/daily/starter_10k.html](https://semiswing.pages.dev/daily/starter_10k.html)
+- **4. Personal Daily Trade Tickets (Passcode-Protected):** [https://semiswing.pages.dev/daily/family_recommendations.html](https://semiswing.pages.dev/daily/family_recommendations.html)
+- **5. Customer IZ Daily Trade Tickets (Passcode-Protected):** [https://semiswing.pages.dev/daily/isabel_recommendations.html](https://semiswing.pages.dev/daily/isabel_recommendations.html)
 - **Static Markdown Backtest Report:** [`reports/backtests/backtest_report.md`](reports/backtests/backtest_report.md)
 
 ---
@@ -38,12 +42,14 @@ The platform is engineered around six institutional quantitative trading and sof
 - **Calibrated Probabilities & Continuous Sizing ($S_{i,t}$):** Raw tree predictions are probability-calibrated using Platt Sigmoid scaling. Rather than binary all-or-nothing trade vetoes, a continuous meta-labeling position sizing multiplier ($S_{i,t} \in [0.50, 1.50]$) scales risk dynamically with model conviction.
 - **Explainable Model Attribution (SHAP):** Every recommended trade ticket includes feature attribution summaries, explicitly detailing the positive and negative drivers behind each signal.
 
-### 1.5 Automated Morning Workflow & Three-Tier Cloud Trading Desk
+### 1.5 Automated Morning Workflow & Five-Scorecard Cloud Trading Desk
 - **Zero-Overhead Cloud Automation:** Runs every trading day at 09:00 AM ET via GitHub Actions, publishing refreshed reports before 09:02 AM ET with precise generation timestamp footers (`Report Created: YYYY-MM-DD HH:MM:SS EDT`).
-- **Three-Tier Cloudflare Pages Delivery:**
-  - **Card 1 (Top, Public): $10,000 Starter Portfolio & Allocation Guide:** Designed for independent cash accounts starting at $10,000. Provides exact dollar-budgeted buy tickets, target share counts, defensive stops, and dual parking options for remainder cash.
-  - **Card 2 (Middle, Passcode-Protected): Multi-Portfolio Daily Trade Tickets:** Delivers a two-step execution guide (existing holding stop ratchets + new buy allocations) for private portfolios (e.g., taxable brokerage, family accounts, Roth IRA).
-  - **Card 3 (Bottom, Public): Walk-Forward Backtest Tearsheet & Equity Curves:** Comprehensive institutional backtest report displaying audited equity curves, Sharpe/Sortino ratios, drawdowns, and complete out-of-sample trade logs.
+- **Five-Scorecard Cloudflare Pages Delivery:**
+  - **[Card 1 (Public): Walk-Forward Backtest Tearsheet & Equity Curves ($10K)](https://semiswing.pages.dev/backtests/backtest_report.html):** Comprehensive institutional backtest report displaying audited equity curves, Sharpe/Sortino ratios, drawdowns, and complete out-of-sample trade logs against benchmarks (`SMH`, `QQQ`, `SPY`, `T-Bills`).
+  - **[Card 2 (Public): Active Open Positions (Daily MTM) & Recent 25 Closed Trades](https://semiswing.pages.dev/backtests/recent_trades_and_open_positions.html):** Real-time Mark-to-Market paper P&L for all active swing positions alongside recent closed trade logs and SHAP drivers.
+  - **[Card 3 (Public): $10,000 Starter Portfolio & Allocation Guide](https://semiswing.pages.dev/daily/starter_10k.html):** Designed for independent cash accounts starting at $10,000. Provides exact dollar-budgeted buy tickets, defensive stops, and dual parking options (SMH Bull Core vs. T-Bills) for unallocated cash.
+  - **[Card 4 (Protected): Personal Daily Trade Tickets](https://semiswing.pages.dev/daily/family_recommendations.html):** Delivers a two-step execution guide (Step 1: existing holding stop ratchets + Step 2: exact $ new buy tickets) for personal and retirement investment accounts.
+  - **[Card 5 (Protected): Customer IZ Daily Trade Tickets](https://semiswing.pages.dev/daily/isabel_recommendations.html):** Dedicated execution tickets and trade allocations for customer IZ accounts.
 
 ### 1.6 Client-Side Zero-Knowledge Encryption & Multi-Portfolio Privacy
 - **Multi-Portfolio Isolation:** Supports centralized management of multiple distinct accounts with varying cash balances, tax requirements, and risk preferences.

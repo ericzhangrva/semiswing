@@ -288,8 +288,8 @@ def recommend(
             isabel_plans=isabel_plans,
             passcode=passcode,
         )
-        console.print(f"\n[bold green]Encrypted Family HTML Trade Tickets (Card 4) written to:[/bold green] reports/daily/family_recommendations.html")
-        console.print(f"[bold green]Encrypted Isabel HTML Trade Tickets (Card 5) written to:[/bold green] reports/daily/isabel_recommendations.html")
+        console.print(f"\n[bold green]Encrypted Personal HTML Trade Tickets (Card 4) written to:[/bold green] reports/daily/family_recommendations.html")
+        console.print(f"[bold green]Encrypted Customer IZ HTML Trade Tickets (Card 5) written to:[/bold green] reports/daily/isabel_recommendations.html")
         console.print(f"[bold green]Local Plain-Text / Markdown Ticket written to:[/bold green] {md_out}")
     except ValueError as e:
         console.print(f"\n[bold yellow]Skipped Encrypted Daily Trade Tickets: {e}[/bold yellow]")
@@ -459,25 +459,25 @@ def _write_cloudflare_pages_index(as_of_date: str, regime_on: bool, num_portfoli
         </div>
       </a>
 
-      <!-- Card 4: Family Daily Trade Tickets (Eric, Alissa, Fei) - PROTECTED -->
+      <!-- Card 4: Personal Daily Trade Tickets - PROTECTED -->
       <a href="daily/family_recommendations.html" style="display:block; text-decoration:none; background:#1e293b; border:1px solid #334155; border-left:5px solid #a855f7; border-radius:10px; padding:20px;">
         <div style="display:flex; justify-content:space-between; align-items:center;">
-          <div style="font-size:18px; font-weight:800; color:#f8fafc;">4. Family Daily Trade Tickets (Eric, Alissa, Fei) &rarr;</div>
+          <div style="font-size:18px; font-weight:800; color:#f8fafc;">4. Personal Daily Trade Tickets &rarr;</div>
           <span style="background:#0f172a; color:#c084fc; border:1px solid #9333ea; padding:3px 10px; border-radius:999px; font-size:11px; font-weight:700;">PROTECTED</span>
         </div>
         <div style="font-size:13px; color:#94a3b8; margin-top:6px;">
-          Requires family passcode to decrypt. Covers all accounts for Eric, Alissa, and Fei (Individual TOD, Minor Roth IRA, Cash Balance, Self-Employed 401K). Step 1 (Holdings SELL/HOLD actions) and Step 2 (Exact $ Buy Tickets, Stop-Loss, TP1).
+          Requires personal passcode to decrypt. Covers core personal and retirement investment accounts (Individual TOD, Minor Roth IRA, Cash Balance, Self-Employed 401K). Step 1 (Holdings SELL/HOLD actions) and Step 2 (Exact $ Buy Tickets, Stop-Loss, TP1).
         </div>
       </a>
 
-      <!-- Card 5: Isabel Daily Trade Tickets - PROTECTED -->
+      <!-- Card 5: Customer IZ Daily Trade Tickets - PROTECTED -->
       <a href="daily/isabel_recommendations.html" style="display:block; text-decoration:none; background:#1e293b; border:1px solid #334155; border-left:5px solid #ec4899; border-radius:10px; padding:20px;">
         <div style="display:flex; justify-content:space-between; align-items:center;">
-          <div style="font-size:18px; font-weight:800; color:#f8fafc;">5. Isabel Daily Trade Tickets &rarr;</div>
+          <div style="font-size:18px; font-weight:800; color:#f8fafc;">5. Customer IZ Daily Trade Tickets &rarr;</div>
           <span style="background:#0f172a; color:#f472b6; border:1px solid #db2777; padding:3px 10px; border-radius:999px; font-size:11px; font-weight:700;">PROTECTED</span>
         </div>
         <div style="font-size:13px; color:#94a3b8; margin-top:6px;">
-          Requires Isabel's passcode to decrypt. Covers Isabel's dedicated investment portfolio (Roth IRA, Capital One 401K, HSA). Exact trade actions and dollar buy allocations.
+          Requires customer passcode to decrypt. Covers dedicated customer investment portfolio (Roth IRA, 401K, HSA). Step 1 (Holdings review) and Step 2 (Exact trade actions and dollar buy allocations).
         </div>
       </a>
     </div>
@@ -604,8 +604,8 @@ def daily_run(
             isabel_plans=isabel_plans,
             passcode=passcode,
         )
-        console.print(f"[bold green]Updated Encrypted Family Daily Trade Tickets (Card 4):[/bold green] reports/daily/family_recommendations.html")
-        console.print(f"[bold green]Updated Encrypted Isabel Daily Trade Tickets (Card 5):[/bold green] reports/daily/isabel_recommendations.html")
+        console.print(f"[bold green]Updated Encrypted Personal Daily Trade Tickets (Card 4):[/bold green] reports/daily/family_recommendations.html")
+        console.print(f"[bold green]Updated Encrypted Customer IZ Daily Trade Tickets (Card 5):[/bold green] reports/daily/isabel_recommendations.html")
     except ValueError as e:
         console.print(f"[bold yellow]Skipped Encrypted Daily Trade Tickets: {e}[/bold yellow]")
 
