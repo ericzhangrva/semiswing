@@ -1531,47 +1531,80 @@ def _df_to_md(df: pd.DataFrame) -> str:
     return "\n".join([header, sep] + body)
 
 
+def _format_drivers_cell_html(drivers_str: str) -> str:
+    """Format SHAP / model drivers cleanly with one driver per line and no pipe characters."""
+    if not drivers_str or drivers_str == "N/A" or pd.isna(drivers_str):
+        return "<span style='color:#94a3b8;'>N/A</span>"
+
+    parts = [p.strip() for p in str(drivers_str).replace(";", "|").replace("\n", "|").split("|") if p.strip()]
+    if not parts:
+        return "<span style='color:#94a3b8;'>N/A</span>"
+
+    items_html = []
+    for p in parts:
+        if "=" in p:
+            k, v = p.split("=", 1)
+            items_html.append(
+                f"<div style='margin-bottom:2px;'><code style='color:#0f172a; font-weight:600;'>{k.strip()}</code>=<span style='color:#0284c7; font-weight:700;'>{v.strip()}</span></div>"
+            )
+        else:
+            items_html.append(f"<div style='margin-bottom:2px;'>&bull; {p}</div>")
+    return f"<div style='line-height:1.4;'>{''.join(items_html)}</div>"
+
+
 def _render_trade_legend_html() -> str:
-    return """
+    return r"""
     <div style="background:#ffffff; border:1px solid #cbd5e1; border-left:5px solid #2563eb; border-radius:8px; padding:16px 20px; margin-bottom:20px; font-size:13px; line-height:1.55; color:#334155;">
       <div style="font-weight:700; color:#0f172a; margin-bottom:8px; font-size:14px;">Trade Blotter Legend &amp; Quantitative Diagnostics</div>
-      <div style="margin-bottom:8px;">
+      <div style="margin-bottom:12px;">
         <strong>Tier Conviction Levels:</strong>
         <ul style="margin: 6px 0 0 18px; padding: 0; line-height: 1.6;">
-          <li><span style="display:inline-block; padding:1px 6px; background:#dcfce7; color:#166534; border-radius:4px; font-size:11px; font-weight:700;">CONSENSUS</span>: Dual-engine alignment (both Baseline OLS trend significance t_norm &ge; 1.8 and ML classifier agree; 1.0% risk).</li>
+          <li><span style="display:inline-block; padding:1px 6px; background:#dcfce7; color:#166534; border-radius:4px; font-size:11px; font-weight:700;">CONSENSUS</span>: Dual-engine alignment (both Baseline OLS trend significance $t_{\text{norm}} \ge 1.8$ and ML classifier agree; 1.0% risk).</li>
           <li><span style="display:inline-block; padding:1px 6px; background:#e0f2fe; color:#0369a1; border-radius:4px; font-size:11px; font-weight:700;">HIGH</span>: Standalone ML qualification with top-quintile residual momentum (1.0% risk).</li>
           <li><span style="display:inline-block; padding:1px 6px; background:#f1f5f9; color:#475569; border-radius:4px; font-size:11px; font-weight:700;">MEDIUM</span>: Baseline trend qualification or secondary ML score (0.75% conservative risk).</li>
-          <li><span style="display:inline-block; padding:1px 6px; background:#fff1f2; color:#be123c; border-radius:4px; font-size:11px; font-weight:700;">LOW</span>: Lower-conviction meta-labeling score (S_i,t &lt; 0.85; 0.50% risk or conservative bottom tier).</li>
+          <li><span style="display:inline-block; padding:1px 6px; background:#fff1f2; color:#be123c; border-radius:4px; font-size:11px; font-weight:700;">LOW</span>: Lower-conviction meta-labeling score ($S_{i,t} < 0.85$; 0.50% risk or conservative bottom tier).</li>
         </ul>
       </div>
-      <div style="margin-bottom:6px;">
-        <strong>Shares &amp; Position ($):</strong> Dynamically calculated via Volatility-Parity / Fixed-Fractional Risk Sizing: <code>Shares = (Portfolio Equity &times; Base Risk &times; M_t &times; S_i,t) / Stop Distance</code>. Each trade risks a fixed fraction of total portfolio equity at execution, so position dollar allocations and share counts vary according to individual stock ATR volatility, tier conviction, meta-labeling multiplier S_i,t, and compounding portfolio equity over time.
+      <div style="margin-bottom:12px;">
+        <strong>Shares &amp; Position ($):</strong> Dynamically calculated via Volatility-Parity / Fixed-Fractional Risk Sizing:
+        <div style="margin: 6px 0; padding: 8px 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; display: inline-block; font-size: 13.5px; color: #0f172a;">
+          $$\text{Shares} = \frac{\text{Portfolio Equity} \times \text{Base Risk} \times M_t \times S_{i,t}}{\text{Stop Distance}}$$
+        </div>
+        <div style="font-size: 12px; color: #64748b; margin-top: 2px;">
+          Each trade risks a fixed fraction of total portfolio equity at execution, so position dollar allocations and share counts vary according to individual stock ATR volatility, tier conviction, meta-labeling multiplier $S_{i,t}$, and compounding portfolio equity over time.
+        </div>
       </div>
-      <div style="margin-bottom:6px;">
+      <div style="margin-bottom:10px;">
         <strong>Partial Profit Taking (TP1) &amp; Blended Returns:</strong> When Take Profit 1 (TP1) triggers, partial shares are sold and stop is moved to breakeven. <code>Exit ($)</code> reports the final runner share exit price, while <code>Return (%)</code> and <code>R Multiple</code> reflect the blended net performance across the entire position.
       </div>
-      <div style="margin-bottom:6px;">
-        <strong>Win Prob:</strong> Platt-calibrated posterior probability P(Hits +1.5R target before Hard Stop) produced out-of-fold by shallow LightGBM trees. With a 1.5:1 reward-to-risk ratio, any probability P &gt; 40.0% yields positive mathematical expectancy.
+      <div style="margin-bottom:12px;">
+        <strong>Win Prob:</strong> Platt-calibrated posterior probability $P(\text{Hits } +1.5\text{R target before Hard Stop})$ produced out-of-fold by shallow LightGBM trees. With a 1.5:1 reward-to-risk ratio, any probability $P > 40.0\%$ yields positive mathematical expectancy.
       </div>
-      <div style="margin-bottom:6px;">
-        <strong>Sizing Scalar:</strong> Continuous meta-labeling position sizing multiplier S_i,t &isin; [0.50, 1.50] (L&oacute;pez de Prado framework). Maps predicted win probability into historical out-of-fold percentile rank: S_i,t = 0.50 + Rank_OOF(p). Conviction scales position sizes dynamically between 0.50x and 1.50x without expanding total risk caps.
+      <div style="margin-bottom:12px;">
+        <strong>Sizing Scalar:</strong> Continuous meta-labeling position sizing multiplier $S_{i,t} \in [0.50, 1.50]$ (L&oacute;pez de Prado framework):
+        <div style="margin: 6px 0; padding: 6px 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; display: inline-block; font-size: 13.5px; color: #0f172a;">
+          $$S_{i,t} = 0.50 + \text{Rank}_{\text{OOF}}(\hat{p}) \in [0.50, 1.50]$$
+        </div>
+        <div style="font-size: 12px; color: #64748b; margin-top: 2px;">
+          Maps predicted win probability into historical out-of-fold percentile rank, scaling conviction dynamically between 0.50x and 1.50x without expanding total risk caps.
+        </div>
       </div>
       <div>
-        <strong>Top Model Drivers (SHAP):</strong> Single-feature marginal contributions detailing model conviction:
-        <ul style="margin: 6px 0 0 18px; padding: 0; line-height: 1.55;">
-          <li><code>sector_rs</code>: 20-day relative strength of SMH vs SPY: Delta%20d(SMH) - Delta%20d(SPY). Positive values confirm semiconductor sector leadership.</li>
-          <li><code>vix_ts</code>: Volatility term structure ratio (VIX / VIX3M). Values &lt; 1.0 confirm normal contango (calm regime); &ge; 1.0 indicates backwardation (near-term panic).</li>
-          <li><code>skew_idx</code>: CBOE SKEW Index 60-day rolling z-score (min_periods=20). Elevated values (&gt; +1.5) indicate institutional tail-risk hedging and out-of-the-money put demand.</li>
-          <li><code>resid_mom_60</code>: 60-day idiosyncratic residual momentum relative to SMH after stripping market beta. Confirms stock-specific momentum decoupled from sector drift.</li>
+        <strong>Top Model Drivers (SHAP Mathematical Definitions):</strong> Single-feature marginal contributions detailing model conviction:
+        <ul style="margin: 6px 0 0 18px; padding: 0; line-height: 1.65;">
+          <li><code>sector_rs</code>: 20-day relative strength of SMH vs SPY: $$\text{sector\_rs} = \Delta\%_{20d}(\text{SMH}) - \Delta\%_{20d}(\text{SPY})$$ Positive values confirm semiconductor sector leadership.</li>
+          <li><code>vix_ts</code>: Volatility term structure ratio: $$\text{vix\_ts} = \frac{\text{VIX}}{\text{VIX3M}}$$ Values $< 1.0$ confirm normal contango (calm regime); $\ge 1.0$ indicates backwardation (near-term panic).</li>
+          <li><code>skew_idx</code>: CBOE SKEW Index 60-day rolling $z$-score ($min\_periods=20$). Elevated values ($> +1.5$) indicate institutional tail-risk hedging and out-of-the-money put demand.</li>
+          <li><code>resid_mom_60</code>: 60-day idiosyncratic residual momentum relative to SMH after stripping market beta: $$\text{resid\_mom\_60} = r_{i,t} - (\alpha + \beta \cdot r_{\text{SMH},t})$$</li>
           <li><code>resid_mom_20</code>: 20-day idiosyncratic residual momentum relative to SMH after stripping market beta.</li>
-          <li><code>rs_rank</code>: Cross-sectional percentile rank [0.0, 1.0] of 20-day residual momentum across the active tradeable universe.</li>
-          <li><code>vol_compress</code>: Realized volatility compression ratio (RV_10d / RV_60d). Values &lt; 0.70 indicate price coiling prior to directional breakout.</li>
-          <li><code>vxn_squeeze_vel</code>: 252-day rolling z-score of 5-day rate of change in Nasdaq Volatility Index (VXN). Rapid drops detect post-panic volatility compression.</li>
-          <li><code>slope_r2_20d</code>: Coefficient of determination (R^2 in [0, 1]) from 20-day log-price linear regression measuring trend smoothness.</li>
-          <li><code>slope_t_norm</code>: Adaptive window L_t sample-size normalized OLS t-statistic measuring directional trend conviction.</li>
-          <li><code>slope_accel</code>: Multi-scale slope acceleration: (beta_10d - beta_40d) / sigma_20 normalized by 20-day return volatility.</li>
-          <li><code>ema20_slope</code>: 5-day slope of 20-day exponential moving average in ATR units: (EMA20_t / EMA20_{t-5} - 1) / ATR%_14.</li>
-          <li><code>ema50_slope</code>: 10-day slope of 50-day exponential moving average in ATR units: (EMA50_t / EMA50_{t-10} - 1) / ATR%_14.</li>
+          <li><code>rs_rank</code>: Cross-sectional percentile rank ($[0.0, 1.0]$) of 20-day residual momentum across the active tradeable universe.</li>
+          <li><code>vol_compress</code>: Realized volatility compression ratio: $$\text{vol\_compress} = \frac{\text{RV}_{10d}}{\text{RV}_{60d}}$$ Values $< 0.70$ indicate price coiling prior to directional breakout.</li>
+          <li><code>vxn_squeeze_vel</code>: 252-day rolling $z$-score of 5-day rate of change in Nasdaq Volatility Index (VXN). Rapid drops detect post-panic volatility compression: $$\text{vxn\_squeeze\_vel} = \frac{\Delta\%_{5d}(\text{VXN}) - \mu_{252d}}{\sigma_{252d}}$$</li>
+          <li><code>slope_r2_20d</code>: Coefficient of determination ($R^2 \in [0, 1]$) from 20-day log-price linear regression measuring trend smoothness.</li>
+          <li><code>slope_t_norm</code>: Adaptive window $L_t$ sample-size normalized OLS $t$-statistic measuring directional trend conviction: $$t_{\text{norm}} = \frac{t_{\text{OLS}}}{\sqrt{L_t / 20}}$$</li>
+          <li><code>slope_accel</code>: Multi-scale slope acceleration: $$\text{slope\_accel} = \frac{\beta_{10d} - \beta_{40d}}{\sigma_{20}}$$</li>
+          <li><code>ema20_slope</code>: 5-day slope of 20-day exponential moving average in ATR units: $$\text{ema20\_slope} = \frac{\frac{\text{EMA20}_t}{\text{EMA20}_{t-5}} - 1}{\text{ATR\%}_{14}}$$</li>
+          <li><code>ema50_slope</code>: 10-day slope of 50-day exponential moving average in ATR units: $$\text{ema50\_slope} = \frac{\frac{\text{EMA50}_t}{\text{EMA50}_{t-10}} - 1}{\text{ATR\%}_{14}}$$</li>
         </ul>
       </div>
     </div>
@@ -1899,7 +1932,7 @@ def generate_reports(
     interactive_html = _build_interactive_dashboard_html(results)
 
     html_parts = [
-        f"<!DOCTYPE html><html><head><meta charset='utf-8'><title>SemiSwing Interactive Backtest Report</title><style>{css}</style></head><body>",
+        f"<!DOCTYPE html><html><head><meta charset='utf-8'><title>SemiSwing Interactive Backtest Report</title><link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css'><script defer src='https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js'></script><script defer src='https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js' onload='renderMathInElement(document.body, {{delimiters: [{{left: \"$$\", right: \"$$\", display: true}}, {{left: \"$\", right: \"$\", display: false}}], throwOnError: false}});'></script><style>{css}</style></head><body>",
         "<h1>SemiSwing Walk-Forward Backtest &amp; Interactive Benchmark Report (2022–2026)</h1>",
         f"<div class='meta'><b>Data Health Score:</b> {health_score}/100 &nbsp;|&nbsp; "
         f"<b>Initial Training Warmup:</b> 2018–2021 &nbsp;|&nbsp; "
@@ -1998,10 +2031,114 @@ def write_recent_trades_and_open_positions_report(
     tot_unrealized_ret = (tot_unrealized_pnl / tot_cost * 100.0) if tot_cost > 0 else 0.0
     pnl_color = "#16a34a" if tot_unrealized_pnl >= 0 else "#dc2626"
 
+    tot_equity = 10000.0
+    parked_cash = 0.0
+    cash_apy_pct = 4.60
+    if hasattr(best_sys, "equity_curve") and best_sys.equity_curve is not None and not best_sys.equity_curve.empty:
+        tot_equity = float(best_sys.equity_curve["equity"].iloc[-1])
+        parked_cash = float(best_sys.equity_curve["cash"].iloc[-1])
+        if "rf_daily" in best_sys.equity_curve.columns:
+            rf_daily = float(best_sys.equity_curve["rf_daily"].iloc[-1])
+            if rf_daily > 0:
+                cash_apy_pct = rf_daily * 252.0 * 100.0
+    else:
+        tot_equity = max(10000.0, tot_invested)
+        parked_cash = max(0.0, tot_equity - tot_invested)
+
+    tot_equity = tot_invested + parked_cash
+
+    # Visual Asset Allocation Donut Data
+    import math
+    donut_colors = ["#0284c7", "#10b981", "#8b5cf6", "#f59e0b"]
+    slices = []
+    for i, r in enumerate(open_rows):
+        c = donut_colors[i % len(donut_colors)]
+        pct = (r["pos_val"] / tot_equity * 100.0) if tot_equity > 0 else 0.0
+        slices.append({
+            "name": r["ticker"],
+            "val": r["pos_val"],
+            "pct": pct,
+            "color": c,
+            "desc": f"Active Swing Long ({r['tier']})",
+            "stat": f"Unrealized P&L: {r['unrealized_pnl']:+,.2f} ({r['unrealized_ret']:+.2f}%)",
+            "stat_color": r["pnl_color"],
+        })
+    parked_pct = (parked_cash / tot_equity * 100.0) if tot_equity > 0 else 0.0
+    slices.append({
+        "name": "3M T-Bills / Cash Reserve",
+        "val": parked_cash,
+        "pct": parked_pct,
+        "color": "#64748b",
+        "desc": "Unallocated Capital Reserve",
+        "stat": f"Annual Yield: +{cash_apy_pct:.2f}% APY (FRED DTB3)",
+        "stat_color": "#0284c7",
+    })
+
+    r_radius = 72
+    circumference = 2 * math.pi * r_radius
+    accum_pct = 0.0
+    svg_circles = []
+    legend_items = []
+
+    for s in slices:
+        pct_frac = s["val"] / tot_equity if tot_equity > 0 else 0.0
+        dash = pct_frac * circumference
+        gap = max(0.0, circumference - dash)
+        offset = -accum_pct * circumference
+        svg_circles.append(
+            f'<circle cx="100" cy="100" r="{r_radius}" fill="none" stroke="{s["color"]}" stroke-width="26" '
+            f'stroke-dasharray="{dash:.2f} {gap:.2f}" stroke-dashoffset="{offset:.2f}" '
+            f'transform="rotate(-90 100 100)" />'
+        )
+        accum_pct += pct_frac
+
+        legend_items.append(f"""
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:9px 14px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; border-left:5px solid {s['color']};">
+          <div>
+            <div style="font-weight:700; font-size:13px; color:#0f172a;">{s['name']} <span style="font-size:11.5px; font-weight:600; color:#64748b; margin-left:6px;">{s['pct']:.1f}% of Portfolio</span></div>
+            <div style="font-size:11.5px; color:#64748b; margin-top:2px;">{s['desc']} &bull; <span style="color:{s['stat_color']}; font-weight:700;">{s['stat']}</span></div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:14px; font-weight:800; color:#0f172a;">${s['val']:,.2f}</div>
+          </div>
+        </div>
+        """)
+
+    donut_html = f"""
+    <div style="background:#ffffff; border:1px solid #cbd5e1; border-radius:10px; padding:20px; margin-bottom:24px; box-shadow:0 1px 3px rgba(0,0,0,0.03);">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:1px solid #e2e8f0; padding-bottom:12px; flex-wrap:wrap; gap:8px;">
+        <div>
+          <div style="font-size:15px; font-weight:700; color:#0f172a;">Portfolio Asset Allocation &amp; Capital Deployment</div>
+          <div style="font-size:12px; color:#64748b;">Visual breakdown of active stock swing holdings vs. parked yield reserve (100% of portfolio equity accounted for)</div>
+        </div>
+        <div style="font-size:11px; font-weight:700; color:#0369a1; background:#e0f2fe; border:1px solid #bae6fd; padding:4px 10px; border-radius:999px;">
+          100% CAPITAL DEPLOYED &amp; PROTECTED
+        </div>
+      </div>
+      <div style="display:flex; gap:28px; align-items:center; flex-wrap:wrap;">
+        <div style="position:relative; width:200px; height:200px; flex-shrink:0; margin:0 auto;">
+          <svg viewBox="0 0 200 200" width="200" height="200">
+            <circle cx="100" cy="100" r="{r_radius}" fill="none" stroke="#f1f5f9" stroke-width="26" />
+            {''.join(svg_circles)}
+            <text x="100" y="93" text-anchor="middle" font-size="16" font-weight="800" fill="#0f172a">${tot_equity:,.0f}</text>
+            <text x="100" y="110" text-anchor="middle" font-size="10" font-weight="700" fill="#64748b">TOTAL EQUITY</text>
+            <text x="100" y="124" text-anchor="middle" font-size="9" font-weight="600" fill="#0284c7">100% ALLOCATED</text>
+          </svg>
+        </div>
+        <div style="flex:1; min-width:280px; display:flex; flex-direction:column; gap:8px;">
+          {''.join(legend_items)}
+        </div>
+      </div>
+    </div>
+    """
+
     html_parts = [
         "<!DOCTYPE html>",
         "<html lang='en'><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'>",
         "<title>SemiSwing: Active Open Positions &amp; Recent Closed Trades</title>",
+        "<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css'>",
+        "<script defer src='https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js'></script>",
+        "<script defer src='https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js' onload='renderMathInElement(document.body, {delimiters: [{left: \"$$\", right: \"$$\", display: true}, {left: \"$\", right: \"$\", display: false}], throwOnError: false});'></script>",
         "<style>",
         "body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 24px 16px; background: #f1f5f9; color: #1e293b; line-height: 1.5; }",
         ".container { max-width: 1360px; margin: 0 auto; background: #ffffff; padding: 28px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.04); }",
@@ -2044,13 +2181,16 @@ def write_recent_trades_and_open_positions_report(
         f"  <div class='meta-badge'>Report Created: {now_ts}</div>",
         "</div>",
         "<div class='cards-grid'>",
-        f"  <div class='metric-card'><div class='title'>Active Open Trades</div><div class='val'>{len(open_rows)} <span style='font-size:13px; font-weight:500; color:#64748b;'>(of 4 max slots)</span></div></div>",
-        f"  <div class='metric-card'><div class='title'>Total Invested Capital</div><div class='val'>${tot_invested:,.2f}</div></div>",
+        f"  <div class='metric-card'><div class='title'>Total Portfolio Equity</div><div class='val'>${tot_equity:,.2f}</div></div>",
+        f"  <div class='metric-card'><div class='title'>Invested Swing Capital</div><div class='val'>${tot_invested:,.2f} <span style='font-size:12px; font-weight:600; color:#64748b;'>({(tot_invested/tot_equity*100.0 if tot_equity>0 else 0):.1f}%)</span></div></div>",
+        f"  <div class='metric-card'><div class='title'>Parked Capital Reserve</div><div class='val'>${parked_cash:,.2f} <span style='font-size:12px; font-weight:600; color:#64748b;'>({(parked_cash/tot_equity*100.0 if tot_equity>0 else 0):.1f}%)</span></div></div>",
         f"  <div class='metric-card'><div class='title'>Temporary Unrealized P&amp;L</div><div class='val' style='color:{pnl_color};'>{tot_unrealized_pnl:+,.2f} ({tot_unrealized_ret:+.2f}%)</div></div>",
+        f"  <div class='metric-card'><div class='title'>Active Trade Slots</div><div class='val'>{len(open_rows)} <span style='font-size:13px; font-weight:500; color:#64748b;'>of 4 Max Positions</span></div></div>",
         f"  <div class='metric-card'><div class='title'>Total Closed Trades (OOS)</div><div class='val'>{len(best_sys.trades) if best_sys is not None else 0}</div></div>",
         "</div>",
+        donut_html,
         _render_trade_legend_html(),
-        "<h2>1. Active Open Positions (Daily Mark-to-Market)</h2>",
+        "<h2>1. Active Open Positions &amp; Capital Allocation (Daily Mark-to-Market)</h2>",
         "<div class='info-box'>",
         "  <strong>Why are 2 swing positions currently active?</strong><br/>",
         "  SemiSwing enforces strict institutional risk limits: a hard maximum of <strong>4 concurrent swing positions</strong>, a single-name position cap of 33%, and a maximum portfolio open risk of 14%. ",
@@ -2059,10 +2199,11 @@ def write_recent_trades_and_open_positions_report(
         "</div>",
     ]
 
-    # Render Table 1: Active Open Positions
+    # Render Table 1: Active Open Positions & Capital Allocation
+    open_table_rows = []
     if open_rows:
-        open_table_rows = []
         for r in open_rows:
+            drivers_html = _format_drivers_cell_html(r['drivers'])
             open_table_rows.append(f"""
             <tr>
               <td><strong style="font-size:13px; color:#0f172a;">{r['ticker']}</strong></td>
@@ -2075,39 +2216,59 @@ def write_recent_trades_and_open_positions_report(
               <td>${r['pos_val']:,.2f}</td>
               <td style="color:{r['pnl_color']}; font-weight:700;">{r['unrealized_pnl']:+,.2f} ({r['unrealized_ret']:+.2f}%)</td>
               <td>{r['stop_dist_pct']:+.2f}%</td>
-              <td class="drivers-cell">{r['drivers']}</td>
+              <td class="drivers-cell">{drivers_html}</td>
             </tr>
             """)
-        html_parts.append(f"""
-        <div class='table-responsive'>
-          <table>
-            <thead>
-              <tr>
-                <th>Ticker</th>
-                <th>Tier</th>
-                <th>Shares</th>
-                <th>Entry Date</th>
-                <th>Held</th>
-                <th>Entry &rarr; Close</th>
-                <th>Protect Stop</th>
-                <th>Position ($)</th>
-                <th>Unrealized P&amp;L</th>
-                <th>Stop Dist</th>
-                <th>Top Model Drivers (SHAP)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {''.join(open_table_rows)}
-            </tbody>
-          </table>
-        </div>
-        """)
-    else:
-        html_parts.append(
-            "<div style='background:#f8fafc; border:1px solid #cbd5e1; border-left:4px solid #0284c7; padding:16px; border-radius:6px; color:#475569; margin:16px 0;'>"
-            "<strong>No Open Swing Positions Active:</strong> All prior trades have reached their natural exits (Stop Loss, TP1, or Time Stop). Portfolio capital is currently parked in 100% Cash / 3-Month T-Bills."
-            "</div>"
-        )
+
+    # Append Parked Reserve Row to Table 1
+    parked_drivers_formatted = (
+        "<div style='line-height:1.4;'>"
+        "  <div style='margin-bottom:2px;'><code style='color:#0f172a; font-weight:600;'>asset_class</code>=<span style='color:#0284c7; font-weight:700;'>3M US Treasury Bills (FRED DTB3)</span></div>"
+        f"  <div style='margin-bottom:2px;'><code style='color:#0f172a; font-weight:600;'>yield_apy</code>=<span style='color:#16a34a; font-weight:700;'>+{cash_apy_pct:.2f}% Risk-Free</span></div>"
+        "  <div style='margin-bottom:2px;'><code style='color:#0f172a; font-weight:600;'>drawdown_risk</code>=<span style='color:#0284c7; font-weight:700;'>0.00%</span></div>"
+        "  <div style='margin-bottom:2px;'>&bull; Capital preservation &amp; overnight yield awaiting qualified swing setups</div>"
+        "</div>"
+    )
+    open_table_rows.append(f"""
+    <tr style="background:#f8fafc; border-top:2px solid #cbd5e1; font-weight:500;">
+      <td><strong style="font-size:12.5px; color:#334155;">3M T-BILLS / CASH</strong></td>
+      <td><span class="badge-tier" style="background:#f1f5f9; color:#475569; border:1px solid #cbd5e1;">PARKED RESERVE</span></td>
+      <td>{parked_cash:,.0f}</td>
+      <td>Continuous</td>
+      <td>Always Active</td>
+      <td>$1.00 &rarr; <strong>$1.00</strong></td>
+      <td>Risk-Free (US Gov)</td>
+      <td><strong>${parked_cash:,.2f}</strong> <span style="font-size:11px; color:#64748b;">({parked_pct:.1f}%)</span></td>
+      <td style="color:#0284c7; font-weight:700;">+{cash_apy_pct:.2f}% APY (Yield)</td>
+      <td>0.00% (No Drawdown)</td>
+      <td class="drivers-cell">{parked_drivers_formatted}</td>
+    </tr>
+    """)
+
+    html_parts.append(f"""
+    <div class='table-responsive'>
+      <table>
+        <thead>
+          <tr>
+            <th>Ticker</th>
+            <th>Tier</th>
+            <th>Shares</th>
+            <th>Entry Date</th>
+            <th>Held</th>
+            <th>Entry &rarr; Close</th>
+            <th>Protect Stop</th>
+            <th>Position ($)</th>
+            <th>Unrealized P&amp;L</th>
+            <th>Stop Dist</th>
+            <th>Top Model Drivers (SHAP)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {''.join(open_table_rows)}
+        </tbody>
+      </table>
+    </div>
+    """)
 
     html_parts.append(
         "<div class='notice-box'>"
@@ -2149,7 +2310,7 @@ def write_recent_trades_and_open_positions_report(
               <td style="color:{color}; font-weight:600;">{r_mult:+.2f}R</td>
               <td><span class="badge-exit">{raw_reason}</span></td>
               <td>{prob_str}</td>
-              <td class="drivers-cell">{drivers_text}</td>
+              <td class="drivers-cell">{_format_drivers_cell_html(drivers_text)}</td>
             </tr>
             """)
 

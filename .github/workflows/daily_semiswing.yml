@@ -2,7 +2,11 @@ name: SemiSwing 9AM Market-Day Pipeline (Backtest + Trade Ticket + Cloudflare Pa
 
 on:
   schedule:
-    # Runs at 9:00 AM US/Eastern on weekdays (13:00 UTC during EDT; NYSE holiday guard inside daily-run)
+    # 1. Primary Pre-Market Trigger at 8:45 AM US/Eastern on weekdays (12:45 UTC during EDT).
+    # Running at :45 avoids the severe top-of-the-hour (:00) global runner congestion on GitHub Actions,
+    # ensuring the pipeline finishes by 8:50 AM ET well before market open (09:30 AM ET).
+    - cron: "45 12 * * 1-5"
+    # 2. Secondary Trigger at 9:00 AM US/Eastern on weekdays (13:00 UTC during EDT).
     - cron: "0 13 * * 1-5"
   workflow_dispatch:
     inputs:
