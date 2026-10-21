@@ -9,3 +9,6 @@ When the user drops new screenshots under `snapshots/` or requests a portfolio s
 5. **Verify CI Gates**: Run `.venv/bin/pytest tests/ -v` to ensure 100% test pass.
 6. **Integrate Remote Commits**: Pull latest remote changes with `git pull --rebase origin main` or fetch & rebase.
 7. **Auto Commit & Push**: Automatically stage all updated encrypted vaults, reports, and instructions, commit with a standard message (`chore(portfolios): update snapshot sync, encrypted vaults, and daily reports`), and push to GitHub `origin main` without waiting for manual confirmation.
+
+## Quality Control & CI Invariant
+- **Mandatory Pre-Push Test Verification**: NEVER execute `git push` in this repository without first running `.venv/bin/pytest tests/ -v` locally and verifying a 100% pass rate. If any test or institutional gate fails, diagnose and resolve it before pushing.
