@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "generated_at": "2026-10-22T17:58:46.583577+00:00",
+  "generated_at": "2026-10-23T17:30:03.691914+00:00",
   "source_sha256": "caff8647280c4f42ed14494d032ed8136de61524c5bc8c7cd83c763b95b3eb84",
   "trial_count_k": 14,
   "all_gates_pass": false,
@@ -9,7 +9,7 @@
   "gates_smh_core": [
     {
       "Gate": "Gate 1: Modern AI Era Sharpe >= 1.60 (2023-2026)",
-      "Value": "1.76",
+      "Value": "1.75",
       "Status": "PASS"
     },
     {
@@ -24,12 +24,12 @@
     },
     {
       "Gate": "Gate 4a: Modern AI Era Max DD <= 36.0% (vs SMH 35.7%)",
-      "Value": "37.15%",
+      "Value": "37.53%",
       "Status": "FAIL"
     },
     {
       "Gate": "Gate 4b: Full OOS Max DD <= 40.0% (vs SMH 45.1%)",
-      "Value": "37.15%",
+      "Value": "37.53%",
       "Status": "PASS"
     },
     {
@@ -44,7 +44,7 @@
     },
     {
       "Gate": "Gate 7: ML Alpha Dominance & Calibration (BSS > 0.02 & SR Lift >= +0.05 or Sortino Lift >= +0.02 or CAGR Lift >= +3.0% or DD Red >= 1.5%)",
-      "Value": "BSS: 0.0393 | SR Lift: +0.00 | Sortino Lift: +0.04 | CAGR Lift: +4.4% | DD Red: -5.9%",
+      "Value": "BSS: 0.0393 | SR Lift: -0.01 | Sortino Lift: +0.03 | CAGR Lift: +4.3% | DD Red: -6.2%",
       "Status": "PASS"
     }
   ],
@@ -56,7 +56,7 @@
     },
     {
       "Gate": "Gate 2: Deflated Sharpe Probability >= 0.95 (K=14 trials)",
-      "Value": "0.960",
+      "Value": "0.961",
       "Status": "PASS"
     },
     {
@@ -66,12 +66,12 @@
     },
     {
       "Gate": "Gate 4a: Modern AI Era Max DD <= 36.0% (vs SMH 35.7%)",
-      "Value": "36.28%",
+      "Value": "36.42%",
       "Status": "FAIL"
     },
     {
       "Gate": "Gate 4b: Full OOS Max DD <= 40.0% (vs SMH 45.1%)",
-      "Value": "36.28%",
+      "Value": "36.42%",
       "Status": "PASS"
     },
     {
@@ -86,20 +86,20 @@
     },
     {
       "Gate": "Gate 7: ML Alpha Dominance & Calibration (BSS > 0.02 & SR Lift >= +0.05 or Sortino Lift >= +0.02 or CAGR Lift >= +3.0% or DD Red >= 1.5%)",
-      "Value": "BSS: 0.0393 | SR Lift: +0.06 | Sortino Lift: +0.10 | CAGR Lift: +10.6% | DD Red: -5.3%",
+      "Value": "BSS: 0.0393 | SR Lift: +0.06 | Sortino Lift: +0.10 | CAGR Lift: +10.6% | DD Red: -5.5%",
       "Status": "PASS"
     }
   ],
   "metrics": {
     "ml_smh_core": {
-      "total_return_pct": 1162.91,
-      "cagr_pct": 95.26,
-      "vol_pct": 40.21,
-      "vol": 40.21,
-      "sharpe": 1.76,
+      "total_return_pct": 1161.07,
+      "cagr_pct": 95.05,
+      "vol_pct": 40.22,
+      "vol": 40.22,
+      "sharpe": 1.75,
       "deflated_sharpe_prob": 0.96,
-      "sortino": 1.81,
-      "max_dd_pct": 37.15,
+      "sortino": 1.8,
+      "max_dd_pct": 37.53,
       "cash_days_pct": 8.9,
       "trades": 75,
       "win_rate_pct": 58.7,
@@ -109,31 +109,31 @@
       "avg_r_winsor": 0.96
     },
     "base_smh_core": {
-      "total_return_pct": 1057.51,
-      "cagr_pct": 90.83,
-      "vol_pct": 38.47,
-      "vol": 38.47,
+      "total_return_pct": 1058.79,
+      "cagr_pct": 90.75,
+      "vol_pct": 38.45,
+      "vol": 38.45,
       "sharpe": 1.76,
       "deflated_sharpe_prob": 0.959,
       "sortino": 1.77,
-      "max_dd_pct": 31.2,
+      "max_dd_pct": 31.31,
       "cash_days_pct": 8.9,
-      "trades": 78,
-      "win_rate_pct": 60.3,
-      "profit_factor": 3.59,
-      "avg_r": 1.98,
-      "profit_factor_winsor": 1.91,
-      "avg_r_winsor": 1.03
+      "trades": 79,
+      "win_rate_pct": 60.8,
+      "profit_factor": 3.61,
+      "avg_r": 1.96,
+      "profit_factor_winsor": 1.94,
+      "avg_r_winsor": 1.02
     },
     "ml_cash_swing": {
-      "total_return_pct": 1028.68,
-      "cagr_pct": 89.56,
-      "vol_pct": 38.11,
-      "vol": 38.11,
+      "total_return_pct": 1031.07,
+      "cagr_pct": 89.54,
+      "vol_pct": 38.1,
+      "vol": 38.1,
       "sharpe": 1.75,
-      "deflated_sharpe_prob": 0.96,
+      "deflated_sharpe_prob": 0.961,
       "sortino": 1.84,
-      "max_dd_pct": 36.28,
+      "max_dd_pct": 36.42,
       "cash_days_pct": 8.9,
       "trades": 75,
       "win_rate_pct": 58.7,
@@ -143,20 +143,20 @@
       "avg_r_winsor": 0.96
     },
     "base_cash_swing": {
-      "total_return_pct": 806.97,
-      "cagr_pct": 78.93,
-      "vol_pct": 35.58,
-      "vol": 35.58,
+      "total_return_pct": 809.31,
+      "cagr_pct": 78.94,
+      "vol_pct": 35.56,
+      "vol": 35.56,
       "sharpe": 1.69,
-      "deflated_sharpe_prob": 0.947,
+      "deflated_sharpe_prob": 0.948,
       "sortino": 1.74,
       "max_dd_pct": 30.95,
       "cash_days_pct": 8.9,
-      "trades": 77,
-      "win_rate_pct": 59.7,
-      "profit_factor": 3.69,
-      "avg_r": 1.95,
-      "profit_factor_winsor": 1.94,
+      "trades": 78,
+      "win_rate_pct": 60.3,
+      "profit_factor": 3.72,
+      "avg_r": 1.93,
+      "profit_factor_winsor": 1.97,
       "avg_r_winsor": 0.98
     }
   },
