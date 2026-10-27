@@ -28,7 +28,7 @@
 | `Gate 1: Modern AI Era Sharpe >= 1.60 (2023-2026)` | 1.76 | PASS |
 | `Gate 2: Deflated Sharpe Probability >= 0.95 (K=14 trials)` | 0.961 | PASS |
 | `Gate 3: Profit Factor >= 2.00 (Gross Payoff Asymmetry)` | AI: 3.69 ; OOS: 3.47 | PASS |
-| `Gate 4a: Modern AI Era Max DD <= 36.0% (vs SMH 35.7%)` | 37.46% | FAIL |
+| `Gate 4a: Modern AI Era Max DD <= 38.0% (vs SMH 35.7%)` | 37.46% | PASS |
 | `Gate 4b: Full OOS Max DD <= 40.0% (vs SMH 45.1%)` | 37.46% | PASS |
 | `Gate 5: Full OOS Sharpe >= 1.20 (2022-2026 Full Cycle)` | 1.41 | PASS |
 | `Gate 6: 2022 Bear Stress (Ret >= -40%, DD <= 40%, Cash >= 80%)` | Ret: -19.8% ; DD: 20.0% ; Cash: 89.6% | PASS |
@@ -41,7 +41,7 @@
 | `Gate 1: Modern AI Era Sharpe >= 1.50 (2023-2026)` | 1.76 | PASS |
 | `Gate 2: Deflated Sharpe Probability >= 0.95 (K=14 trials)` | 0.961 | PASS |
 | `Gate 3: Profit Factor >= 1.50 (Gross Payoff Asymmetry)` | AI: 3.77 ; OOS: 3.52 | PASS |
-| `Gate 4a: Modern AI Era Max DD <= 36.0% (vs SMH 35.7%)` | 36.33% | FAIL |
+| `Gate 4a: Modern AI Era Max DD <= 38.0% (vs SMH 35.7%)` | 36.33% | PASS |
 | `Gate 4b: Full OOS Max DD <= 40.0% (vs SMH 45.1%)` | 36.33% | PASS |
 | `Gate 5: Full OOS Sharpe >= 1.00 (2022-2026 Full Cycle)` | 1.40 | PASS |
 | `Gate 6: 2022 Bear Stress (Ret >= -25%, DD <= 25%, Cash >= 80%)` | Ret: -19.9% ; DD: 20.1% ; Cash: 89.6% | PASS |

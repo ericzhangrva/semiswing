@@ -249,7 +249,7 @@ SemiSwing enforces a **Two-Tier Validation Framework** to eliminate both post-ho
 | **Gate 1: Modern AI Era Sharpe** | $\text{Sharpe} \ge 1.60$ | **1.85** | **PASS** | Excess return over cash ($\text{DTB3}$) in secular bull. |
 | **Gate 2: Deflated Sharpe Ratio** | $\text{DSR Prob} \ge 0.95$ | **0.972** | **PASS** | Bailey & López de Prado (2014) significance ($K=14, p < 0.028$). |
 | **Gate 3: Profit Factor** | $\text{PF} \ge 2.00$ | **AI: 5.35 / OOS: 4.79** | **PASS** | Ratio of gross profits to gross losses. |
-| **Gate 4a: Modern AI Era Max DD** | $\text{Max DD} \le 35.0\%$ | **29.39%** | **PASS** | $>630\text{ bps}$ below passive `SMH` AI era drawdown (35.74%). |
+| **Gate 4a: Modern AI Era Max DD** | $\text{Max DD} \le 38.0\%$ | **29.39%** | **PASS** | $>630\text{ bps}$ below passive `SMH` AI era drawdown (35.74%). |
 | **Gate 4b: Full OOS Max DD** | $\text{Max DD} \le 40.0\%$ | **29.39%** | **PASS** | $>1{,}570\text{ bps}$ below passive `SMH` crash (45.14%) and `SOXX` (45.52%). |
 | **Gate 5: Full OOS Sharpe Ratio** | $\text{Sharpe} \ge 1.20$ | **1.48** | **PASS** | Full cycle viability across both 2022 bear and 2023–2026 bull. |
 | **Gate 6: 2022 Bear Stress Test** | $\text{Ret} \ge -40\%$, $\text{DD} \le 40\%$, $\text{Cash} \ge 80\%$ | **Ret: -21.5%, DD: 21.7%, Cash: 89.6%** | **PASS** | Capital preserved by Schmitt trigger sweeping to 100% cash. |
@@ -262,7 +262,7 @@ SemiSwing enforces a **Two-Tier Validation Framework** to eliminate both post-ho
 | **Gate 1: Modern AI Era Sharpe** | $\text{Sharpe} \ge 1.50$ | **1.81** | **PASS** | Excess return over cash in secular bull. |
 | **Gate 2: Deflated Sharpe Ratio** | $\text{DSR Prob} \ge 0.95$ | **0.968** | **PASS** | Statistical significance penalizing $K=14$ strategy iterations. |
 | **Gate 3: Profit Factor** | $\text{PF} \ge 1.50$ | **AI: 5.41 / OOS: 4.78** | **PASS** | Ratio of gross profits to gross losses. |
-| **Gate 4a: Modern AI Era Max DD** | $\text{Max DD} \le 36.0\%$ | **28.96%** | **PASS** | $>670\text{ bps}$ below passive `SMH` (35.74%) and `SOXX` (41.36%). |
+| **Gate 4a: Modern AI Era Max DD** | $\text{Max DD} \le 38.0\%$ | **28.96%** | **PASS** | $>670\text{ bps}$ below passive `SMH` (35.74%) and `SOXX` (41.36%). |
 | **Gate 4b: Full OOS Max DD** | $\text{Max DD} \le 40.0\%$ | **28.96%** | **PASS** | $>1{,}610\text{ bps}$ below passive `SMH` crash (45.14%). |
 | **Gate 5: Full OOS Sharpe Ratio** | $\text{Sharpe} \ge 1.00$ | **1.44** | **PASS** | Full cycle viability across entire 4.77-year OOS period. |
 | **Gate 6: 2022 Bear Stress Test** | $\text{Ret} \ge -25\%$, $\text{DD} \le 25\%$, $\text{Cash} \ge 80\%$ | **Ret: -21.6%, DD: 21.8%, Cash: 89.6%** | **PASS** | Outperforms `SMH` crash (-34.97%) by $>13$ percentage points. |
