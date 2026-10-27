@@ -1,13 +1,14 @@
-name: SemiSwing Pre-Market Pipeline (Backtest + Trade Ticket + Cloudflare Pages)
+name: SemiSwing 6AM Pre-Market Pipeline (Backtest + Trade Ticket + Cloudflare Pages)
 
 on:
   schedule:
-    # 1. Primary Early Pre-Market Trigger at ~6:15 AM US/Eastern (10:15 UTC).
-    # Running early off-peak completely avoids the severe 8 AM - 12 PM ET GitHub Actions runner queue congestion,
-    # ensuring daily trade tickets and backtests finish and publish hours before 9:30 AM ET market open.
-    - cron: "15 10 * * 1-5"
-    # 2. Secondary Pre-Market Backup Trigger at ~7:15 AM US/Eastern (11:15 UTC).
-    - cron: "15 11 * * 1-5"
+    # 1. Primary Pre-Market Trigger at 6:00 AM US/Eastern EDT (10:00 UTC).
+    # Running early at 6:00 AM avoids daytime runner queues, ensuring reports are published hours before 9:30 AM market open.
+    - cron: "0 10 * * 1-5"
+    # 2. Secondary Pre-Market Backup Trigger at 6:00 AM US/Eastern EST / 7:00 AM EDT (11:00 UTC).
+    - cron: "0 11 * * 1-5"
+  repository_dispatch:
+    types: [daily-pipeline]
   workflow_dispatch:
     inputs:
       force:
