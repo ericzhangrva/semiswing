@@ -25,14 +25,14 @@
 
 | Institutional Gate | Realized Metric | Gate Status |
 | --- | --- | --- |
-| `Gate 1: Modern AI Era Sharpe >= 1.60 (2023-2026)` | 1.74 | PASS |
-| `Gate 2: Deflated Sharpe Probability >= 0.95 (K=14 trials)` | 0.958 | PASS |
-| `Gate 3: Profit Factor >= 2.00 (Gross Payoff Asymmetry)` | AI: 3.63 ; OOS: 3.42 | PASS |
-| `Gate 4a: Modern AI Era Max DD <= 38.0% (vs SMH 35.7%)` | 38.55% | FAIL |
-| `Gate 4b: Full OOS Max DD <= 40.0% (vs SMH 45.1%)` | 38.55% | PASS |
-| `Gate 5: Full OOS Sharpe >= 1.20 (2022-2026 Full Cycle)` | 1.40 | PASS |
+| `Gate 1: Modern AI Era Sharpe >= 1.60 (2023-2026)` | 1.73 | PASS |
+| `Gate 2: Deflated Sharpe Probability >= 0.95 (K=14 trials)` | 0.956 | PASS |
+| `Gate 3: Profit Factor >= 2.00 (Gross Payoff Asymmetry)` | AI: 3.63 ; OOS: 3.41 | PASS |
+| `Gate 4a: Modern AI Era Max DD <= 38.0% (vs SMH 35.7%)` | 38.58% | FAIL |
+| `Gate 4b: Full OOS Max DD <= 40.0% (vs SMH 45.1%)` | 38.58% | PASS |
+| `Gate 5: Full OOS Sharpe >= 1.20 (2022-2026 Full Cycle)` | 1.39 | PASS |
 | `Gate 6: 2022 Bear Stress (Ret >= -40%, DD <= 40%, Cash >= 80%)` | Ret: -19.8% ; DD: 20.0% ; Cash: 89.6% | PASS |
-| `Gate 7: ML Alpha Dominance & Calibration (BSS > 0.02 & SR Lift >= +0.05 or Sortino Lift >= +0.02 or CAGR Lift >= +3.0% or DD Red >= 1.5%)` | BSS: 0.0393 ; SR Lift: +0.02 ; Sortino Lift: +0.06 ; CAGR Lift: +5.5% ; DD Red: -5.4% | PASS |
+| `Gate 7: ML Alpha Dominance & Calibration (BSS > 0.02 & SR Lift >= +0.05 or Sortino Lift >= +0.02 or CAGR Lift >= +3.0% or DD Red >= 1.5%)` | BSS: 0.0393 ; SR Lift: +0.01 ; Sortino Lift: +0.05 ; CAGR Lift: +4.7% ; DD Red: -5.4% | PASS |
 
 ### 2.2 Cash Swing Mode (100% Cash / T-Bill Secondary Default)
 
@@ -40,31 +40,31 @@
 | --- | --- | --- |
 | `Gate 1: Modern AI Era Sharpe >= 1.50 (2023-2026)` | 1.75 | PASS |
 | `Gate 2: Deflated Sharpe Probability >= 0.95 (K=14 trials)` | 0.961 | PASS |
-| `Gate 3: Profit Factor >= 1.50 (Gross Payoff Asymmetry)` | AI: 3.71 ; OOS: 3.46 | PASS |
-| `Gate 4a: Modern AI Era Max DD <= 38.0% (vs SMH 35.7%)` | 36.37% | PASS |
-| `Gate 4b: Full OOS Max DD <= 40.0% (vs SMH 45.1%)` | 36.37% | PASS |
+| `Gate 3: Profit Factor >= 1.50 (Gross Payoff Asymmetry)` | AI: 3.70 ; OOS: 3.46 | PASS |
+| `Gate 4a: Modern AI Era Max DD <= 38.0% (vs SMH 35.7%)` | 36.42% | PASS |
+| `Gate 4b: Full OOS Max DD <= 40.0% (vs SMH 45.1%)` | 36.42% | PASS |
 | `Gate 5: Full OOS Sharpe >= 1.00 (2022-2026 Full Cycle)` | 1.40 | PASS |
 | `Gate 6: 2022 Bear Stress (Ret >= -25%, DD <= 25%, Cash >= 80%)` | Ret: -19.9% ; DD: 20.1% ; Cash: 89.6% | PASS |
-| `Gate 7: ML Alpha Dominance & Calibration (BSS > 0.02 & SR Lift >= +0.05 or Sortino Lift >= +0.02 or CAGR Lift >= +3.0% or DD Red >= 1.5%)` | BSS: 0.0393 ; SR Lift: +0.06 ; Sortino Lift: +0.11 ; CAGR Lift: +10.4% ; DD Red: -5.4% | PASS |
+| `Gate 7: ML Alpha Dominance & Calibration (BSS > 0.02 & SR Lift >= +0.05 or Sortino Lift >= +0.02 or CAGR Lift >= +3.0% or DD Red >= 1.5%)` | BSS: 0.0393 ; SR Lift: +0.06 ; Sortino Lift: +0.11 ; CAGR Lift: +10.3% ; DD Red: -5.5% | PASS |
 
 ## 3. Full Out-of-Sample Walk-Forward (`2022–2026`)
 
 | Strategy / Benchmark | Total Return (%) | CAGR (%) | Sharpe | Deflated SR Prob | Sortino | Max DD (%) | 100% Cash Days (%) | Trades | Win Rate (%) | Profit Factor | Avg R |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | Baseline (SMH Bull Core + Swing) | 794.05 | 57.57 | 1.37 | 0.909 | 1.41 | 33.17 | 26.1 | 96 | 51.0 | 3.33 | 1.51 |
-| ML (SMH Bull Core + Swing) | 907.52 | 61.53 | 1.4 | 0.921 | 1.47 | 38.55 | 25.7 | 96 | 47.9 | 3.42 | 1.57 |
+| ML (SMH Bull Core + Swing) | 890.73 | 60.97 | 1.39 | 0.917 | 1.46 | 38.58 | 25.7 | 95 | 47.4 | 3.41 | 1.58 |
 | Pure Pre-2022 Semi (SMH Bull Core + Swing) | 353.11 | 36.84 | 0.99 | 0.69 | 0.99 | 38.63 | 27.9 | 89 | 52.8 | 2.75 | 1.16 |
 | `Baseline (Adaptive `L_t`)` | 626.73 | 50.94 | 1.33 | 0.894 | 1.39 | 30.95 | 26.1 | 95 | 50.5 | 3.37 | 1.48 |
-| ML (LightGBM + Platt) | 807.38 | 58.06 | 1.4 | 0.921 | 1.5 | 36.37 | 25.7 | 95 | 47.4 | 3.46 | 1.58 |
+| ML (LightGBM + Platt) | 806.02 | 58.01 | 1.4 | 0.921 | 1.5 | 36.42 | 25.7 | 95 | 47.4 | 3.46 | 1.58 |
 | Pure Pre-2022 Semi (Cash Swing) | 286.98 | 32.43 | 0.95 | 0.66 | 0.97 | 35.6 | 27.9 | 90 | 52.2 | 2.76 | 1.14 |
-| Baseline (Fixed 20d) | 638.87 | 51.46 | 1.3 | 0.88 | 1.37 | 34.9 | 25.7 | 103 | 46.6 | 3.54 | 1.52 |
-| SMH Buy & Hold | 239.11 | 28.85 | 0.76 | 0.501 | 0.75 | 45.14 | 0.0 | 0 | 0.0 | 0.0 | 0.0 |
-| SOXX Buy & Hold | 163.76 | 22.3 | 0.61 | 0.369 | 0.6 | 45.52 | 0.0 | 0 | 0.0 | 0.0 | 0.0 |
-| VGT Buy & Hold | 106.47 | 16.24 | 0.55 | 0.325 | 0.53 | 34.5 | 0.0 | 0 | 0.0 | 0.0 | 0.0 |
-| QQQ Buy & Hold | 76.1 | 12.46 | 0.45 | 0.249 | 0.44 | 34.83 | 0.0 | 0 | 0.0 | 0.0 | 0.0 |
-| AIQ Buy & Hold | 89.06 | 14.13 | 0.48 | 0.269 | 0.47 | 42.02 | 0.0 | 0 | 0.0 | 0.0 | 0.0 |
-| IGV Buy & Hold | 31.06 | 5.78 | 0.2 | 0.111 | 0.2 | 38.49 | 0.0 | 0 | 0.0 | 0.0 | 0.0 |
-| S&P 500 (SPY) Buy & Hold | 68.56 | 11.45 | 0.48 | 0.273 | 0.48 | 24.5 | 0.0 | 0 | 0.0 | 0.0 | 0.0 |
+| Baseline (Fixed 20d) | 637.06 | 51.38 | 1.3 | 0.88 | 1.36 | 34.9 | 25.7 | 103 | 45.6 | 3.52 | 1.52 |
+| SMH Buy & Hold | 238.92 | 28.84 | 0.76 | 0.5 | 0.75 | 45.14 | 0.0 | 0 | 0.0 | 0.0 | 0.0 |
+| SOXX Buy & Hold | 163.28 | 22.26 | 0.61 | 0.368 | 0.6 | 45.52 | 0.0 | 0 | 0.0 | 0.0 | 0.0 |
+| VGT Buy & Hold | 106.58 | 16.25 | 0.55 | 0.326 | 0.53 | 34.5 | 0.0 | 0 | 0.0 | 0.0 | 0.0 |
+| QQQ Buy & Hold | 76.25 | 12.48 | 0.45 | 0.25 | 0.44 | 34.83 | 0.0 | 0 | 0.0 | 0.0 | 0.0 |
+| AIQ Buy & Hold | 89.42 | 14.18 | 0.48 | 0.27 | 0.47 | 42.02 | 0.0 | 0 | 0.0 | 0.0 | 0.0 |
+| IGV Buy & Hold | 31.26 | 5.81 | 0.2 | 0.111 | 0.2 | 38.49 | 0.0 | 0 | 0.0 | 0.0 | 0.0 |
+| S&P 500 (SPY) Buy & Hold | 68.75 | 11.47 | 0.49 | 0.274 | 0.48 | 24.5 | 0.0 | 0 | 0.0 | 0.0 | 0.0 |
 | 3M T-Bill Cash (DTB3) | 21.11 | 4.06 | 0.0 | 0.0 | 0.0 | 0.0 | 100.0 | 0 | 0.0 | 0.0 | 0.0 |
 
 ## 4. View A — 2022 Bear Market Stress Test (`2022`)
@@ -92,19 +92,19 @@
 | Strategy / Benchmark | Total Return (%) | CAGR (%) | Sharpe | Deflated SR Prob | Sortino | Max DD (%) | 100% Cash Days (%) | Trades | Win Rate (%) | Profit Factor | Avg R |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | Baseline (SMH Bull Core + Swing) | 1024.61 | 88.38 | 1.72 | 0.953 | 1.73 | 33.17 | 9.6 | 81 | 60.5 | 3.58 | 1.91 |
-| ML (SMH Bull Core + Swing) | 1156.14 | 93.91 | 1.74 | 0.958 | 1.79 | 38.55 | 9.0 | 79 | 58.2 | 3.63 | 2.04 |
+| ML (SMH Bull Core + Swing) | 1135.19 | 93.06 | 1.73 | 0.956 | 1.78 | 38.58 | 9.0 | 78 | 57.7 | 3.63 | 2.06 |
 | Pure Pre-2022 Semi (SMH Bull Core + Swing) | 473.97 | 57.97 | 1.3 | 0.803 | 1.28 | 38.63 | 11.8 | 75 | 62.7 | 3.14 | 1.5 |
 | `Baseline (Adaptive `L_t`)` | 811.93 | 78.32 | 1.69 | 0.948 | 1.73 | 30.95 | 9.6 | 80 | 60.0 | 3.68 | 1.88 |
-| ML (LightGBM + Platt) | 1032.7 | 88.73 | 1.75 | 0.961 | 1.84 | 36.37 | 9.0 | 78 | 57.7 | 3.71 | 2.06 |
+| ML (LightGBM + Platt) | 1031.0 | 88.66 | 1.75 | 0.961 | 1.84 | 36.42 | 9.0 | 78 | 57.7 | 3.7 | 2.06 |
 | Pure Pre-2022 Semi (Cash Swing) | 389.02 | 51.49 | 1.27 | 0.79 | 1.29 | 35.6 | 11.8 | 76 | 61.8 | 3.21 | 1.47 |
-| Baseline (Fixed 20d) | 776.52 | 76.48 | 1.6 | 0.926 | 1.65 | 34.9 | 9.2 | 90 | 53.3 | 3.8 | 1.82 |
-| SMH Buy & Hold | 425.47 | 54.37 | 1.27 | 0.791 | 1.25 | 35.74 | 0.0 | 0 | 0.0 | 0.0 | 0.0 |
-| SOXX Buy & Hold | 318.47 | 45.44 | 1.05 | 0.652 | 1.03 | 41.36 | 0.0 | 0 | 0.0 | 0.0 | 0.0 |
-| VGT Buy & Hold | 199.0 | 33.19 | 1.13 | 0.71 | 1.08 | 27.23 | 0.0 | 0 | 0.0 | 0.0 | 0.0 |
-| QQQ Buy & Hold | 165.49 | 29.11 | 1.15 | 0.719 | 1.13 | 22.77 | 0.0 | 0 | 0.0 | 0.0 | 0.0 |
-| AIQ Buy & Hold | 198.16 | 33.09 | 1.11 | 0.695 | 1.08 | 26.35 | 0.0 | 0 | 0.0 | 0.0 | 0.0 |
-| IGV Buy & Hold | 100.94 | 20.03 | 0.66 | 0.353 | 0.65 | 36.61 | 0.0 | 0 | 0.0 | 0.0 | 0.0 |
-| S&P 500 (SPY) Buy & Hold | 108.08 | 21.14 | 1.06 | 0.663 | 1.06 | 18.76 | 0.0 | 0 | 0.0 | 0.0 | 0.0 |
+| Baseline (Fixed 20d) | 774.37 | 76.37 | 1.6 | 0.926 | 1.65 | 34.9 | 9.2 | 90 | 52.2 | 3.79 | 1.82 |
+| SMH Buy & Hold | 425.18 | 54.34 | 1.27 | 0.791 | 1.25 | 35.74 | 0.0 | 0 | 0.0 | 0.0 | 0.0 |
+| SOXX Buy & Hold | 317.71 | 45.37 | 1.05 | 0.651 | 1.03 | 41.36 | 0.0 | 0 | 0.0 | 0.0 | 0.0 |
+| VGT Buy & Hold | 199.15 | 33.21 | 1.13 | 0.71 | 1.08 | 27.23 | 0.0 | 0 | 0.0 | 0.0 | 0.0 |
+| QQQ Buy & Hold | 165.72 | 29.14 | 1.15 | 0.72 | 1.13 | 22.77 | 0.0 | 0 | 0.0 | 0.0 | 0.0 |
+| AIQ Buy & Hold | 198.73 | 33.16 | 1.12 | 0.696 | 1.08 | 26.35 | 0.0 | 0 | 0.0 | 0.0 | 0.0 |
+| IGV Buy & Hold | 101.23 | 20.08 | 0.66 | 0.354 | 0.65 | 36.61 | 0.0 | 0 | 0.0 | 0.0 | 0.0 |
+| S&P 500 (SPY) Buy & Hold | 108.3 | 21.17 | 1.07 | 0.665 | 1.06 | 18.76 | 0.0 | 0 | 0.0 | 0.0 | 0.0 |
 | 3M T-Bill Cash (DTB3) | 18.68 | 4.58 | 0.0 | 0.0 | 0.0 | 0.0 | 100.0 | 0 | 0.0 | 0.0 | 0.0 |
 
 ## 6. Yearly Breakdown — Baseline (Adaptive `L_t`, Cash + T-Bill Interest)
@@ -122,7 +122,7 @@
 | Year | Total Return (%) | CAGR (%) | Ann. Vol (%) | Sharpe | Sortino | Max Drawdown (%) | 100% Cash Days (%) | Trades | Win Rate (%) | Profit Factor | Avg R |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 2022 | -19.91% | -19.98% | 9.4% | -2.56 | -2.04 | -20.12% | 89.6% | 17 | 0.0% | 0.00 | -0.60R |
-| 2023 | +44.02% | +44.44% | 20.4% | 1.66 | 1.73 | -19.27% | 6.0% | 25 | 68.0% | 4.11 | +0.89R |
-| 2024 | +85.57% | +85.57% | 31.4% | 1.97 | 2.21 | -23.40% | 7.5% | 22 | 59.1% | 5.24 | +1.18R |
-| 2025 | +134.28% | +135.88% | 35.2% | 2.51 | 2.84 | -18.81% | 20.4% | 12 | 58.3% | 33.40 | +8.39R |
-| 2026 | +74.64% | +94.62% | 58.5% | 1.37 | 1.39 | -36.37% | 0.9% | 19 | 42.1% | 1.14 | +0.62R |
+| 2023 | +44.17% | +44.60% | 20.5% | 1.66 | 1.73 | -19.36% | 6.0% | 25 | 68.0% | 4.11 | +0.89R |
+| 2024 | +85.67% | +85.67% | 31.4% | 1.98 | 2.21 | -23.36% | 7.5% | 22 | 59.1% | 5.26 | +1.18R |
+| 2025 | +134.05% | +135.65% | 35.2% | 2.51 | 2.84 | -18.80% | 20.4% | 12 | 58.3% | 33.40 | +8.39R |
+| 2026 | +74.27% | +94.13% | 58.6% | 1.37 | 1.38 | -36.42% | 0.9% | 19 | 42.1% | 1.15 | +0.62R |
