@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "generated_at": "2026-11-06T17:08:48.980733+00:00",
+  "generated_at": "2026-11-06T17:47:49.593316+00:00",
   "source_sha256": "caff8647280c4f42ed14494d032ed8136de61524c5bc8c7cd83c763b95b3eb84",
   "trial_count_k": 14,
   "all_gates_pass": false,
@@ -9,7 +9,7 @@
   "gates_smh_core": [
     {
       "Gate": "Gate 1: Modern AI Era Sharpe >= 1.60 (2023-2026)",
-      "Value": "1.72",
+      "Value": "1.73",
       "Status": "PASS"
     },
     {
@@ -19,22 +19,22 @@
     },
     {
       "Gate": "Gate 3: Profit Factor >= 2.00 (Gross Payoff Asymmetry)",
-      "Value": "AI: 3.63 | OOS: 3.41",
+      "Value": "AI: 3.61 | OOS: 3.40",
       "Status": "PASS"
     },
     {
       "Gate": "Gate 4a: Modern AI Era Max DD <= 38.0% (vs SMH 35.7%)",
-      "Value": "38.55%",
+      "Value": "38.57%",
       "Status": "FAIL"
     },
     {
       "Gate": "Gate 4b: Full OOS Max DD <= 40.0% (vs SMH 45.1%)",
-      "Value": "38.55%",
+      "Value": "38.57%",
       "Status": "PASS"
     },
     {
       "Gate": "Gate 5: Full OOS Sharpe >= 1.20 (2022-2026 Full Cycle)",
-      "Value": "1.38",
+      "Value": "1.39",
       "Status": "PASS"
     },
     {
@@ -44,7 +44,7 @@
     },
     {
       "Gate": "Gate 7: ML Alpha Dominance & Calibration (BSS > 0.02 & SR Lift >= +0.05 or Sortino Lift >= +0.02 or CAGR Lift >= +3.0% or DD Red >= 1.5%)",
-      "Value": "BSS: 0.0393 | SR Lift: +0.00 | Sortino Lift: +0.04 | CAGR Lift: +4.4% | DD Red: -5.4%",
+      "Value": "BSS: 0.0394 | SR Lift: +0.01 | Sortino Lift: +0.05 | CAGR Lift: +4.6% | DD Red: -5.4%",
       "Status": "PASS"
     }
   ],
@@ -56,7 +56,7 @@
     },
     {
       "Gate": "Gate 2: Deflated Sharpe Probability >= 0.95 (K=14 trials)",
-      "Value": "0.960",
+      "Value": "0.961",
       "Status": "PASS"
     },
     {
@@ -66,12 +66,12 @@
     },
     {
       "Gate": "Gate 4a: Modern AI Era Max DD <= 38.0% (vs SMH 35.7%)",
-      "Value": "36.37%",
+      "Value": "36.38%",
       "Status": "PASS"
     },
     {
       "Gate": "Gate 4b: Full OOS Max DD <= 40.0% (vs SMH 45.1%)",
-      "Value": "36.37%",
+      "Value": "36.38%",
       "Status": "PASS"
     },
     {
@@ -86,27 +86,27 @@
     },
     {
       "Gate": "Gate 7: ML Alpha Dominance & Calibration (BSS > 0.02 & SR Lift >= +0.05 or Sortino Lift >= +0.02 or CAGR Lift >= +3.0% or DD Red >= 1.5%)",
-      "Value": "BSS: 0.0393 | SR Lift: +0.06 | Sortino Lift: +0.10 | CAGR Lift: +10.1% | DD Red: -5.4%",
+      "Value": "BSS: 0.0394 | SR Lift: +0.06 | Sortino Lift: +0.11 | CAGR Lift: +10.2% | DD Red: -5.4%",
       "Status": "PASS"
     }
   ],
   "metrics": {
     "ml_smh_core": {
-      "total_return_pct": 1129.07,
-      "cagr_pct": 92.41,
-      "vol_pct": 40.14,
-      "vol": 40.14,
-      "sharpe": 1.72,
+      "total_return_pct": 1134.62,
+      "cagr_pct": 92.64,
+      "vol_pct": 40.13,
+      "vol": 40.13,
+      "sharpe": 1.73,
       "deflated_sharpe_prob": 0.956,
-      "sortino": 1.77,
-      "max_dd_pct": 38.55,
+      "sortino": 1.78,
+      "max_dd_pct": 38.57,
       "cash_days_pct": 9.3,
-      "trades": 78,
-      "win_rate_pct": 57.7,
-      "profit_factor": 3.63,
-      "avg_r": 2.06,
-      "profit_factor_winsor": 1.72,
-      "avg_r_winsor": 0.91
+      "trades": 79,
+      "win_rate_pct": 57.0,
+      "profit_factor": 3.61,
+      "avg_r": 2.03,
+      "profit_factor_winsor": 1.71,
+      "avg_r_winsor": 0.89
     },
     "base_smh_core": {
       "total_return_pct": 1025.15,
@@ -126,14 +126,14 @@
       "avg_r_winsor": 0.99
     },
     "ml_cash_swing": {
-      "total_return_pct": 1027.39,
-      "cagr_pct": 88.13,
-      "vol_pct": 37.87,
-      "vol": 37.87,
+      "total_return_pct": 1029.14,
+      "cagr_pct": 88.2,
+      "vol_pct": 37.85,
+      "vol": 37.85,
       "sharpe": 1.74,
-      "deflated_sharpe_prob": 0.96,
-      "sortino": 1.83,
-      "max_dd_pct": 36.37,
+      "deflated_sharpe_prob": 0.961,
+      "sortino": 1.84,
+      "max_dd_pct": 36.38,
       "cash_days_pct": 9.3,
       "trades": 78,
       "win_rate_pct": 57.7,
@@ -163,6 +163,6 @@
   "cal_stats": {
     "brier_raw": 0.2402,
     "brier_calibrated": 0.2402,
-    "brier_skill_score": 0.0393
+    "brier_skill_score": 0.0394
   }
 }
