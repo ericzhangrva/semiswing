@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "generated_at": "2026-11-12T17:59:52.735788+00:00",
+  "generated_at": "2026-11-12T18:43:09.034350+00:00",
   "source_sha256": "caff8647280c4f42ed14494d032ed8136de61524c5bc8c7cd83c763b95b3eb84",
   "trial_count_k": 14,
   "all_gates_pass": false,
@@ -24,12 +24,12 @@
     },
     {
       "Gate": "Gate 4a: Modern AI Era Max DD <= 38.0% (vs SMH 35.7%)",
-      "Value": "38.59%",
+      "Value": "38.54%",
       "Status": "FAIL"
     },
     {
       "Gate": "Gate 4b: Full OOS Max DD <= 40.0% (vs SMH 45.1%)",
-      "Value": "38.59%",
+      "Value": "38.54%",
       "Status": "PASS"
     },
     {
@@ -44,7 +44,7 @@
     },
     {
       "Gate": "Gate 7: ML Alpha Dominance & Calibration (BSS > 0.02 & SR Lift >= +0.05 or Sortino Lift >= +0.02 or CAGR Lift >= +3.0% or DD Red >= 1.5%)",
-      "Value": "BSS: 0.0393 | SR Lift: +0.00 | Sortino Lift: +0.04 | CAGR Lift: +4.4% | DD Red: -5.4%",
+      "Value": "BSS: 0.0393 | SR Lift: +0.00 | Sortino Lift: +0.05 | CAGR Lift: +4.4% | DD Red: -5.4%",
       "Status": "PASS"
     }
   ],
@@ -56,7 +56,7 @@
     },
     {
       "Gate": "Gate 2: Deflated Sharpe Probability >= 0.95 (K=14 trials)",
-      "Value": "0.961",
+      "Value": "0.960",
       "Status": "PASS"
     },
     {
@@ -66,12 +66,12 @@
     },
     {
       "Gate": "Gate 4a: Modern AI Era Max DD <= 38.0% (vs SMH 35.7%)",
-      "Value": "36.41%",
+      "Value": "36.37%",
       "Status": "PASS"
     },
     {
       "Gate": "Gate 4b: Full OOS Max DD <= 40.0% (vs SMH 45.1%)",
-      "Value": "36.41%",
+      "Value": "36.37%",
       "Status": "PASS"
     },
     {
@@ -86,20 +86,20 @@
     },
     {
       "Gate": "Gate 7: ML Alpha Dominance & Calibration (BSS > 0.02 & SR Lift >= +0.05 or Sortino Lift >= +0.02 or CAGR Lift >= +3.0% or DD Red >= 1.5%)",
-      "Value": "BSS: 0.0393 | SR Lift: +0.06 | Sortino Lift: +0.10 | CAGR Lift: +10.2% | DD Red: -5.5%",
+      "Value": "BSS: 0.0393 | SR Lift: +0.06 | Sortino Lift: +0.10 | CAGR Lift: +10.1% | DD Red: -5.4%",
       "Status": "PASS"
     }
   ],
   "metrics": {
     "ml_smh_core": {
-      "total_return_pct": 1131.91,
-      "cagr_pct": 92.01,
-      "vol_pct": 40.06,
-      "vol": 40.06,
+      "total_return_pct": 1130.62,
+      "cagr_pct": 91.96,
+      "vol_pct": 40.05,
+      "vol": 40.05,
       "sharpe": 1.72,
       "deflated_sharpe_prob": 0.956,
-      "sortino": 1.77,
-      "max_dd_pct": 38.59,
+      "sortino": 1.78,
+      "max_dd_pct": 38.54,
       "cash_days_pct": 9.7,
       "trades": 78,
       "win_rate_pct": 57.7,
@@ -126,14 +126,14 @@
       "avg_r_winsor": 0.99
     },
     "ml_cash_swing": {
-      "total_return_pct": 1031.99,
-      "cagr_pct": 87.84,
+      "total_return_pct": 1028.32,
+      "cagr_pct": 87.68,
       "vol_pct": 37.79,
       "vol": 37.79,
       "sharpe": 1.74,
-      "deflated_sharpe_prob": 0.961,
+      "deflated_sharpe_prob": 0.96,
       "sortino": 1.83,
-      "max_dd_pct": 36.41,
+      "max_dd_pct": 36.37,
       "cash_days_pct": 9.7,
       "trades": 78,
       "win_rate_pct": 57.7,
