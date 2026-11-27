@@ -237,7 +237,7 @@
                 </td>
                 <td align="right" valign="middle">
                   <span style="display:inline-block; padding:3px 10px; background:#38bdf8; color:#082f49; border-radius:999px; font-size:11px; font-weight:800;">
-                    PRE-SIZED TICKET #1 (Tier WATCH)
+                    PRE-SIZED TICKET #1 (Tier HIGH)
                   </span>
                 </td>
               </tr>
@@ -294,7 +294,7 @@
                       <span class="metric-tip tip-right">ML Score &amp; RS<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">Composite conviction score combining Platt-calibrated win probability P(TP1 before Stop) with 20-day beta-neutral residual momentum percentile rank across the active universe.</span></span>
                     </div>
                     <div style="font-size:14px; font-weight:700; color:#0f172a; margin-top:2px;">
-                      36.0% <span style="font-size:11px; color:#64748b;">(RS 73th)</span>
+                      46.3% <span style="font-size:11px; color:#64748b;">(RS 73th)</span>
                     </div>
                   </div>
                 </td>
@@ -311,8 +311,8 @@
 
             <!-- Trigger Condition & Top SHAP Drivers -->
             <div style="font-size:12px; color:#334155; background:#f8fafc; border-radius:6px; padding:8px 12px; line-height:1.45;">
-              <div><strong>Entry Condition:</strong> Waiting: regime_on=OFF (SMH pullback), rs_rank=0.73<0.8, ml_prob=0.36<0.44 &nbsp;|&nbsp; <strong>Max Hold:</strong> 25 trading days &nbsp;|&nbsp; <strong>Earnings:</strong> 44d</div>
-              <div style="margin-top:4px; color:#475569;"><strong>Top Model Drivers (SHAP):</strong> <code><span class="metric-tip tip-left">skew_idx<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">CBOE SKEW Index 60-day z-score. Elevated values (> +1.5) indicate institutional tail-risk hedging and out-of-the-money put demand.</span></span>=-1.10 (-0.104) | <span class="metric-tip tip-left">vix_ts<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">Volatility term structure ratio (VIX / VIX3M). Values < 1.0 confirm normal contango (calm regime); >= 1.0 indicates backwardation (near-term panic).</span></span>=1.00 (+0.063) | <span class="metric-tip">vxn_squeeze_vel<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">5-day rate of change in Nasdaq Volatility Index (VXN). Rapid drops detect post-panic volatility compression and short squeezes.</span></span>=-2.23 (+0.033) | <span class="metric-tip tip-right">sector_rs<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">20-day relative strength of SMH vs SPY: Delta%20d(SMH) - Delta%20d(SPY). Positive values confirm semiconductor sector leadership.</span></span>=-0.12 (-0.021) | <span class="metric-tip tip-right">slope_t_norm_40d<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">40-day intermediate-horizon normalized OLS t-statistic measuring intermediate trend persistence.</span></span>=5.40 (-0.009)</code></div>
+              <div><strong>Entry Condition:</strong> Waiting: regime_on=OFF (SMH pullback), rs_rank=0.73<0.8, slope_accel=-0.04<=0 &nbsp;|&nbsp; <strong>Max Hold:</strong> 25 trading days &nbsp;|&nbsp; <strong>Earnings:</strong> 44d</div>
+              <div style="margin-top:4px; color:#475569;"><strong>Top Model Drivers (SHAP):</strong> <code><span class="metric-tip tip-left">vix_ts<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">Volatility term structure ratio (VIX / VIX3M). Values < 1.0 confirm normal contango (calm regime); >= 1.0 indicates backwardation (near-term panic).</span></span>=1.00 (+0.102) | <span class="metric-tip tip-left">vxn_squeeze_vel<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">5-day rate of change in Nasdaq Volatility Index (VXN). Rapid drops detect post-panic volatility compression and short squeezes.</span></span>=-2.23 (+0.032) | <span class="metric-tip">sector_rs<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">20-day relative strength of SMH vs SPY: Delta%20d(SMH) - Delta%20d(SPY). Positive values confirm semiconductor sector leadership.</span></span>=-0.12 (-0.008) | <span class="metric-tip tip-right">resid_mom_60<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">60-day idiosyncratic residual momentum relative to SMH after stripping market beta. Confirms stock-specific momentum decoupled from sector drift.</span></span>=0.14 (-0.004) | <span class="metric-tip tip-right">ema20_slope<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">5-day rate of change of the 20-day exponential moving average (EMA20).</span></span>=0.23 (+0.003)</code></div>
             </div>
           </div>
         </div>
@@ -322,192 +322,12 @@
             <table width="100%" cellpadding="0" cellspacing="0" border="0">
               <tr>
                 <td align="left" valign="middle">
-                  <span style="font-size:17px; font-weight:800; letter-spacing:0.3px;">#2 QCOM</span>
-                  <span style="font-size:13px; color:#cbd5e1; margin-left:8px;">Last Close: <strong>$179.27</strong></span>
-                </td>
-                <td align="right" valign="middle">
-                  <span style="display:inline-block; padding:3px 10px; background:#38bdf8; color:#082f49; border-radius:999px; font-size:11px; font-weight:800;">
-                    PRE-SIZED TICKET #2 (Tier WATCH)
-                  </span>
-                </td>
-              </tr>
-            </table>
-          </div>
-
-          <div style="padding:14px 16px;">
-            <!-- Dollar Order Allocation Box -->
-            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f0f9ff; border:1px solid #bae6fd; border-radius:8px; margin-bottom:12px;">
-              <tr>
-                <td width="50%" valign="top" style="padding:10px 14px; border-right:1px solid #bae6fd;">
-                  <div style="font-size:11px; color:#0369a1; font-weight:700; text-transform:uppercase;">Order (Using Settled Cash: $10,000)</div>
-                  <div style="font-size:18px; font-weight:800; color:#0c4a6e; margin-top:2px;">
-                    BUY $0.00
-                  </div>
-                  <div style="font-size:12px; color:#0284c7;">
-                    ~0.000 shares @ $179.27 (Max Risk: -$0)
-                  </div>
-                </td>
-                <td width="50%" valign="top" style="padding:10px 14px;">
-                  <div style="font-size:11px; color:#0369a1; font-weight:700; text-transform:uppercase;">Order (With ETF Rotation: $10,000)</div>
-                  <div style="font-size:18px; font-weight:800; color:#0c4a6e; margin-top:2px;">
-                    BUY $0.00
-                  </div>
-                  <div style="font-size:12px; color:#0284c7;">
-                    ~0.000 shares @ $179.27 (Max Risk: -$0)
-                  </div>
-                </td>
-              </tr>
-            </table>
-
-            <!-- Stop Loss, Profit Target, & Model Score Row -->
-            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:10px;">
-              <tr>
-                <td width="33%" valign="top" style="padding-right:6px;">
-                  <div style="background:#fef2f2; border:1px solid #fecaca; border-radius:6px; padding:8px 10px;">
-                    <div style="font-size:10px; color:#991b1b; font-weight:700; text-transform:uppercase;">Hard Stop-Loss</div>
-                    <div style="font-size:14px; font-weight:700; color:#dc2626; margin-top:2px;">
-                       $152.38 <span style="font-size:11px; font-weight:600;">(-15.0%)</span>
-                    </div>
-                  </div>
-                </td>
-                <td width="34%" valign="top" style="padding:0 3px;">
-                  <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:6px; padding:8px 10px;">
-                    <div style="font-size:10px; color:#166534; font-weight:700; text-transform:uppercase;">Profit Target (TP1)</div>
-                    <div style="font-size:14px; font-weight:700; color:#15803d; margin-top:2px;">
-                      $234.26 <span style="font-size:11px; font-weight:600;">(+30.7%)</span>
-                    </div>
-                  </div>
-                </td>
-                <td width="33%" valign="top" style="padding-left:6px;">
-                  <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:8px 10px;">
-                    <div style="font-size:10px; color:#475569; font-weight:700; text-transform:uppercase;">
-                      <span class="metric-tip tip-right">ML Score &amp; RS<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">Composite conviction score combining Platt-calibrated win probability P(TP1 before Stop) with 20-day beta-neutral residual momentum percentile rank across the active universe.</span></span>
-                    </div>
-                    <div style="font-size:14px; font-weight:700; color:#0f172a; margin-top:2px;">
-                      43.1% <span style="font-size:11px; color:#64748b;">(RS 90th)</span>
-                    </div>
-                  </div>
-                </td>
-              </tr>
-            </table>
-
-            <!-- Order Execution & Gap-Up Protection -->
-            <div style="font-size:12px; color:#0369a1; background:#f0f9ff; border:1px solid #bae6fd; border-radius:6px; padding:7px 12px; margin-bottom:10px; line-height:1.45;">
-              <div><strong>Order Execution:</strong> Market on Open (MOO) or Limit &le; <strong>$186.44</strong></div>
-              <div style="font-size:11px; color:#0284c7; margin-top:2px;">
-                <strong>Gap-Up Protection:</strong> Max chasing ceiling is <strong>$186.44</strong> (+4.0% max). If stock opens above $186.44 at 09:30 ET, skip/cancel order.
-              </div>
-            </div>
-
-            <!-- Trigger Condition & Top SHAP Drivers -->
-            <div style="font-size:12px; color:#334155; background:#f8fafc; border-radius:6px; padding:8px 12px; line-height:1.45;">
-              <div><strong>Entry Condition:</strong> Waiting: regime_on=OFF (SMH pullback), slope_t=-1.13<1.2, ema20_slope=-0.14<=0 &nbsp;|&nbsp; <strong>Max Hold:</strong> 25 trading days &nbsp;|&nbsp; <strong>Earnings:</strong> 49d</div>
-              <div style="margin-top:4px; color:#475569;"><strong>Top Model Drivers (SHAP):</strong> <code><span class="metric-tip tip-left">skew_idx<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">CBOE SKEW Index 60-day z-score. Elevated values (> +1.5) indicate institutional tail-risk hedging and out-of-the-money put demand.</span></span>=-1.10 (-0.068) | <span class="metric-tip tip-left">vix_ts<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">Volatility term structure ratio (VIX / VIX3M). Values < 1.0 confirm normal contango (calm regime); >= 1.0 indicates backwardation (near-term panic).</span></span>=1.00 (+0.067) | <span class="metric-tip">vxn_squeeze_vel<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">5-day rate of change in Nasdaq Volatility Index (VXN). Rapid drops detect post-panic volatility compression and short squeezes.</span></span>=-2.23 (+0.035) | <span class="metric-tip tip-right">slope_t_norm_40d<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">40-day intermediate-horizon normalized OLS t-statistic measuring intermediate trend persistence.</span></span>=-2.71 (+0.020) | <span class="metric-tip tip-right">ema50_slope<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">5-day rate of change of the 50-day exponential moving average (EMA50).</span></span>=-0.32 (+0.018)</code></div>
-            </div>
-          </div>
-        </div>
-        
-        <div style="background:#ffffff; border:1px solid #cbd5e1; border-radius:10px; overflow:visible; margin-bottom:14px;">
-          <div style="background:#1e293b; color:#ffffff; padding:10px 16px; border-top-left-radius:9px; border-top-right-radius:9px;">
-            <table width="100%" cellpadding="0" cellspacing="0" border="0">
-              <tr>
-                <td align="left" valign="middle">
-                  <span style="font-size:17px; font-weight:800; letter-spacing:0.3px;">#3 COHR</span>
-                  <span style="font-size:13px; color:#cbd5e1; margin-left:8px;">Last Close: <strong>$223.79</strong></span>
-                </td>
-                <td align="right" valign="middle">
-                  <span style="display:inline-block; padding:3px 10px; background:#38bdf8; color:#082f49; border-radius:999px; font-size:11px; font-weight:800;">
-                    PRE-SIZED TICKET #3 (Tier MEDIUM)
-                  </span>
-                </td>
-              </tr>
-            </table>
-          </div>
-
-          <div style="padding:14px 16px;">
-            <!-- Dollar Order Allocation Box -->
-            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f0f9ff; border:1px solid #bae6fd; border-radius:8px; margin-bottom:12px;">
-              <tr>
-                <td width="50%" valign="top" style="padding:10px 14px; border-right:1px solid #bae6fd;">
-                  <div style="font-size:11px; color:#0369a1; font-weight:700; text-transform:uppercase;">Order (Using Settled Cash: $10,000)</div>
-                  <div style="font-size:18px; font-weight:800; color:#0c4a6e; margin-top:2px;">
-                    BUY $0.00
-                  </div>
-                  <div style="font-size:12px; color:#0284c7;">
-                    ~0.000 shares @ $223.79 (Max Risk: -$0)
-                  </div>
-                </td>
-                <td width="50%" valign="top" style="padding:10px 14px;">
-                  <div style="font-size:11px; color:#0369a1; font-weight:700; text-transform:uppercase;">Order (With ETF Rotation: $10,000)</div>
-                  <div style="font-size:18px; font-weight:800; color:#0c4a6e; margin-top:2px;">
-                    BUY $0.00
-                  </div>
-                  <div style="font-size:12px; color:#0284c7;">
-                    ~0.000 shares @ $223.79 (Max Risk: -$0)
-                  </div>
-                </td>
-              </tr>
-            </table>
-
-            <!-- Stop Loss, Profit Target, & Model Score Row -->
-            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:10px;">
-              <tr>
-                <td width="33%" valign="top" style="padding-right:6px;">
-                  <div style="background:#fef2f2; border:1px solid #fecaca; border-radius:6px; padding:8px 10px;">
-                    <div style="font-size:10px; color:#991b1b; font-weight:700; text-transform:uppercase;">Hard Stop-Loss</div>
-                    <div style="font-size:14px; font-weight:700; color:#dc2626; margin-top:2px;">
-                       $190.22 <span style="font-size:11px; font-weight:600;">(-15.0%)</span>
-                    </div>
-                  </div>
-                </td>
-                <td width="34%" valign="top" style="padding:0 3px;">
-                  <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:6px; padding:8px 10px;">
-                    <div style="font-size:10px; color:#166534; font-weight:700; text-transform:uppercase;">Profit Target (TP1)</div>
-                    <div style="font-size:14px; font-weight:700; color:#15803d; margin-top:2px;">
-                      $364.85 <span style="font-size:11px; font-weight:600;">(+63.0%)</span>
-                    </div>
-                  </div>
-                </td>
-                <td width="33%" valign="top" style="padding-left:6px;">
-                  <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:8px 10px;">
-                    <div style="font-size:10px; color:#475569; font-weight:700; text-transform:uppercase;">
-                      <span class="metric-tip tip-right">ML Score &amp; RS<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">Composite conviction score combining Platt-calibrated win probability P(TP1 before Stop) with 20-day beta-neutral residual momentum percentile rank across the active universe.</span></span>
-                    </div>
-                    <div style="font-size:14px; font-weight:700; color:#0f172a; margin-top:2px;">
-                      44.7% <span style="font-size:11px; color:#64748b;">(RS 98th)</span>
-                    </div>
-                  </div>
-                </td>
-              </tr>
-            </table>
-
-            <!-- Order Execution & Gap-Up Protection -->
-            <div style="font-size:12px; color:#0369a1; background:#f0f9ff; border:1px solid #bae6fd; border-radius:6px; padding:7px 12px; margin-bottom:10px; line-height:1.45;">
-              <div><strong>Order Execution:</strong> Market on Open (MOO) or Limit &le; <strong>$232.74</strong></div>
-              <div style="font-size:11px; color:#0284c7; margin-top:2px;">
-                <strong>Gap-Up Protection:</strong> Max chasing ceiling is <strong>$232.74</strong> (+4.0% max). If stock opens above $232.74 at 09:30 ET, skip/cancel order.
-              </div>
-            </div>
-
-            <!-- Trigger Condition & Top SHAP Drivers -->
-            <div style="font-size:12px; color:#334155; background:#f8fafc; border-radius:6px; padding:8px 12px; line-height:1.45;">
-              <div><strong>Entry Condition:</strong> Waiting: regime_on=OFF (SMH pullback), slope_t=-2.22<1.2, ema20_slope=-0.25<=0 &nbsp;|&nbsp; <strong>Max Hold:</strong> 25 trading days &nbsp;|&nbsp; <strong>Earnings:</strong> 49d</div>
-              <div style="margin-top:4px; color:#475569;"><strong>Top Model Drivers (SHAP):</strong> <code><span class="metric-tip tip-left">vix_ts<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">Volatility term structure ratio (VIX / VIX3M). Values < 1.0 confirm normal contango (calm regime); >= 1.0 indicates backwardation (near-term panic).</span></span>=1.00 (+0.069) | <span class="metric-tip tip-left">skew_idx<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">CBOE SKEW Index 60-day z-score. Elevated values (> +1.5) indicate institutional tail-risk hedging and out-of-the-money put demand.</span></span>=-1.10 (-0.068) | <span class="metric-tip">vxn_squeeze_vel<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">5-day rate of change in Nasdaq Volatility Index (VXN). Rapid drops detect post-panic volatility compression and short squeezes.</span></span>=-2.23 (+0.037) | <span class="metric-tip tip-right">ema50_slope<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">5-day rate of change of the 50-day exponential moving average (EMA50).</span></span>=-0.54 (+0.021) | <span class="metric-tip tip-right">slope_t_norm_40d<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">40-day intermediate-horizon normalized OLS t-statistic measuring intermediate trend persistence.</span></span>=-4.27 (+0.021)</code></div>
-            </div>
-          </div>
-        </div>
-        
-        <div style="background:#ffffff; border:1px solid #cbd5e1; border-radius:10px; overflow:visible; margin-bottom:14px;">
-          <div style="background:#1e293b; color:#ffffff; padding:10px 16px; border-top-left-radius:9px; border-top-right-radius:9px;">
-            <table width="100%" cellpadding="0" cellspacing="0" border="0">
-              <tr>
-                <td align="left" valign="middle">
-                  <span style="font-size:17px; font-weight:800; letter-spacing:0.3px;">#4 APP</span>
+                  <span style="font-size:17px; font-weight:800; letter-spacing:0.3px;">#2 APP</span>
                   <span style="font-size:13px; color:#cbd5e1; margin-left:8px;">Last Close: <strong>$399.21</strong></span>
                 </td>
                 <td align="right" valign="middle">
                   <span style="display:inline-block; padding:3px 10px; background:#38bdf8; color:#082f49; border-radius:999px; font-size:11px; font-weight:800;">
-                    PRE-SIZED TICKET #4 (Tier WATCH)
+                    PRE-SIZED TICKET #2 (Tier HIGH)
                   </span>
                 </td>
               </tr>
@@ -564,7 +384,7 @@
                       <span class="metric-tip tip-right">ML Score &amp; RS<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">Composite conviction score combining Platt-calibrated win probability P(TP1 before Stop) with 20-day beta-neutral residual momentum percentile rank across the active universe.</span></span>
                     </div>
                     <div style="font-size:14px; font-weight:700; color:#0f172a; margin-top:2px;">
-                      41.6% <span style="font-size:11px; color:#64748b;">(RS 100th)</span>
+                      51.4% <span style="font-size:11px; color:#64748b;">(RS 100th)</span>
                     </div>
                   </div>
                 </td>
@@ -581,8 +401,188 @@
 
             <!-- Trigger Condition & Top SHAP Drivers -->
             <div style="font-size:12px; color:#334155; background:#f8fafc; border-radius:6px; padding:8px 12px; line-height:1.45;">
-              <div><strong>Entry Condition:</strong> Waiting: regime_on=OFF (SMH pullback), slope_t=-2.53<1.2, ml_prob=0.42<0.44 &nbsp;|&nbsp; <strong>Max Hold:</strong> 25 trading days &nbsp;|&nbsp; <strong>Earnings:</strong> 54d</div>
-              <div style="margin-top:4px; color:#475569;"><strong>Top Model Drivers (SHAP):</strong> <code><span class="metric-tip tip-left">skew_idx<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">CBOE SKEW Index 60-day z-score. Elevated values (> +1.5) indicate institutional tail-risk hedging and out-of-the-money put demand.</span></span>=-1.10 (-0.101) | <span class="metric-tip tip-left">vix_ts<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">Volatility term structure ratio (VIX / VIX3M). Values < 1.0 confirm normal contango (calm regime); >= 1.0 indicates backwardation (near-term panic).</span></span>=1.00 (+0.072) | <span class="metric-tip">vxn_squeeze_vel<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">5-day rate of change in Nasdaq Volatility Index (VXN). Rapid drops detect post-panic volatility compression and short squeezes.</span></span>=-2.23 (+0.037) | <span class="metric-tip tip-right">resid_mom_60<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">60-day idiosyncratic residual momentum relative to SMH after stripping market beta. Confirms stock-specific momentum decoupled from sector drift.</span></span>=0.27 (+0.030) | <span class="metric-tip tip-right">sector_rs<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">20-day relative strength of SMH vs SPY: Delta%20d(SMH) - Delta%20d(SPY). Positive values confirm semiconductor sector leadership.</span></span>=-0.12 (-0.021)</code></div>
+              <div><strong>Entry Condition:</strong> Waiting: regime_on=OFF (SMH pullback), slope_t=-2.53<1.2, slope_accel=-0.25<=0 &nbsp;|&nbsp; <strong>Max Hold:</strong> 25 trading days &nbsp;|&nbsp; <strong>Earnings:</strong> 54d</div>
+              <div style="margin-top:4px; color:#475569;"><strong>Top Model Drivers (SHAP):</strong> <code><span class="metric-tip tip-left">vix_ts<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">Volatility term structure ratio (VIX / VIX3M). Values < 1.0 confirm normal contango (calm regime); >= 1.0 indicates backwardation (near-term panic).</span></span>=1.00 (+0.108) | <span class="metric-tip tip-left">vxn_squeeze_vel<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">5-day rate of change in Nasdaq Volatility Index (VXN). Rapid drops detect post-panic volatility compression and short squeezes.</span></span>=-2.23 (+0.035) | <span class="metric-tip">resid_mom_60<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">60-day idiosyncratic residual momentum relative to SMH after stripping market beta. Confirms stock-specific momentum decoupled from sector drift.</span></span>=0.27 (+0.027) | <span class="metric-tip tip-right">rs_rank<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">Cross-sectional percentile rank [0.0, 1.0] of 20-day residual momentum across the active tradeable universe.</span></span>=1.00 (+0.015) | <span class="metric-tip tip-right">sector_rs<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">20-day relative strength of SMH vs SPY: Delta%20d(SMH) - Delta%20d(SPY). Positive values confirm semiconductor sector leadership.</span></span>=-0.12 (-0.009)</code></div>
+            </div>
+          </div>
+        </div>
+        
+        <div style="background:#ffffff; border:1px solid #cbd5e1; border-radius:10px; overflow:visible; margin-bottom:14px;">
+          <div style="background:#1e293b; color:#ffffff; padding:10px 16px; border-top-left-radius:9px; border-top-right-radius:9px;">
+            <table width="100%" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td align="left" valign="middle">
+                  <span style="font-size:17px; font-weight:800; letter-spacing:0.3px;">#3 QCOM</span>
+                  <span style="font-size:13px; color:#cbd5e1; margin-left:8px;">Last Close: <strong>$179.27</strong></span>
+                </td>
+                <td align="right" valign="middle">
+                  <span style="display:inline-block; padding:3px 10px; background:#38bdf8; color:#082f49; border-radius:999px; font-size:11px; font-weight:800;">
+                    PRE-SIZED TICKET #3 (Tier HIGH)
+                  </span>
+                </td>
+              </tr>
+            </table>
+          </div>
+
+          <div style="padding:14px 16px;">
+            <!-- Dollar Order Allocation Box -->
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f0f9ff; border:1px solid #bae6fd; border-radius:8px; margin-bottom:12px;">
+              <tr>
+                <td width="50%" valign="top" style="padding:10px 14px; border-right:1px solid #bae6fd;">
+                  <div style="font-size:11px; color:#0369a1; font-weight:700; text-transform:uppercase;">Order (Using Settled Cash: $10,000)</div>
+                  <div style="font-size:18px; font-weight:800; color:#0c4a6e; margin-top:2px;">
+                    BUY $0.00
+                  </div>
+                  <div style="font-size:12px; color:#0284c7;">
+                    ~0.000 shares @ $179.27 (Max Risk: -$0)
+                  </div>
+                </td>
+                <td width="50%" valign="top" style="padding:10px 14px;">
+                  <div style="font-size:11px; color:#0369a1; font-weight:700; text-transform:uppercase;">Order (With ETF Rotation: $10,000)</div>
+                  <div style="font-size:18px; font-weight:800; color:#0c4a6e; margin-top:2px;">
+                    BUY $0.00
+                  </div>
+                  <div style="font-size:12px; color:#0284c7;">
+                    ~0.000 shares @ $179.27 (Max Risk: -$0)
+                  </div>
+                </td>
+              </tr>
+            </table>
+
+            <!-- Stop Loss, Profit Target, & Model Score Row -->
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:10px;">
+              <tr>
+                <td width="33%" valign="top" style="padding-right:6px;">
+                  <div style="background:#fef2f2; border:1px solid #fecaca; border-radius:6px; padding:8px 10px;">
+                    <div style="font-size:10px; color:#991b1b; font-weight:700; text-transform:uppercase;">Hard Stop-Loss</div>
+                    <div style="font-size:14px; font-weight:700; color:#dc2626; margin-top:2px;">
+                       $152.38 <span style="font-size:11px; font-weight:600;">(-15.0%)</span>
+                    </div>
+                  </div>
+                </td>
+                <td width="34%" valign="top" style="padding:0 3px;">
+                  <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:6px; padding:8px 10px;">
+                    <div style="font-size:10px; color:#166534; font-weight:700; text-transform:uppercase;">Profit Target (TP1)</div>
+                    <div style="font-size:14px; font-weight:700; color:#15803d; margin-top:2px;">
+                      $234.26 <span style="font-size:11px; font-weight:600;">(+30.7%)</span>
+                    </div>
+                  </div>
+                </td>
+                <td width="33%" valign="top" style="padding-left:6px;">
+                  <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:8px 10px;">
+                    <div style="font-size:10px; color:#475569; font-weight:700; text-transform:uppercase;">
+                      <span class="metric-tip tip-right">ML Score &amp; RS<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">Composite conviction score combining Platt-calibrated win probability P(TP1 before Stop) with 20-day beta-neutral residual momentum percentile rank across the active universe.</span></span>
+                    </div>
+                    <div style="font-size:14px; font-weight:700; color:#0f172a; margin-top:2px;">
+                      49.6% <span style="font-size:11px; color:#64748b;">(RS 90th)</span>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            </table>
+
+            <!-- Order Execution & Gap-Up Protection -->
+            <div style="font-size:12px; color:#0369a1; background:#f0f9ff; border:1px solid #bae6fd; border-radius:6px; padding:7px 12px; margin-bottom:10px; line-height:1.45;">
+              <div><strong>Order Execution:</strong> Market on Open (MOO) or Limit &le; <strong>$186.44</strong></div>
+              <div style="font-size:11px; color:#0284c7; margin-top:2px;">
+                <strong>Gap-Up Protection:</strong> Max chasing ceiling is <strong>$186.44</strong> (+4.0% max). If stock opens above $186.44 at 09:30 ET, skip/cancel order.
+              </div>
+            </div>
+
+            <!-- Trigger Condition & Top SHAP Drivers -->
+            <div style="font-size:12px; color:#334155; background:#f8fafc; border-radius:6px; padding:8px 12px; line-height:1.45;">
+              <div><strong>Entry Condition:</strong> Waiting: regime_on=OFF (SMH pullback), slope_t=-1.13<1.2, ema20_slope=-0.14<=0 &nbsp;|&nbsp; <strong>Max Hold:</strong> 25 trading days &nbsp;|&nbsp; <strong>Earnings:</strong> 49d</div>
+              <div style="margin-top:4px; color:#475569;"><strong>Top Model Drivers (SHAP):</strong> <code><span class="metric-tip tip-left">vix_ts<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">Volatility term structure ratio (VIX / VIX3M). Values < 1.0 confirm normal contango (calm regime); >= 1.0 indicates backwardation (near-term panic).</span></span>=1.00 (+0.098) | <span class="metric-tip tip-left">vxn_squeeze_vel<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">5-day rate of change in Nasdaq Volatility Index (VXN). Rapid drops detect post-panic volatility compression and short squeezes.</span></span>=-2.23 (+0.033) | <span class="metric-tip">slope_sharpe<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">Trend slope annualized Sharpe ratio proxy: beta / sigma_residual.</span></span>=-1.15 (+0.009) | <span class="metric-tip tip-right">ema50_slope<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">5-day rate of change of the 50-day exponential moving average (EMA50).</span></span>=-0.32 (+0.008) | <span class="metric-tip tip-right">vol_compress<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">Realized volatility compression ratio (RV_10d / RV_60d). Values < 0.70 indicate price coiling prior to directional breakout.</span></span>=1.33 (-0.007)</code></div>
+            </div>
+          </div>
+        </div>
+        
+        <div style="background:#ffffff; border:1px solid #cbd5e1; border-radius:10px; overflow:visible; margin-bottom:14px;">
+          <div style="background:#1e293b; color:#ffffff; padding:10px 16px; border-top-left-radius:9px; border-top-right-radius:9px;">
+            <table width="100%" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td align="left" valign="middle">
+                  <span style="font-size:17px; font-weight:800; letter-spacing:0.3px;">#4 COHR</span>
+                  <span style="font-size:13px; color:#cbd5e1; margin-left:8px;">Last Close: <strong>$223.79</strong></span>
+                </td>
+                <td align="right" valign="middle">
+                  <span style="display:inline-block; padding:3px 10px; background:#38bdf8; color:#082f49; border-radius:999px; font-size:11px; font-weight:800;">
+                    PRE-SIZED TICKET #4 (Tier HIGH)
+                  </span>
+                </td>
+              </tr>
+            </table>
+          </div>
+
+          <div style="padding:14px 16px;">
+            <!-- Dollar Order Allocation Box -->
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f0f9ff; border:1px solid #bae6fd; border-radius:8px; margin-bottom:12px;">
+              <tr>
+                <td width="50%" valign="top" style="padding:10px 14px; border-right:1px solid #bae6fd;">
+                  <div style="font-size:11px; color:#0369a1; font-weight:700; text-transform:uppercase;">Order (Using Settled Cash: $10,000)</div>
+                  <div style="font-size:18px; font-weight:800; color:#0c4a6e; margin-top:2px;">
+                    BUY $0.00
+                  </div>
+                  <div style="font-size:12px; color:#0284c7;">
+                    ~0.000 shares @ $223.79 (Max Risk: -$0)
+                  </div>
+                </td>
+                <td width="50%" valign="top" style="padding:10px 14px;">
+                  <div style="font-size:11px; color:#0369a1; font-weight:700; text-transform:uppercase;">Order (With ETF Rotation: $10,000)</div>
+                  <div style="font-size:18px; font-weight:800; color:#0c4a6e; margin-top:2px;">
+                    BUY $0.00
+                  </div>
+                  <div style="font-size:12px; color:#0284c7;">
+                    ~0.000 shares @ $223.79 (Max Risk: -$0)
+                  </div>
+                </td>
+              </tr>
+            </table>
+
+            <!-- Stop Loss, Profit Target, & Model Score Row -->
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:10px;">
+              <tr>
+                <td width="33%" valign="top" style="padding-right:6px;">
+                  <div style="background:#fef2f2; border:1px solid #fecaca; border-radius:6px; padding:8px 10px;">
+                    <div style="font-size:10px; color:#991b1b; font-weight:700; text-transform:uppercase;">Hard Stop-Loss</div>
+                    <div style="font-size:14px; font-weight:700; color:#dc2626; margin-top:2px;">
+                       $190.22 <span style="font-size:11px; font-weight:600;">(-15.0%)</span>
+                    </div>
+                  </div>
+                </td>
+                <td width="34%" valign="top" style="padding:0 3px;">
+                  <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:6px; padding:8px 10px;">
+                    <div style="font-size:10px; color:#166534; font-weight:700; text-transform:uppercase;">Profit Target (TP1)</div>
+                    <div style="font-size:14px; font-weight:700; color:#15803d; margin-top:2px;">
+                      $364.85 <span style="font-size:11px; font-weight:600;">(+63.0%)</span>
+                    </div>
+                  </div>
+                </td>
+                <td width="33%" valign="top" style="padding-left:6px;">
+                  <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:8px 10px;">
+                    <div style="font-size:10px; color:#475569; font-weight:700; text-transform:uppercase;">
+                      <span class="metric-tip tip-right">ML Score &amp; RS<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">Composite conviction score combining Platt-calibrated win probability P(TP1 before Stop) with 20-day beta-neutral residual momentum percentile rank across the active universe.</span></span>
+                    </div>
+                    <div style="font-size:14px; font-weight:700; color:#0f172a; margin-top:2px;">
+                      51.3% <span style="font-size:11px; color:#64748b;">(RS 98th)</span>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            </table>
+
+            <!-- Order Execution & Gap-Up Protection -->
+            <div style="font-size:12px; color:#0369a1; background:#f0f9ff; border:1px solid #bae6fd; border-radius:6px; padding:7px 12px; margin-bottom:10px; line-height:1.45;">
+              <div><strong>Order Execution:</strong> Market on Open (MOO) or Limit &le; <strong>$232.74</strong></div>
+              <div style="font-size:11px; color:#0284c7; margin-top:2px;">
+                <strong>Gap-Up Protection:</strong> Max chasing ceiling is <strong>$232.74</strong> (+4.0% max). If stock opens above $232.74 at 09:30 ET, skip/cancel order.
+              </div>
+            </div>
+
+            <!-- Trigger Condition & Top SHAP Drivers -->
+            <div style="font-size:12px; color:#334155; background:#f8fafc; border-radius:6px; padding:8px 12px; line-height:1.45;">
+              <div><strong>Entry Condition:</strong> Waiting: regime_on=OFF (SMH pullback), slope_t=-2.22<1.2, ema20_slope=-0.25<=0 &nbsp;|&nbsp; <strong>Max Hold:</strong> 25 trading days &nbsp;|&nbsp; <strong>Earnings:</strong> 49d</div>
+              <div style="margin-top:4px; color:#475569;"><strong>Top Model Drivers (SHAP):</strong> <code><span class="metric-tip tip-left">vix_ts<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">Volatility term structure ratio (VIX / VIX3M). Values < 1.0 confirm normal contango (calm regime); >= 1.0 indicates backwardation (near-term panic).</span></span>=1.00 (+0.099) | <span class="metric-tip tip-left">vxn_squeeze_vel<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">5-day rate of change in Nasdaq Volatility Index (VXN). Rapid drops detect post-panic volatility compression and short squeezes.</span></span>=-2.23 (+0.035) | <span class="metric-tip">rs_rank<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">Cross-sectional percentile rank [0.0, 1.0] of 20-day residual momentum across the active tradeable universe.</span></span>=0.98 (+0.016) | <span class="metric-tip tip-right">ema50_slope<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">5-day rate of change of the 50-day exponential moving average (EMA50).</span></span>=-0.54 (+0.011) | <span class="metric-tip tip-right">sector_rs<sup class="metric-tip-sup">ⓘ</sup><span class="metric-tip-popup" role="tooltip">20-day relative strength of SMH vs SPY: Delta%20d(SMH) - Delta%20d(SPY). Positive values confirm semiconductor sector leadership.</span></span>=-0.12 (-0.008)</code></div>
             </div>
           </div>
         </div>
@@ -601,7 +601,7 @@
 
         <!-- Footer -->
         <div style="max-width:680px; width:100%; text-align:center; padding:20px 0 28px 0; font-size:12px; color:#64748b; border-top:1px solid #cbd5e1; margin-top:20px;">
-          SemiSwing &bull; Semiconductor &amp; AI Momentum Strategy &bull; Report Created: 2026-11-27 14:21:17 EST
+          SemiSwing &bull; Semiconductor &amp; AI Momentum Strategy &bull; Report Created: 2026-11-27 14:46:09 EST
         </div>
       </td>
     </tr>

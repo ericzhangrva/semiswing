@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "generated_at": "2026-11-27T19:21:17.211610+00:00",
+  "generated_at": "2026-11-27T19:46:08.911005+00:00",
   "source_sha256": "caff8647280c4f42ed14494d032ed8136de61524c5bc8c7cd83c763b95b3eb84",
   "trial_count_k": 14,
   "all_gates_pass": false,
@@ -19,7 +19,7 @@
     },
     {
       "Gate": "Gate 3: Profit Factor >= 2.00 (Gross Payoff Asymmetry)",
-      "Value": "AI: 3.63 | OOS: 3.41",
+      "Value": "AI: 3.62 | OOS: 3.41",
       "Status": "PASS"
     },
     {
@@ -44,7 +44,7 @@
     },
     {
       "Gate": "Gate 7: ML Alpha Dominance & Calibration (BSS > 0.02 & SR Lift >= +0.05 or Sortino Lift >= +0.02 or CAGR Lift >= +3.0% or DD Red >= 1.5%)",
-      "Value": "BSS: 0.0393 | SR Lift: +0.00 | Sortino Lift: +0.05 | CAGR Lift: +4.5% | DD Red: -5.4%",
+      "Value": "BSS: 0.0393 | SR Lift: +0.00 | Sortino Lift: +0.05 | CAGR Lift: +4.4% | DD Red: -5.4%",
       "Status": "PASS"
     }
   ],
@@ -56,27 +56,27 @@
     },
     {
       "Gate": "Gate 2: Deflated Sharpe Probability >= 0.95 (K=14 trials)",
-      "Value": "0.961",
+      "Value": "0.960",
       "Status": "PASS"
     },
     {
       "Gate": "Gate 3: Profit Factor >= 1.50 (Gross Payoff Asymmetry)",
-      "Value": "AI: 3.71 | OOS: 3.46",
+      "Value": "AI: 3.70 | OOS: 3.46",
       "Status": "PASS"
     },
     {
       "Gate": "Gate 4a: Modern AI Era Max DD <= 38.0% (vs SMH 40.2%)",
-      "Value": "36.41%",
+      "Value": "36.38%",
       "Status": "PASS"
     },
     {
       "Gate": "Gate 4b: Full OOS Max DD <= 40.0% (vs SMH 45.1%)",
-      "Value": "36.41%",
+      "Value": "36.38%",
       "Status": "PASS"
     },
     {
       "Gate": "Gate 5: Full OOS Sharpe >= 1.00 (2022-2026 Full Cycle)",
-      "Value": "1.39",
+      "Value": "1.38",
       "Status": "PASS"
     },
     {
@@ -86,14 +86,14 @@
     },
     {
       "Gate": "Gate 7: ML Alpha Dominance & Calibration (BSS > 0.02 & SR Lift >= +0.05 or Sortino Lift >= +0.02 or CAGR Lift >= +3.0% or DD Red >= 1.5%)",
-      "Value": "BSS: 0.0393 | SR Lift: +0.06 | Sortino Lift: +0.10 | CAGR Lift: +10.2% | DD Red: -5.5%",
+      "Value": "BSS: 0.0393 | SR Lift: +0.06 | Sortino Lift: +0.10 | CAGR Lift: +9.9% | DD Red: -5.4%",
       "Status": "PASS"
     }
   ],
   "metrics": {
     "ml_smh_core": {
-      "total_return_pct": 1137.02,
-      "cagr_pct": 90.94,
+      "total_return_pct": 1134.71,
+      "cagr_pct": 90.85,
       "vol_pct": 39.85,
       "vol": 39.85,
       "sharpe": 1.71,
@@ -103,7 +103,7 @@
       "cash_days_pct": 10.6,
       "trades": 78,
       "win_rate_pct": 57.7,
-      "profit_factor": 3.63,
+      "profit_factor": 3.62,
       "avg_r": 2.06,
       "profit_factor_winsor": 1.72,
       "avg_r_winsor": 0.91
@@ -126,18 +126,18 @@
       "avg_r_winsor": 0.99
     },
     "ml_cash_swing": {
-      "total_return_pct": 1036.64,
-      "cagr_pct": 86.83,
-      "vol_pct": 37.6,
-      "vol": 37.6,
+      "total_return_pct": 1030.83,
+      "cagr_pct": 86.58,
+      "vol_pct": 37.61,
+      "vol": 37.61,
       "sharpe": 1.73,
-      "deflated_sharpe_prob": 0.961,
+      "deflated_sharpe_prob": 0.96,
       "sortino": 1.81,
-      "max_dd_pct": 36.41,
+      "max_dd_pct": 36.38,
       "cash_days_pct": 10.6,
       "trades": 78,
       "win_rate_pct": 57.7,
-      "profit_factor": 3.71,
+      "profit_factor": 3.7,
       "avg_r": 2.06,
       "profit_factor_winsor": 1.74,
       "avg_r_winsor": 0.91
